@@ -1,0 +1,158 @@
+# LangChain 1.0+ 智能体使用指南
+
+本项目基于最新的 LangChain 1.0+ API 创建了一个现代化的智能体，展示了当前推荐的智能体开发模式。
+
+## 🆕 LangChain 1.0+ 主要特性
+
+- **新的 `create_agent` API**: 替代了旧版本的 `createReactAgent`
+- **简化的工具集成**: 使用 `@tool` 装饰器定义工具
+- **基于 LangGraph**: 智能体底层使用 LangGraph 实现，提供更好的执行能力
+- **标准化消息格式**: 统一的消息传递接口
+
+## 📁 项目文件
+
+- `modern_langchain_agent.py` - 主要的智能体实现
+- `test_agent_structure.py` - 代码结构测试（无需 API 密钥）
+- `.env.example` - 环境变量示例文件
+
+## 🚀 快速开始
+
+### 1. 安装依赖
+
+```bash
+uv sync
+```
+
+### 2. 设置环境变量
+
+复制示例环境文件并配置 API 密钥：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，设置至少一个 API 密钥：
+
+```env
+# Anthropic Claude (推荐)
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# 或使用 OpenAI
+OPENAI_API_KEY=your-openai-api-key-here
+```
+
+### 3. 测试代码结构
+
+首先运行结构测试（无需 API 密钥）：
+
+```bash
+uv run python test_agent_structure.py
+```
+
+### 4. 启动智能体
+
+设置好 API 密钥后，运行主程序：
+
+```bash
+uv run python modern_langchain_agent.py
+```
+
+## 🛠️ 智能体工具
+
+智能体内置了以下工具：
+
+1. **get_current_time()** - 获取当前时间和日期
+2. **calculate(expression)** - 计算数学表达式
+3. **get_weather(city)** - 查询城市天气信息（模拟数据）
+4. **search_information(query)** - 搜索信息（模拟搜索）
+
+## 💡 使用示例
+
+### 基本查询
+
+```
+用户: 现在几点了？
+智能体: 当前时间: 2025-11-03 17:53:22 (星期日)
+
+用户: 帮我计算 123 * 456
+智能体: 计算结果: 123 * 456 = 56088
+
+用户: 北京天气怎么样？
+智能体: 北京天气: 晴天，温度 25°C，湿度 60%
+```
+
+### 复杂查询
+
+```
+用户: 今天是什么日子？如果下雨的话，提醒我带伞
+智能体: 当前时间: 2025-11-03 17:53:22 (星期日)。今天是星期日。关于下雨提醒，我可以帮您查询天气，目前北京是晴天，不需要带伞。
+```
+
+## 🔧 代码特点
+
+### 使用最新 API
+
+```python
+# LangChain 1.0+ 新语法
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=chat_model,
+    tools=[tool1, tool2],
+    system_prompt="你是一个智能助手..."
+)
+
+# 标准调用格式
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": "你好"}
+    ]
+})
+```
+
+### 现代工具定义
+
+```python
+from langchain_core.tools import tool
+
+@tool
+def my_tool(param: str) -> str:
+    """工具描述"""
+    return f"处理结果: {param}"
+```
+
+## 📚 相关文档
+
+- [LangChain 官方文档](https://docs.langchain.com)
+- [LangChain 1.0 迁移指南](https://docs.langchain.com/oss/python/releases/langchain-v1)
+- [工具开发指南](https://docs.langchain.com/oss/python/contributing/implement-langchain)
+
+## 🧪 测试和调试
+
+### 运行测试
+
+```bash
+# 结构测试
+uv run python test_agent_structure.py
+
+# 完整功能测试（需要 API 密钥）
+uv run python modern_langchain_agent.py
+```
+
+### 启用 LangSmith 追踪（可选）
+
+在 `.env` 文件中添加：
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your-langsmith-api-key
+LANGSMITH_PROJECT=langchain-agent-demo
+```
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request 来改进这个智能体示例！
+
+## 📄 许可证
+
+本项目仅供学习和参考使用。
