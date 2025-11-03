@@ -5,6 +5,89 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-11-03
+
+### 🚀 Added
+- **Real-time Weather API Integration**
+  - Added `weather_service.py` with Caiyun Weather API integration
+  - Real-time weather data support for major Chinese cities
+  - Fallback mechanism with simulated data when API unavailable
+  - Weather data parsing and formatting with error handling
+
+- **Restructured Testing Suite**
+  - Organized all test files into structured `tests/` directory
+  - Created categorized testing: unit tests, integration tests, demos, weather-specific tests
+  - Added comprehensive `tests/README.md` with testing guidelines
+  - Updated import paths for all moved test files
+
+- **Complete API Documentation**
+  - Created detailed `docs/API.md` with comprehensive API reference
+  - Documented all classes, methods, and parameters with examples
+  - Added environment configuration and error handling guides
+  - Included best practices and usage patterns
+
+- **OpenSpec Workflow Integration**
+  - Added OpenSpec specification-driven development workflow
+  - Created `openspec/changes/` directory for change proposals
+  - Integrated proposal → implementation → archival process
+  - Added `openspec/AGENTS.md` workflow guide
+
+### 🔧 Modified
+- **Weather Tool Enhancement**
+  - Upgraded from simulated weather data to real-time API integration
+  - Enhanced `get_weather` tool in `modern_langchain_agent.py`
+  - Added support for 15+ major Chinese cities
+  - Improved error handling and graceful degradation
+
+- **Testing Infrastructure**
+  - Moved 10 test files from root to organized subdirectories
+  - Updated all import paths with automatic project root detection
+  - Enhanced test coverage with weather API validation
+  - Added performance and concurrency testing
+
+- **Documentation Overhaul**
+  - Completely restructured main `README.md` with current project status
+  - Updated `CLAUDE.md` with comprehensive project information
+  - Added proper cross-references between all documentation files
+  - Enhanced project structure documentation
+
+- **Environment Configuration**
+  - Added `CAIYUN_API_KEY` support for real weather data
+  - Updated `.env.example` with new API key requirements
+  - Improved environment variable loading and validation
+
+### 📊 Improved
+- **Project Organization**
+  - Established clear separation between application code, tests, and documentation
+  - Created logical directory structure following Python best practices
+  - Improved maintainability and scalability of project structure
+
+- **Code Quality**
+  - Enhanced error handling throughout the application
+  - Added comprehensive logging and debugging information
+  - Improved type hints and documentation strings
+  - Standardized coding patterns across all modules
+
+- **User Experience**
+  - Better onboarding experience with structured documentation
+  - Improved error messages with actionable troubleshooting steps
+  - Enhanced CLI output with progress indicators and status updates
+  - More reliable API interactions with retry mechanisms
+
+### 🛠️ Technical Changes
+- Added `weather_service` module with `CaiyunWeatherService` class
+- Implemented `WeatherData` dataclass for structured weather information
+- Updated all test files with proper import path handling
+- Added HTTP client integration for external API calls
+- Enhanced environment variable management with `python-dotenv`
+
+### 📚 Documentation Updates
+- **docs/API.md**: New comprehensive API documentation (9951 words)
+- **tests/README.md**: Complete testing suite documentation
+- **README.md**: Restructured with current features and links
+- **CLAUDE.md**: Updated with detailed project overview and structure
+- **CHANGELOG.md**: Updated with latest changes and improvements
+
 ## [1.1.0] - 2025-11-03
 
 ### 🚀 Added
@@ -84,6 +167,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 🔄 Migration Guide
 
+### From 1.1.0 to 1.2.0
+
+1. **Update Environment Variables**
+   ```bash
+   # Add new weather API key
+   CAIYUN_API_KEY=your-caiyun-api-key-here
+   ```
+
+2. **Update Test File Locations**
+   ```bash
+   # Old test files (moved to tests/ directory)
+   test_weather_service.py → tests/unit/test_weather_service.py
+   test_real_weather_api.py → tests/weather/test_real_weather_api.py
+   test_integrated_weather_agent.py → tests/integration/test_integrated_weather_agent.py
+   # ... and other test files
+   ```
+
+3. **New Testing Commands**
+   ```bash
+   # Run all tests
+   uv run python -m pytest tests/ -v
+
+   # Run specific test categories
+   uv run python tests/unit/test_weather_service.py
+   uv run python tests/integration/test_integrated_weather_agent.py
+   ```
+
+4. **New Documentation**
+   - `docs/API.md` - Comprehensive API reference
+   - `tests/README.md` - Testing suite documentation
+   - `openspec/AGENTS.md` - Development workflow guide
+
+5. **Weather Service Usage**
+   ```python
+   # New import for weather service
+   from weather_service import get_weather_info
+
+   # Get real weather data
+   weather = get_weather_info("北京")
+   ```
+
 ### From 1.0.0 to 1.1.0
 
 1. **Update Environment Variables**
@@ -110,18 +234,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 🗂️ File Structure Changes
 
-### New Files
+### New Files in v1.2.0
+```
+weather_service.py           # 🌤️ Caiyun Weather API integration
+docs/
+└── API.md                   # 📖 Comprehensive API documentation
+tests/                       # 🧪 Restructured testing suite
+├── README.md               # 📋 Testing documentation
+├── unit/                   # 📋 Unit tests
+├── integration/            # 🔗 Integration tests
+├── demos/                  # 🎭 Demonstration scripts
+└── weather/                # 🌤️ Weather-specific tests
+openspec/                    # 📋 OpenSpec workflow
+├── AGENTS.md               # 🔄 Development workflow guide
+└── changes/               # 📝 Change proposals
+```
+
+### Files Moved in v1.2.0
+```
+# Test files reorganized
+test_weather_service.py → tests/unit/test_weather_service.py
+test_real_weather_api.py → tests/weather/test_real_weather_api.py
+test_integrated_weather_agent.py → tests/integration/test_integrated_weather_agent.py
+test_agent_conversation.py → tests/integration/test_agent_conversation.py
+test_agent_weather_simulation.py → tests/integration/test_agent_weather_simulation.py
+test_weather_component_only.py → tests/unit/test_weather_component_only.py
+final_weather_component_test.py → tests/unit/final_weather_component_test.py
+demo_weather_agent.py → tests/demos/demo_weather_agent.py
+weather_example.py → tests/demos/weather_example.py
+```
+
+### Previously Added Files (v1.1.0)
 ```
 modern_langchain_agent.py     # 🤖 LangChain 1.0+ intelligent agent
 test_agent_structure.py       # 🧪 Structure testing (no API key required)
 AGENT_README.md              # 📖 Comprehensive usage guide
-CHANGELOG.md                 # 📋 This changelog file
 ```
 
 ### Modified Files
 ```
 README.md                    # ✨ Updated with new features and structure
+CLAUDE.md                    # 🤖 Enhanced project overview
 .env.example                 # 🔑 Updated environment variables
+CHANGELOG.md                 # 📋 Updated with latest changes
 ```
 
 ---
@@ -162,9 +317,26 @@ README.md                    # ✨ Updated with new features and structure
 
 ## 🔄 Future Plans
 
-- [ ] Real-time weather API integration
+### ✅ Completed (since v1.1.0)
+- [x] Real-time weather API integration
+- [x] Structured testing suite organization
+- [x] Comprehensive API documentation
+- [x] OpenSpec workflow integration
+
+### 🚧 In Progress
+- [ ] Enhanced weather forecasting (multi-day forecasts)
+- [ ] Weather alert system integration
+- [ ] Performance optimization and caching
+
+### 📋 Planned Features
 - [ ] Web search tool implementation
-- [ ] Memory/persistence features
-- [ ] Additional tool integrations
-- [ ] Streaming response support
-- [ ] Multi-modal capabilities (images, audio)
+- [ ] Memory/persistence features for conversations
+- [ ] Additional tool integrations (stock prices, news, etc.)
+- [ ] Streaming response support for real-time interactions
+- [ ] Multi-modal capabilities (images, audio analysis)
+- [ ] Plugin system for custom tools
+- [ ] Docker containerization support
+- [ ] REST API wrapper for agent functionality
+- [ ] Advanced error handling and retry mechanisms
+- [ ] Configuration management system
+- [ ] Internationalization support (multiple languages)

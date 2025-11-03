@@ -1,10 +1,29 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-This is a LangChain learning project focused on exploring and implementing various LLM chain architectures and patterns using Python with uv package management.
+This is a comprehensive LangChain learning project focused on exploring and implementing modern LLM applications using LangChain 1.0+ with real-time weather API integration. The project demonstrates intelligent agent capabilities with tool integration, spec-driven development using OpenSpec, and structured testing methodologies.
 
 ## Package Management
 
@@ -31,7 +50,7 @@ source .venv/bin/activate
 
 ## Dependencies
 
-The project includes key LangChain ecosystem packages:
+The project includes key LangChain ecosystem packages and additional tools:
 - `langchain>=1.0.2` - Core LangChain library
 - `langchain-anthropic>=1.0.0` - Anthropic integration
 - `langchain-community>=0.3.0` - Community integrations
@@ -42,6 +61,8 @@ The project includes key LangChain ecosystem packages:
 - `transformers>=4.21.0` - Hugging Face transformers
 - `torch>=1.12.0` - PyTorch
 - `zai-sdk>=0.0.4.1` - Zai SDK
+- `python-dotenv>=1.0.0` - Environment variable management
+- `requests>=2.31.0` - HTTP client for API calls
 
 ## Development Environment
 
@@ -60,14 +81,37 @@ The `.claude/settings.local.json` file allows:
 
 ## Project Structure
 
-Currently a minimal setup with:
-- `pyproject.toml` - Project configuration and dependencies
+A comprehensive LangChain learning project with organized structure:
+
+### Core Application Files
+- `modern_langchain_agent.py` - Main LangChain 1.0+ intelligent agent with weather integration
+- `weather_service.py` - Caiyun Weather API service module with fallback mechanisms
+- `zhipu_langchain_example.py` - Basic LangChain integration examples with ZhipuAI
+
+### Testing Suite (`tests/`)
+- `tests/unit/` - Unit tests for individual components
+- `tests/integration/` - Integration tests for multi-component workflows
+- `tests/demos/` - Demonstration scripts and examples
+- `tests/weather/` - Specialized weather API testing
+- `tests/README.md` - Comprehensive testing documentation
+
+### Development Workflow
+- `openspec/` - OpenSpec specification-driven development workflow
+- `openspec/changes/` - Change proposals and implementation tracking
+- `openspec/AGENTS.md` - OpenSpec workflow guide for AI assistants
+
+### Configuration
+- `.env` - Environment variables and API keys (not in git)
+- `.env.example` - Environment variable template
+- `pyproject.toml` - Project dependencies and configuration
 - `uv.lock` - Locked dependency versions
+
+### Development Standards
 - `.gitignore` - Python gitignore rules
 - `.python-version` - Python version specification
-- `.venv/` - Virtual environment directory
+- `.venv/` - Virtual environment directory (uv-managed)
 
-This appears to be a fresh project setup ready for LangChain experimentation and learning.
+This is a mature project setup demonstrating modern LangChain development practices with real-world API integration, comprehensive testing, and spec-driven development methodologies.
 
 # LangChain1.0+ overview
 

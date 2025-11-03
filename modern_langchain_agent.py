@@ -7,6 +7,10 @@
 import os
 from typing import List, Dict, Any
 from datetime import datetime
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
@@ -47,25 +51,16 @@ def get_weather(city: str) -> str:
 
     Args:
         city: 城市名称，如 "北京" 或 "上海"
-    """
-    # 模拟天气数据
-    weather_data = {
-        "北京": {"temp": "25°C", "condition": "晴天", "humidity": "60%"},
-        "上海": {"temp": "28°C", "condition": "多云", "humidity": "70%"},
-        "广州": {"temp": "30°C", "condition": "阴天", "humidity": "80%"},
-        "深圳": {"temp": "29°C", "condition": "晴天", "humidity": "75%"},
-        "杭州": {"temp": "22°C", "condition": "小雨", "humidity": "85%"},
-        "成都": {"temp": "20°C", "condition": "雾", "humidity": "90%"},
-        "西安": {"temp": "18°C", "condition": "晴", "humidity": "50%"}
-    }
 
-    city = city.strip()
-    if city in weather_data:
-        weather = weather_data[city]
-        return f"{city}天气: {weather['condition']}，温度 {weather['temp']}，湿度 {weather['humidity']}"
-    else:
-        available_cities = ', '.join(weather_data.keys())
-        return f"抱歉，没有找到 {city} 的天气信息。目前支持的城市: {available_cities}"
+    Returns:
+        包含天气信息的字符串，包括温度、湿度、风速等详细信息
+    """
+    from weather_service import get_weather_info
+
+    try:
+        return get_weather_info(city)
+    except Exception as e:
+        return f"获取天气信息时出错: {str(e)}"
 
 @tool
 def search_information(query: str) -> str:

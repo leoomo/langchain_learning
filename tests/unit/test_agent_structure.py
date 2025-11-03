@@ -8,6 +8,9 @@ import os
 import sys
 from datetime import datetime
 
+# 添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
 def test_imports():
     """测试所有必要的导入"""
     print("🔍 测试模块导入...")

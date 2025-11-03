@@ -7,19 +7,39 @@
 - **🚀 最新 LangChain 1.0+ API**: 使用 `create_agent` 函数和现代工具集成
 - **🤖 多模型支持**: 智谱AI (默认)、Anthropic Claude、OpenAI GPT
 - **🛠️ 实用智能体**: 内置时间查询、数学计算、天气查询、信息搜索工具
+- **🌤️ 真实天气数据**: 集成彩云天气 API，提供实时天气信息
 - **📚 完整示例**: 从基础对话到复杂智能体的全方位演示
 - **🧪 测试驱动**: 包含结构测试和功能验证
 
 ## 📁 项目文件结构
 
 ```
-├── modern_langchain_agent.py    # 🤖 LangChain 1.0+ 智能体 (新功能)
-├── test_agent_structure.py      # 🧪 智能体结构测试
-├── AGENT_README.md              # 📖 智能体详细使用指南
+├── modern_langchain_agent.py    # 🤖 LangChain 1.0+ 智能体 (主要功能)
+├── weather_service.py           # 🌤️ 彩云天气 API 服务模块
 ├── zhipu_langchain_example.py   # 📚 智谱AI基础集成示例
-├── .env.example                 # 🔑 环境变量配置示例
-├── pyproject.toml               # 📦 项目依赖配置
-└── README.md                    # 📋 项目说明 (本文件)
+├── tests/                       # 🧪 测试套件 (重新组织)
+│   ├── README.md               # 📖 测试目录说明文档
+│   ├── unit/                   # 📋 单元测试
+│   │   ├── test_agent_structure.py
+│   │   ├── test_weather_service.py
+│   │   ├── test_weather_component_only.py
+│   │   └── final_weather_component_test.py
+│   ├── integration/            # 🔗 集成测试
+│   │   ├── test_integrated_weather_agent.py
+│   │   ├── test_agent_conversation.py
+│   │   └── test_agent_weather_simulation.py
+│   ├── demos/                  # 🎭 演示脚本
+│   │   ├── demo_weather_agent.py
+│   │   └── weather_example.py
+│   └── weather/                # 🌤️ 天气专项测试
+│       └── test_real_weather_api.py
+├── openspec/                   # 📋 OpenSpec 规范管理
+│   ├── changes/               # 变更提案
+│   └── AGENTS.md              # OpenSpec 工作流指南
+├── .env.example               # 🔑 环境变量配置示例
+├── .env                       # 🔑 环境变量配置 (需要创建)
+├── pyproject.toml             # 📦 项目依赖配置
+└── README.md                  # 📋 项目说明 (本文件)
 ```
 
 ## 🚀 快速开始
@@ -30,7 +50,7 @@
 uv sync
 ```
 
-### 2. 配置智谱AI API
+### 2. 配置 API 密钥
 
 ```bash
 cp .env.example .env
@@ -42,30 +62,66 @@ cp .env.example .env
 # 智谱AI (默认使用，推荐)
 ANTHROPIC_AUTH_TOKEN=your-zhipu-api-token-here
 
+# 彩云天气 API (用于真实天气数据)
+CAIYUN_API_KEY=your-caiyun-api-key-here
+
 # 其他模型 (可选)
 ANTHROPIC_API_KEY=your-anthropic-api-key-here
 OPENAI_API_KEY=your-openai-api-key-here
 ```
 
-### 3. 获取智谱AI API 密钥
+### 3. 获取 API 密钥
 
+#### 智谱AI API (必需)
 1. 访问 [智谱AI开放平台](https://open.bigmodel.cn/)
 2. 注册并登录账号
 3. 在控制台获取 API Token
 4. 设置到 `ANTHROPIC_AUTH_TOKEN` 环境变量
 
+#### 彩云天气 API (推荐)
+1. 访问 [彩云天气官网](https://www.caiyunapp.com/)
+2. 注册账号并登录
+3. 在开发者控制台获取 API 密钥
+4. 设置到 `CAIYUN_API_KEY` 环境变量
+
+> 💡 **提示**: 彩云天气 API 提供免费调用额度，用于获取真实天气数据。未配置时将使用模拟数据。
+
 ### 4. 运行测试
 
 ```bash
-# 结构测试 (无需 API 密钥)
-uv run python test_agent_structure.py
+# 🧪 运行所有测试
+uv run python -m pytest tests/ -v
 
-# 基础示例 (需要 API 密钥)
-uv run python zhipu_langchain_example.py
+# 📋 运行单元测试
+uv run python tests/unit/test_agent_structure.py
+uv run python tests/unit/test_weather_service.py
 
-# 智能体演示 (需要 API 密钥)
+# 🌤️ 运行天气相关测试
+uv run python tests/weather/test_real_weather_api.py
+uv run python tests/unit/test_weather_service.py
+
+# 🔗 运行集成测试
+uv run python tests/integration/test_integrated_weather_agent.py
+uv run python tests/integration/test_agent_conversation.py
+
+# 🎭 运行演示脚本
+uv run python tests/demos/demo_weather_agent.py
+uv run python tests/demos/weather_example.py
+
+# 🤖 运行主要智能体 (需要智谱AI API)
 uv run python modern_langchain_agent.py
+
+# 📚 运行基础示例 (需要智谱AI API)
+uv run python zhipu_langchain_example.py
 ```
+
+### 5. 测试指南
+
+详细的测试说明请参考 [`tests/README.md`](tests/README.md)，包含：
+- 测试目录结构说明
+- 各种测试类型的运行方式
+- 环境配置要求
+- 故障排除指南
 
 ## 🤖 智能体功能 (新)
 
@@ -73,10 +129,19 @@ uv run python modern_langchain_agent.py
 
 - **⏰ get_current_time()** - 获取当前时间和日期
 - **🧮 calculate(expression)** - 计算数学表达式
-- **🌤️ get_weather(city)** - 查询城市天气信息
+- **🌤️ get_weather(city)** - 查询城市天气信息 (支持真实数据)
 - **🔍 search_information(query)** - 搜索信息
 
-### 使用示例
+### 天气查询功能 (新)
+
+#### 支持的数据源
+- **🌤️ 彩云天气 API**: 实时天气数据 (需配置 `CAIYUN_API_KEY`)
+- **🎭 模拟数据**: 当 API 不可用时自动降级
+
+#### 支持的城市
+北京、上海、广州、深圳、杭州、成都、西安、武汉、南京、重庆、天津、苏州、青岛、大连、厦门
+
+#### 使用示例
 
 ```
 用户: 现在几点了？
@@ -86,7 +151,11 @@ uv run python modern_langchain_agent.py
 智能体: 计算结果: 123 * 456 = 56088
 
 用户: 北京天气怎么样？
-智能体: 北京天气: 晴天，温度 25°C，湿度 60%
+智能体: 北京天气: 晴夜，温度 8.9°C (体感 6.8°C)，湿度 0%，风速 4.5km/h
+数据来源: 实时数据（彩云天气 API）
+
+用户: 上海和北京哪个更暖和？
+智能体: 上海更暖和（12.5°C），北京较冷（8.9°C）
 ```
 
 ## 📚 完整功能列表
@@ -100,6 +169,23 @@ uv run python modern_langchain_agent.py
 - ✅ 并行链式调用
 - ✅ 顺序链式调用
 - ✅ 可配置模型支持
+- ✅ OpenSpec 规范驱动开发
+- ✅ 结构化测试套件
+- ✅ 真实天气 API 集成
+
+### 🛠️ 开发工具与工作流
+
+#### OpenSpec 规范管理
+本项目使用 OpenSpec 进行规范驱动的开发：
+- 📋 **变更提案**: 在 `openspec/changes/` 目录中管理功能变更
+- 🔄 **工作流程**: 提案 → 实施 → 归档的完整开发流程
+- 📖 **详细指南**: 参考 [`openspec/AGENTS.md`](openspec/AGENTS.md)
+
+#### 测试策略
+- 🧪 **单元测试**: 独立模块功能验证
+- 🔗 **集成测试**: 多组件协同测试
+- 🎭 **演示脚本**: 功能展示和验证
+- 🌤️ **专项测试**: 天气 API 深度测试
 
 ### 支持的模型
 - **🇨🇳 智谱AI GLM-4.6** (默认，中文优化)
@@ -255,11 +341,18 @@ async for chunk in model.astream([message]):
     print(chunk.content, end="")
 ```
 
+## 📖 相关文档
+
+- **[API 文档](docs/API.md)** - 详细的 API 接口说明和使用示例
+- **[测试指南](tests/README.md)** - 完整的测试套件说明和运行指南
+- **[OpenSpec 工作流](openspec/AGENTS.md)** - 规范驱动的开发流程指南
+
 ## 参考资料
 
 - [LangChain 1.0 官方文档](https://docs.langchain.com/)
 - [智谱AI API文档](https://open.bigmodel.cn/dev/api)
 - [LangChain模型集成指南](https://docs.langchain.com/oss/python/integrations/chat/)
+- [彩云天气 API文档](https://docs.caiyunapp.com/weather-api/v2/)
 
 ## 许可证
 
