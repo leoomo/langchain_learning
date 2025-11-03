@@ -13,10 +13,10 @@ import logging
 from dataclasses import dataclass, asdict
 
 # 导入自定义组件
-from weather_service import WeatherData, CaiyunWeatherService
-from services.matching.city_coordinate_db import CityCoordinateDB, PlaceInfo
-from place_name_matcher import PlaceNameMatcher, MatchResult
-from weather_cache import WeatherCache, get_weather_cache
+from .weather_service import WeatherData, CaiyunWeatherService
+from ..matching.city_coordinate_db import CityCoordinateDB, PlaceInfo
+from ..matching.enhanced_place_matcher import EnhancedPlaceMatcher
+from .weather_cache import WeatherCache, get_weather_cache
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -38,8 +38,11 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
 
         # 初始化增强组件
         self.coordinate_db = CityCoordinateDB()
-        self.place_matcher = PlaceNameMatcher(self.coordinate_db)
+        self.place_matcher = EnhancedPlaceMatcher()
         self.cache = get_weather_cache()
+
+        # 连接数据库
+        self.place_matcher.connect()
 
         logger.info("增强版天气服务初始化完成")
         logger.info(f"数据库统计: {self.coordinate_db.get_statistics()}")
@@ -68,14 +71,14 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
         # 2. 智能地名匹配
         match_result = self.place_matcher.match_place(place_name)
         if match_result:
-            coords = (match_result.place_info.longitude, match_result.place_info.latitude)
+            coords = (match_result['longitude'], match_result['latitude'])
 
             # 缓存结果（缓存1小时）
             self.cache.set(place_name, coords, ttl=3600, extra_params={"type": "coordinates"})
 
-            logger.info(f"智能匹配成功: {place_name} -> {match_result.place_info.name} "
+            logger.info(f"智能匹配成功: {place_name} -> {match_result['name']} "
                        f"({coords[0]:.4f}, {coords[1]:.4f}) "
-                       f"匹配类型: {match_result.match_type}, 分数: {match_result.score:.3f}")
+                       f"级别: {match_result['level_name']}")
 
             return coords
 
@@ -227,18 +230,17 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
         Returns:
             匹配的地区列表
         """
-        match_results = self.place_matcher.batch_match([query] * limit)  # 简化的批量匹配
+        # 简化的搜索：使用单个查询并获取结果
+        result = self.place_matcher.match_place(query)
         places = []
-        for result in match_results:
-            if result:
-                places.append({
-                    "name": result.place_info.name,
-                    "level": result.place_info.level,
-                    "coordinates": (result.place_info.longitude, result.place_info.latitude),
-                    "match_score": result.score,
-                    "match_type": result.match_type,
-                    "full_path": result.place_info.full_path
-                })
+        if result:
+            places.append({
+                "name": result['name'],
+                "level": result['level'],
+                "coordinates": (result['longitude'], result['latitude']),
+                "level_name": result['level_name'],
+                "full_address": result.get('full_address', '')
+            })
 
         return places[:limit]
 
@@ -260,14 +262,14 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
         """清理所有缓存"""
         # 清理各组件缓存
         self.coordinate_db.clear_cache()
-        self.place_matcher.clear_cache()
+        # place_matcher 没有clear_cache方法，跳过
         self.cache.clear()
 
         return {
             "coordinate_db_cleared": True,
-            "place_matcher_cleared": True,
+            "place_matcher_cleared": False,  # 没有此方法
             "weather_cache_cleared": True,
-            "message": "所有缓存已清理"
+            "message": "缓存已清理（place_matcher不支持clear_cache）"
         }
 
     def __del__(self):
@@ -275,6 +277,8 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
         try:
             if hasattr(self, 'coordinate_db'):
                 self.coordinate_db.close()
+            if hasattr(self, 'place_matcher'):
+                self.place_matcher.close()
         except:
             pass
 
