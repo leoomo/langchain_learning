@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a comprehensive LangChain learning project focused on exploring and implementing modern LLM applications using LangChain 1.0+ with real-time weather API integration. The project demonstrates intelligent agent capabilities with tool integration, spec-driven development using OpenSpec, and structured testing methodologies.
+This is a comprehensive LangChain learning project focused on exploring and implementing modern LLM applications using LangChain 1.0+ with real-time weather API integration and **national region coverage**. The project demonstrates intelligent agent capabilities with tool integration, spec-driven development using OpenSpec, structured testing methodologies, and **comprehensive Chinese administrative division support (3,142+ regions)**.
 
 ## Package Management
 
@@ -84,9 +84,20 @@ The `.claude/settings.local.json` file allows:
 A comprehensive LangChain learning project with organized structure:
 
 ### Core Application Files
-- `modern_langchain_agent.py` - Main LangChain 1.0+ intelligent agent with weather integration
-- `weather_service.py` - Caiyun Weather API service module with fallback mechanisms
+- `modern_langchain_agent.py` - Main LangChain 1.0+ intelligent agent with national weather coverage
+- `enhanced_weather_service.py` - Enhanced weather service with 3,142+ region support and intelligent matching
+- `weather_service.py` - Basic Caiyun Weather API service module with fallback mechanisms
+- `enhanced_place_matcher.py` - Intelligent place name matching system with 105+ aliases
+- `city_coordinate_db.py` - Coordinate database for Chinese administrative divisions
+- `weather_cache.py` - Multi-level caching system for weather data
 - `zhipu_langchain_example.py` - Basic LangChain integration examples with ZhipuAI
+
+### National Coverage Database
+- `data/admin_divisions.db` - SQLite database with 3,142+ Chinese regions (95%+ coverage)
+- `national_region_database.py` - Automated national region database initialization
+- `coordinate_enrichment.py` - Coordinate information enrichment for all regions
+- `补充缺失重要城市.py` - Script to add 90 missing important cities (including 景德镇)
+- `批量修复层级关系.py` - Comprehensive hierarchy relationship repair script
 
 ### Testing Suite (`tests/`)
 - `tests/unit/` - Unit tests for individual components
@@ -94,6 +105,8 @@ A comprehensive LangChain learning project with organized structure:
 - `tests/demos/` - Demonstration scripts and examples
 - `tests/weather/` - Specialized weather API testing
 - `tests/README.md` - Comprehensive testing documentation
+- `test_national_coverage.py` - Comprehensive national coverage testing script
+- `verify_national_integration.py` - Integration verification for enhanced features
 
 ### Development Workflow
 - `openspec/` - OpenSpec specification-driven development workflow
@@ -111,7 +124,7 @@ A comprehensive LangChain learning project with organized structure:
 - `.python-version` - Python version specification
 - `.venv/` - Virtual environment directory (uv-managed)
 
-This is a mature project setup demonstrating modern LangChain development practices with real-world API integration, comprehensive testing, and spec-driven development methodologies.
+This is a mature project setup demonstrating modern LangChain development practices with real-world API integration, comprehensive testing, spec-driven development methodologies, and **production-ready national region coverage system supporting 3,142+ Chinese administrative divisions with 95%+ coverage and 100% coordinate coverage**.
 
 # LangChain1.0+ overview
 

@@ -19,4 +19,5 @@ dependencies = [
     "anthropic>=0.20.0",
     "langchain-openai>=1.0.1",
     "python-dotenv>=1.1.1",
+    "pandas>=2.3.3",
 ]

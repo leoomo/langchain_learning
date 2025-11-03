@@ -1,0 +1,1082 @@
+{
+  "2dbaf59884934414": {
+    "key": "2dbaf59884934414",
+    "value": [
+      117.2147,
+      29.2975
+    ],
+    "timestamp": 1762180296.608583,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.608583
+  },
+  "7dc6f9e36444a411": {
+    "key": "7dc6f9e36444a411",
+    "value": {
+      "data": {
+        "temperature": 25,
+        "apparent_temperature": 23,
+        "humidity": 50,
+        "pressure": 1002,
+        "wind_speed": 14.068493630167701,
+        "wind_direction": 112,
+        "condition": "晴天",
+        "description": "晴天，25°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        117.2147,
+        29.2975
+      ],
+      "timestamp": 1762180296.608646
+    },
+    "timestamp": 1762180296.608651,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.608651
+  },
+  "a9c8d2c1c67fea66": {
+    "key": "a9c8d2c1c67fea66",
+    "value": [
+      114.9403,
+      25.8316
+    ],
+    "timestamp": 1762180296.609364,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.609364
+  },
+  "50d7b0a1128e2eec": {
+    "key": "50d7b0a1128e2eec",
+    "value": {
+      "data": {
+        "temperature": 16,
+        "apparent_temperature": 17,
+        "humidity": 65,
+        "pressure": 1007,
+        "wind_speed": 3.4087815039269698,
+        "wind_direction": 328,
+        "condition": "阴天",
+        "description": "阴天，16°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        114.9403,
+        25.8316
+      ],
+      "timestamp": 1762180296.609405
+    },
+    "timestamp": 1762180296.6094122,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.6094122
+  },
+  "cdb1f3c24f8be320": {
+    "key": "cdb1f3c24f8be320",
+    "value": [
+      115.9929,
+      29.712
+    ],
+    "timestamp": 1762180296.6101031,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6101031
+  },
+  "72589f15c97ccca2": {
+    "key": "72589f15c97ccca2",
+    "value": {
+      "data": {
+        "temperature": 21,
+        "apparent_temperature": 22,
+        "humidity": 68,
+        "pressure": 1014,
+        "wind_speed": 18.35691601289768,
+        "wind_direction": 197,
+        "condition": "晴天",
+        "description": "晴天，21°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        115.9929,
+        29.712
+      ],
+      "timestamp": 1762180296.6101289
+    },
+    "timestamp": 1762180296.610132,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.610132
+  },
+  "199b36f243e8799b": {
+    "key": "199b36f243e8799b",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.6108239,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.610825
+  },
+  "17399aac2966e11f": {
+    "key": "17399aac2966e11f",
+    "value": {
+      "data": {
+        "temperature": 15,
+        "apparent_temperature": 15,
+        "humidity": 45,
+        "pressure": 1018,
+        "wind_speed": 1.5160057679756012,
+        "wind_direction": 279,
+        "condition": "晴天",
+        "description": "晴天，15°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.610847
+    },
+    "timestamp": 1762180296.610851,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.610851
+  },
+  "baa9340935bd5fd6": {
+    "key": "baa9340935bd5fd6",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.611538,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.611538
+  },
+  "c3778f426f40cef0": {
+    "key": "c3778f426f40cef0",
+    "value": {
+      "data": {
+        "temperature": 22,
+        "apparent_temperature": 20,
+        "humidity": 70,
+        "pressure": 1016,
+        "wind_speed": 5.267988086277331,
+        "wind_direction": 272,
+        "condition": "阴天",
+        "description": "阴天，22°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.611556
+    },
+    "timestamp": 1762180296.611559,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.611559
+  },
+  "f1030e24e631f148": {
+    "key": "f1030e24e631f148",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.6127732,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6127732
+  },
+  "c0e1921753c5ee5c": {
+    "key": "c0e1921753c5ee5c",
+    "value": {
+      "data": {
+        "temperature": 15,
+        "apparent_temperature": 13,
+        "humidity": 58,
+        "pressure": 1008,
+        "wind_speed": 9.82603594208846,
+        "wind_direction": 309,
+        "condition": "阴天",
+        "description": "阴天，15°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.612797
+    },
+    "timestamp": 1762180296.612799,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.612799
+  },
+  "94fe1efd190cbb5a": {
+    "key": "94fe1efd190cbb5a",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.613487,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.613487
+  },
+  "6e07cd1fb7c0e47e": {
+    "key": "6e07cd1fb7c0e47e",
+    "value": {
+      "data": {
+        "temperature": 18,
+        "apparent_temperature": 19,
+        "humidity": 69,
+        "pressure": 1016,
+        "wind_speed": 13.197721276778996,
+        "wind_direction": 69,
+        "condition": "多云",
+        "description": "多云，18°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.613508
+    },
+    "timestamp": 1762180296.61351,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.61351
+  },
+  "0632c0c481143365": {
+    "key": "0632c0c481143365",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.614214,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.614214
+  },
+  "e6906e46c064bcbe": {
+    "key": "e6906e46c064bcbe",
+    "value": {
+      "data": {
+        "temperature": 27,
+        "apparent_temperature": 26,
+        "humidity": 51,
+        "pressure": 1009,
+        "wind_speed": 0.7414470117200378,
+        "wind_direction": 314,
+        "condition": "晴天",
+        "description": "晴天，27°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.6142359
+    },
+    "timestamp": 1762180296.614238,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.614238
+  },
+  "649c182181b5ce49": {
+    "key": "649c182181b5ce49",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.6218472,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6218472
+  },
+  "f86b80d1f7add943": {
+    "key": "f86b80d1f7add943",
+    "value": {
+      "data": {
+        "temperature": 21,
+        "apparent_temperature": 23,
+        "humidity": 60,
+        "pressure": 1007,
+        "wind_speed": 11.88841741455107,
+        "wind_direction": 91,
+        "condition": "多云",
+        "description": "多云，21°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.6218722
+    },
+    "timestamp": 1762180296.621876,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.621876
+  },
+  "02cec22f4542da7c": {
+    "key": "02cec22f4542da7c",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.6225789,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6225789
+  },
+  "b79f39a3c8c698a8": {
+    "key": "b79f39a3c8c698a8",
+    "value": {
+      "data": {
+        "temperature": 29,
+        "apparent_temperature": 31,
+        "humidity": 58,
+        "pressure": 1003,
+        "wind_speed": 0.09993935315671054,
+        "wind_direction": 323,
+        "condition": "多云",
+        "description": "多云，29°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.622605
+    },
+    "timestamp": 1762180296.622607,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.622607
+  },
+  "a0addb71801daf1d": {
+    "key": "a0addb71801daf1d",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.62369,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.62369
+  },
+  "120e63f84176239a": {
+    "key": "120e63f84176239a",
+    "value": {
+      "data": {
+        "temperature": 21,
+        "apparent_temperature": 23,
+        "humidity": 73,
+        "pressure": 1003,
+        "wind_speed": 0.2270035160731365,
+        "wind_direction": 114,
+        "condition": "晴天",
+        "description": "晴天，21°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.623712
+    },
+    "timestamp": 1762180296.6237152,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.6237152
+  },
+  "8cf54099775e2a71": {
+    "key": "8cf54099775e2a71",
+    "value": [
+      111.2908,
+      30.7026
+    ],
+    "timestamp": 1762180296.624407,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.624407
+  },
+  "9b9cebe2c68274d1": {
+    "key": "9b9cebe2c68274d1",
+    "value": {
+      "data": {
+        "temperature": 17,
+        "apparent_temperature": 17,
+        "humidity": 41,
+        "pressure": 1009,
+        "wind_speed": 1.8675217418713252,
+        "wind_direction": 302,
+        "condition": "晴天",
+        "description": "晴天，17°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        111.2908,
+        30.7026
+      ],
+      "timestamp": 1762180296.624427
+    },
+    "timestamp": 1762180296.624429,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.624429
+  },
+  "c99e59dbd675b1a1": {
+    "key": "c99e59dbd675b1a1",
+    "value": [
+      112.1441,
+      32.042
+    ],
+    "timestamp": 1762180296.625122,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.625123
+  },
+  "2cd6cf3832b2a1af": {
+    "key": "2cd6cf3832b2a1af",
+    "value": {
+      "data": {
+        "temperature": 24,
+        "apparent_temperature": 25,
+        "humidity": 58,
+        "pressure": 1018,
+        "wind_speed": 9.614198409665278,
+        "wind_direction": 68,
+        "condition": "晴天",
+        "description": "晴天，24°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        112.1441,
+        32.042
+      ],
+      "timestamp": 1762180296.625139
+    },
+    "timestamp": 1762180296.625141,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.625141
+  },
+  "07cd44d9d5620ab2": {
+    "key": "07cd44d9d5620ab2",
+    "value": [
+      110.785,
+      32.6474
+    ],
+    "timestamp": 1762180296.6258419,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6258419
+  },
+  "f8f30ce289ca9b78": {
+    "key": "f8f30ce289ca9b78",
+    "value": {
+      "data": {
+        "temperature": 17,
+        "apparent_temperature": 19,
+        "humidity": 42,
+        "pressure": 1014,
+        "wind_speed": 5.837843830785201,
+        "wind_direction": 343,
+        "condition": "晴天",
+        "description": "晴天，17°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        110.785,
+        32.6474
+      ],
+      "timestamp": 1762180296.625865
+    },
+    "timestamp": 1762180296.625868,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.625869
+  },
+  "1e4908843a0b3368": {
+    "key": "1e4908843a0b3368",
+    "value": [
+      118.5854,
+      24.9088
+    ],
+    "timestamp": 1762180296.6265962,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6265962
+  },
+  "4977cfc95631d8ca": {
+    "key": "4977cfc95631d8ca",
+    "value": {
+      "data": {
+        "temperature": 20,
+        "apparent_temperature": 20,
+        "humidity": 51,
+        "pressure": 1003,
+        "wind_speed": 16.324279529098412,
+        "wind_direction": 270,
+        "condition": "阴天",
+        "description": "阴天，20°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        118.5854,
+        24.9088
+      ],
+      "timestamp": 1762180296.626613
+    },
+    "timestamp": 1762180296.626615,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.626615
+  },
+  "e7f2cac433b8e9de": {
+    "key": "e7f2cac433b8e9de",
+    "value": [
+      117.647,
+      24.521
+    ],
+    "timestamp": 1762180296.62849,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.62849
+  },
+  "c9ec115e9b5556cf": {
+    "key": "c9ec115e9b5556cf",
+    "value": {
+      "data": {
+        "temperature": 25,
+        "apparent_temperature": 25,
+        "humidity": 72,
+        "pressure": 1019,
+        "wind_speed": 14.815351030654984,
+        "wind_direction": 352,
+        "condition": "多云",
+        "description": "多云，25°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        117.647,
+        24.521
+      ],
+      "timestamp": 1762180296.6285179
+    },
+    "timestamp": 1762180296.628521,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.628521
+  },
+  "96c798cd8e8c1f9d": {
+    "key": "96c798cd8e8c1f9d",
+    "value": [
+      119.0076,
+      25.431
+    ],
+    "timestamp": 1762180296.6292639,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6292639
+  },
+  "3b7f4dabb86670eb": {
+    "key": "3b7f4dabb86670eb",
+    "value": {
+      "data": {
+        "temperature": 28,
+        "apparent_temperature": 27,
+        "humidity": 42,
+        "pressure": 1011,
+        "wind_speed": 16.44201346062744,
+        "wind_direction": 335,
+        "condition": "阴天",
+        "description": "阴天，28°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        119.0076,
+        25.431
+      ],
+      "timestamp": 1762180296.629288
+    },
+    "timestamp": 1762180296.629291,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.629291
+  },
+  "cc706b2b256fcf61": {
+    "key": "cc706b2b256fcf61",
+    "value": [
+      104.1954,
+      35.8617
+    ],
+    "timestamp": 1762180296.630018,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.630018
+  },
+  "9ff3c8e6e3c2fc1e": {
+    "key": "9ff3c8e6e3c2fc1e",
+    "value": {
+      "data": {
+        "temperature": 29,
+        "apparent_temperature": 28,
+        "humidity": 43,
+        "pressure": 1012,
+        "wind_speed": 4.136603374403,
+        "wind_direction": 219,
+        "condition": "阴天",
+        "description": "阴天，29°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        104.1954,
+        35.8617
+      ],
+      "timestamp": 1762180296.630035
+    },
+    "timestamp": 1762180296.630037,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.630037
+  },
+  "dc2a3241104a30b2": {
+    "key": "dc2a3241104a30b2",
+    "value": [
+      113.1135,
+      36.2018
+    ],
+    "timestamp": 1762180296.630731,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.630731
+  },
+  "866af63abcc01302": {
+    "key": "866af63abcc01302",
+    "value": {
+      "data": {
+        "temperature": 30,
+        "apparent_temperature": 28,
+        "humidity": 50,
+        "pressure": 1013,
+        "wind_speed": 14.167455159242806,
+        "wind_direction": 304,
+        "condition": "晴天",
+        "description": "晴天，30°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        113.1135,
+        36.2018
+      ],
+      "timestamp": 1762180296.630749
+    },
+    "timestamp": 1762180296.630751,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.630751
+  },
+  "739245afdea359c5": {
+    "key": "739245afdea359c5",
+    "value": [
+      111.518,
+      36.0882
+    ],
+    "timestamp": 1762180296.6314409,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180296.6314409
+  },
+  "763b4482b1f4ac35": {
+    "key": "763b4482b1f4ac35",
+    "value": {
+      "data": {
+        "temperature": 18,
+        "apparent_temperature": 19,
+        "humidity": 48,
+        "pressure": 1011,
+        "wind_speed": 7.359138054705461,
+        "wind_direction": 1,
+        "condition": "多云",
+        "description": "多云，18°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        111.518,
+        36.0882
+      ],
+      "timestamp": 1762180296.631458
+    },
+    "timestamp": 1762180296.6314602,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180296.6314602
+  },
+  "8bf24b07f5e02f43": {
+    "key": "8bf24b07f5e02f43",
+    "value": [
+      120.2999,
+      30.4182
+    ],
+    "timestamp": 1762180642.803276,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.803276
+  },
+  "962083889edb29fb": {
+    "key": "962083889edb29fb",
+    "value": {
+      "data": {
+        "temperature": 20,
+        "apparent_temperature": 20,
+        "humidity": 47,
+        "pressure": 1009,
+        "wind_speed": 9.861909794764404,
+        "wind_direction": 4,
+        "condition": "晴天",
+        "description": "晴天，20°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.2999,
+        30.4182
+      ],
+      "timestamp": 1762180642.803338
+    },
+    "timestamp": 1762180642.8033438,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.8033438
+  },
+  "34ed914ccba2f62e": {
+    "key": "34ed914ccba2f62e",
+    "value": [
+      120.1551,
+      30.2741
+    ],
+    "timestamp": 1762180642.804111,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.804111
+  },
+  "194ea89c6035ef9b": {
+    "key": "194ea89c6035ef9b",
+    "value": {
+      "data": {
+        "temperature": 22,
+        "apparent_temperature": 21,
+        "humidity": 85,
+        "pressure": 1011,
+        "wind_speed": 7.592865002425175,
+        "wind_direction": 201,
+        "condition": "小雨",
+        "description": "小雨，22°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.1551,
+        30.2741
+      ],
+      "timestamp": 1762180642.8041558
+    },
+    "timestamp": 1762180642.8041651,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.8041658
+  },
+  "ff3578b538cccc85": {
+    "key": "ff3578b538cccc85",
+    "value": [
+      121.5439,
+      29.8683
+    ],
+    "timestamp": 1762180642.8049228,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.8049228
+  },
+  "14db4b44041bbd31": {
+    "key": "14db4b44041bbd31",
+    "value": {
+      "data": {
+        "temperature": 29,
+        "apparent_temperature": 28,
+        "humidity": 43,
+        "pressure": 1014,
+        "wind_speed": 15.096996834879302,
+        "wind_direction": 199,
+        "condition": "晴天",
+        "description": "晴天，29°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        121.5439,
+        29.8683
+      ],
+      "timestamp": 1762180642.804949
+    },
+    "timestamp": 1762180642.8049521,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.8049521
+  },
+  "fad41d7e3e17502a": {
+    "key": "fad41d7e3e17502a",
+    "value": [
+      120.6994,
+      27.9944
+    ],
+    "timestamp": 1762180642.80566,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.80566
+  },
+  "555770a157490678": {
+    "key": "555770a157490678",
+    "value": {
+      "data": {
+        "temperature": 20,
+        "apparent_temperature": 20,
+        "humidity": 57,
+        "pressure": 1013,
+        "wind_speed": 17.794293183000192,
+        "wind_direction": 76,
+        "condition": "阴天",
+        "description": "阴天，20°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.6994,
+        27.9944
+      ],
+      "timestamp": 1762180642.805682
+    },
+    "timestamp": 1762180642.805687,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.805687
+  },
+  "e49a1b343f0238e8": {
+    "key": "e49a1b343f0238e8",
+    "value": [
+      120.7509,
+      30.7627
+    ],
+    "timestamp": 1762180642.8063731,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.8063731
+  },
+  "104bf29722036b9c": {
+    "key": "104bf29722036b9c",
+    "value": {
+      "data": {
+        "temperature": 25,
+        "apparent_temperature": 24,
+        "humidity": 64,
+        "pressure": 1013,
+        "wind_speed": 3.982368104848666,
+        "wind_direction": 44,
+        "condition": "晴天",
+        "description": "晴天，25°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.7509,
+        30.7627
+      ],
+      "timestamp": 1762180642.806392
+    },
+    "timestamp": 1762180642.8063948,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.8063948
+  },
+  "1f0072ef41158354": {
+    "key": "1f0072ef41158354",
+    "value": [
+      120.1024,
+      30.8672
+    ],
+    "timestamp": 1762180642.807931,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.807931
+  },
+  "fe94214cc5067d4f": {
+    "key": "fe94214cc5067d4f",
+    "value": {
+      "data": {
+        "temperature": 23,
+        "apparent_temperature": 23,
+        "humidity": 76,
+        "pressure": 1001,
+        "wind_speed": 5.735470684813695,
+        "wind_direction": 264,
+        "condition": "多云",
+        "description": "多云，23°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.1024,
+        30.8672
+      ],
+      "timestamp": 1762180642.807955
+    },
+    "timestamp": 1762180642.8079581,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.807959
+  },
+  "0e5da186974b4f1d": {
+    "key": "0e5da186974b4f1d",
+    "value": [
+      120.5821,
+      30.0293
+    ],
+    "timestamp": 1762180642.808645,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.808645
+  },
+  "85ee0537ed4a7548": {
+    "key": "85ee0537ed4a7548",
+    "value": {
+      "data": {
+        "temperature": 30,
+        "apparent_temperature": 31,
+        "humidity": 47,
+        "pressure": 1008,
+        "wind_speed": 8.778564088463215,
+        "wind_direction": 120,
+        "condition": "多云",
+        "description": "多云，30°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        120.5821,
+        30.0293
+      ],
+      "timestamp": 1762180642.8086662
+    },
+    "timestamp": 1762180642.8086689,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.8086689
+  },
+  "5468df49739567d8": {
+    "key": "5468df49739567d8",
+    "value": [
+      119.6495,
+      29.0895
+    ],
+    "timestamp": 1762180642.80937,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.80937
+  },
+  "59830f9bddcbd02c": {
+    "key": "59830f9bddcbd02c",
+    "value": {
+      "data": {
+        "temperature": 26,
+        "apparent_temperature": 27,
+        "humidity": 80,
+        "pressure": 1016,
+        "wind_speed": 11.818913907442772,
+        "wind_direction": 56,
+        "condition": "多云",
+        "description": "多云，26°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        119.6495,
+        29.0895
+      ],
+      "timestamp": 1762180642.8093922
+    },
+    "timestamp": 1762180642.809394,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.809394
+  },
+  "6dfb8d4a4e14d0bb": {
+    "key": "6dfb8d4a4e14d0bb",
+    "value": [
+      118.8724,
+      28.9417
+    ],
+    "timestamp": 1762180642.810084,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.810085
+  },
+  "d012ac3fdbbd4643": {
+    "key": "d012ac3fdbbd4643",
+    "value": {
+      "data": {
+        "temperature": 25,
+        "apparent_temperature": 25,
+        "humidity": 43,
+        "pressure": 1007,
+        "wind_speed": 0.7244340307108343,
+        "wind_direction": 239,
+        "condition": "多云",
+        "description": "多云，25°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        118.8724,
+        28.9417
+      ],
+      "timestamp": 1762180642.810105
+    },
+    "timestamp": 1762180642.810107,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.810108
+  },
+  "cddb3bc1332cae83": {
+    "key": "cddb3bc1332cae83",
+    "value": [
+      122.2072,
+      29.9853
+    ],
+    "timestamp": 1762180642.810797,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762180642.810797
+  },
+  "2ae2e5804b1d5a28": {
+    "key": "2ae2e5804b1d5a28",
+    "value": {
+      "data": {
+        "temperature": 19,
+        "apparent_temperature": 18,
+        "humidity": 69,
+        "pressure": 1015,
+        "wind_speed": 11.372463864210813,
+        "wind_direction": 38,
+        "condition": "多云",
+        "description": "多云，19°C"
+      },
+      "source": "模拟数据（未配置 API 密钥）",
+      "coordinates": [
+        122.2072,
+        29.9853
+      ],
+      "timestamp": 1762180642.8108149
+    },
+    "timestamp": 1762180642.810817,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1762180642.810817
+  }
+}
