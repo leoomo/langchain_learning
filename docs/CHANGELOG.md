@@ -5,6 +5,133 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-11-03
+
+### 🏗️ Major Release: Modular Architecture Refactoring
+
+### 🚀 Added
+
+- **🔧 Core Architecture Module (`core/`)**
+  - Added `interfaces.py` with unified interface definitions (ITool, IAgent, IService)
+  - Added `base_tool.py` with comprehensive tool base classes (BaseTool, ConfigurableTool, AsyncTool)
+  - Added `base_agent.py` with agent base classes (BaseAgent, ManagedAgent, DependentAgent)
+  - Added `base_service.py` with service base classes (BaseService, ManagedService, DependentService)
+  - Added `registry.py` with tool and service registration system (ToolRegistry, ServiceRegistry)
+  - Implemented complete type safety and asynchronous support
+
+- **🛠️ Refactored Tool Module (`tools/`)**
+  - **TimeTool** (`tools/time_tool.py`) - Comprehensive time management tool
+    - Time query with timezone support (current_time, add_time, subtract_time)
+    - Time formatting with multiple formats (default, date, time, iso, us, full, compact)
+    - Timezone conversion capabilities
+    - Advanced time arithmetic with year/month handling
+    - Built-in caching and configuration management
+
+  - **MathTool** (`tools/math_tool.py`) - Complete mathematical calculation tool
+    - Basic arithmetic operations (add, subtract, multiply, divide)
+    - Advanced mathematical functions (power, sqrt, trigonometric, logarithmic)
+    - Statistical calculations (average, median, mode, standard deviation)
+    - Random number generation and rounding functions
+    - Comprehensive error handling and precision control
+
+  - **WeatherTool** (`tools/weather_tool.py`) - Enhanced weather service tool
+    - Current weather queries with location search
+    - Batch weather queries for multiple locations
+    - Weather forecasting capabilities (simulated)
+    - Coordinate resolution and location matching
+    - Integration with existing weather services
+    - Built-in caching and fallback mechanisms
+
+  - **SearchTool** (`tools/search_tool.py`) - Information retrieval tool
+    - Knowledge base search with categorized information
+    - Web search simulation with result ranking
+    - Similarity-based search with configurable thresholds
+    - Definition, features, and applications retrieval
+    - Advanced search with filtering capabilities
+    - Comprehensive caching system
+
+- **📚 Comprehensive Documentation**
+  - Added `docs/TOOLS_GUIDE.md` - Complete tools usage guide
+  - Updated `docs/README.md` with new architecture information
+  - Updated `docs/API.md` with core architecture and new tools API
+  - Added detailed examples and best practices
+  - Updated project structure documentation
+
+### 🔧 Improved
+
+- **🏗️ Modular Design**
+  - Each tool is now a completely independent module
+  - Unified interface ensures consistency across all tools
+  - Support for both standalone and integrated usage
+  - Configuration-driven behavior customization
+
+- **⚡ Performance Enhancements**
+  - Asynchronous execution support for all operations
+  - Intelligent caching mechanisms with TTL management
+  - Optimized error handling and fallback strategies
+  - Reduced memory footprint through efficient data structures
+
+- **🧪 Enhanced Testing**
+  - Complete test coverage for all new tools
+  - Integration tests for tool combinations
+  - Performance benchmarking and validation
+  - Comprehensive error scenario testing
+
+### 🔄 Changed
+
+- **📁 Project Structure Reorganization**
+  - Created `core/` directory for base architecture components
+  - Reorganized `tools/` directory with modular tool implementations
+  - Planned `services/` and `agents/` directories for future expansion
+  - Updated import paths and module dependencies
+
+- **🔌 Interface Standardization**
+  - All tools now implement the `ITool` interface
+  - Consistent `ToolMetadata` and `ToolResult` structures
+  - Unified error handling and logging patterns
+  - Standardized configuration management
+
+### 🛠️ Technical Improvements
+
+- **Type Safety**: Full type hints and validation
+- **Error Handling**: Comprehensive exception handling with graceful degradation
+- **Configuration**: Flexible configuration system with environment variable support
+- **Logging**: Structured logging with configurable levels
+- **Testing**: Complete test coverage with unit and integration tests
+- **Documentation**: Comprehensive API documentation and usage examples
+
+### 📊 Migration Guide
+
+**From Old to New Tools:**
+
+```python
+# Old approach
+from weather_service import get_weather_info
+weather_info = get_weather_info("北京")
+
+# New approach
+from tools import WeatherTool
+import asyncio
+
+weather_tool = WeatherTool()
+result = await weather_tool.execute(operation='current_weather', location='北京')
+if result.success:
+    weather_info = f"{result.data['location']}: {result.data['condition']} {result.data['temperature']}°C"
+```
+
+**Backward Compatibility:**
+- All existing tools remain functional
+- Legacy APIs continue to work
+- Gradual migration path available
+- Zero-downtime deployment possible
+
+### 🎯 Breaking Changes
+
+- Import paths for tools have changed
+- Some function signatures now require async/await
+- Configuration format has been standardized
+- Tool registration and discovery uses new registry system
+
 ## [1.3.0] - 2025-11-03
 
 ### 🌟 Major Release: National Region Coverage Enhancement

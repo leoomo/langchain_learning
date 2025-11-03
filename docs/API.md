@@ -4,6 +4,15 @@
 
 ## 目录
 
+- [核心架构 API](#核心架构-api)
+  - [ITool 接口](#itool-接口)
+  - [BaseTool 基类](#basetool-基类)
+  - [ToolRegistry 注册器](#toolregistry-注册器)
+- [新工具模块 API](#新工具模块-api)
+  - [TimeTool 时间工具](#timetool-时间工具)
+  - [MathTool 数学工具](#mathtool-数学工具)
+  - [WeatherTool 天气工具](#weathertool-天气工具)
+  - [SearchTool 搜索工具](#searchtool-搜索工具)
 - [智能体 API](#智能体-api)
 - [天气服务 API](#天气服务-api)
   - [EnhancedCaiyunWeatherService (增强版)](#enhancedcaiyunweatherservice-类-)
@@ -15,6 +24,412 @@
 - [环境配置](#环境配置)
 - [错误处理](#错误处理)
 - [使用示例](#使用示例)
+
+## 核心架构 API
+
+### ITool 接口
+
+所有工具必须实现的核心接口，定义了工具的基本规范。
+
+```python
+from abc import ABC, abstractmethod
+from typing import Any, Dict
+from dataclasses import dataclass
+
+@dataclass
+class ToolMetadata:
+    """工具元数据"""
+    name: str
+    description: str
+    version: str
+    author: str
+    tags: List[str]
+    dependencies: List[str]
+
+@dataclass
+class ToolResult:
+    """工具执行结果"""
+    success: bool
+    data: Any = None
+    error: str = None
+    metadata: Dict[str, Any] = None
+
+class ITool(ABC):
+    """工具接口"""
+
+    @property
+    @abstractmethod
+    def metadata(self) -> ToolMetadata:
+        """工具元数据"""
+        pass
+
+    @abstractmethod
+    async def execute(self, **kwargs) -> ToolResult:
+        """执行工具操作"""
+        pass
+
+    @abstractmethod
+    def validate_input(self, **kwargs) -> bool:
+        """验证输入参数"""
+        pass
+```
+
+### BaseTool 基类
+
+提供工具的基础实现，包含通用功能。
+
+```python
+from core.base_tool import BaseTool
+
+class MyTool(BaseTool):
+    def __init__(self, config: Optional[Dict] = None, logger: Optional[logging.Logger] = None):
+        super().__init__(config, logger)
+        # 初始化工具特定配置
+
+    @property
+    def metadata(self) -> ToolMetadata:
+        return ToolMetadata(
+            name="my_tool",
+            description="我的自定义工具",
+            version="1.0.0",
+            author="author",
+            tags=["custom"],
+            dependencies=[]
+        )
+
+    def validate_input(self, **kwargs) -> bool:
+        # 验证输入参数
+        return True
+
+    async def _execute(self, **kwargs) -> ToolResult:
+        # 实现具体功能
+        return ToolResult(success=True, data="result")
+```
+
+### ToolRegistry 注册器
+
+工具注册和管理系统，支持动态注册和发现。
+
+```python
+from core.registry import ToolRegistry
+
+# 创建注册器
+registry = ToolRegistry()
+
+# 注册工具实例
+registry.register("my_tool", MyTool())
+
+# 注册工具类（延迟实例化）
+registry.register_class(MyTool)
+
+# 获取工具
+tool = registry.get_tool("my_tool")
+result = await tool.execute(param="value")
+
+# 列出所有工具
+tools = registry.list_tools()
+print(tools)  # ["my_tool", ...]
+```
+
+## 新工具模块 API
+
+### TimeTool 时间工具
+
+提供时间查询、计算、格式化和时区转换功能。
+
+#### 初始化
+
+```python
+from tools import TimeTool
+
+# 使用默认配置
+time_tool = TimeTool()
+
+# 使用自定义配置
+config = {
+    "default_timezone": "Asia/Shanghai",
+    "precision": 10
+}
+time_tool = TimeTool(config)
+```
+
+#### 主要方法
+
+##### async execute(operation: str, **kwargs) -> ToolResult
+
+执行时间操作。
+
+**支持的操作：**
+- `current_time` - 获取当前时间
+- `add_time` - 时间加法
+- `subtract_time` - 时间减法
+- `format_time` - 时间格式化
+- `convert_timezone` - 时区转换
+
+**示例：**
+```python
+# 获取当前时间
+result = await time_tool.execute(operation='current_time')
+if result.success:
+    data = result.data
+    print(f"当前时间: {data['formatted']} ({data['timezone']})")
+
+# 时间加法
+result = await time_tool.execute(
+    operation='add_time',
+    base_time='2024-01-01T10:00:00',
+    days=1,
+    hours=2
+)
+print(f"新时间: {result.data['formatted']}")
+
+# 时间格式化
+result = await time_tool.execute(
+    operation='format_time',
+    time_input='2024-01-01T10:30:45',
+    format_type='full'
+)
+print(f"格式化: {result.data['formatted']}")
+```
+
+### MathTool 数学工具
+
+提供数学计算和统计功能。
+
+#### 初始化
+
+```python
+from tools import MathTool
+
+# 使用默认配置
+math_tool = MathTool()
+
+# 使用自定义配置
+config = {
+    "precision": 15,
+    "enable_cache": True
+}
+math_tool = MathTool(config)
+```
+
+#### 主要方法
+
+##### async execute(operation: str, **kwargs) -> ToolResult
+
+执行数学操作。
+
+**支持的操作：**
+- `add`, `subtract`, `multiply`, `divide` - 基本运算
+- `power`, `sqrt` - 幂运算和平方根
+- `sin`, `cos`, `tan` - 三角函数
+- `log` - 对数函数
+- `factorial` - 阶乘
+- `average`, `median`, `mode` - 统计函数
+- `std_dev` - 标准差
+- `random` - 随机数生成
+- `round` - 四舍五入
+
+**示例：**
+```python
+# 基本运算
+result = await math_tool.execute(operation='add', a=10, b=5)
+print(result.data['formatted'])  # 10 + 5 = 15
+
+# 高级函数
+result = await math_tool.execute(operation='sqrt', number=144)
+print(result.data['formatted'])  # √144 = 12.0
+
+# 三角函数
+result = await math_tool.execute(operation='sin', angle=30, degrees=True)
+print(result.data['formatted'])  # sin(30°) = 0.5
+
+# 统计计算
+numbers = [1, 2, 3, 4, 5]
+result = await math_tool.execute(operation='average', numbers=numbers)
+print(f"平均值: {result.data['result']}")
+
+# 随机数
+result = await math_tool.execute(operation='random', min_val=1, max_val=100)
+print(f"随机数: {result.data['result']}")
+```
+
+### WeatherTool 天气工具
+
+提供天气查询和预报功能。
+
+#### 初始化
+
+```python
+from tools import WeatherTool
+
+# 使用默认配置
+weather_tool = WeatherTool()
+
+# 使用自定义配置
+config = {
+    "api_key": "your-api-key",
+    "timeout": 15,
+    "cache_ttl": 1800,
+    "max_results": 10
+}
+weather_tool = WeatherTool(config)
+```
+
+#### 主要方法
+
+##### async execute(operation: str, **kwargs) -> ToolResult
+
+执行天气操作。
+
+**支持的操作：**
+- `current_weather` - 获取当前天气
+- `get_coordinates` - 获取位置坐标
+- `get_weather` - 获取天气信息（兼容方法）
+- `batch_weather` - 批量天气查询
+- `search_locations` - 位置搜索
+- `weather_forecast` - 天气预报
+
+**示例：**
+```python
+# 获取当前天气
+result = await weather_tool.execute(
+    operation='current_weather',
+    location='北京'
+)
+if result.success:
+    data = result.data
+    print(f"北京天气: {data['condition']}")
+    print(f"温度: {data['temperature']}°C")
+    print(f"湿度: {data['humidity']}%")
+
+# 批量查询
+cities = ['北京', '上海', '广州']
+result = await weather_tool.execute(
+    operation='batch_weather',
+    locations=cities
+)
+for item in result.data['results']:
+    if item['success']:
+        weather = item['data']
+        print(f"{item['location']}: {weather['condition']} {weather['temperature']}°C")
+
+# 位置搜索
+result = await weather_tool.execute(
+    operation='search_locations',
+    query='北',
+    limit=5
+)
+for match in result.data['matches']:
+    print(f"{match['name']}: ({match['longitude']}, {match['latitude']})")
+
+# 天气预报
+result = await weather_tool.execute(
+    operation='weather_forecast',
+    location='深圳',
+    days=3
+)
+for day in result.data['forecast']:
+    print(f"第{day['day']}天: {day['condition']} {day['temperature']}°C")
+```
+
+### SearchTool 搜索工具
+
+提供网络搜索和知识检索功能。
+
+#### 初始化
+
+```python
+from tools import SearchTool
+
+# 使用默认配置
+search_tool = SearchTool()
+
+# 使用自定义配置
+config = {
+    "max_results": 20,
+    "timeout": 10,
+    "cache_ttl": 3600
+}
+search_tool = SearchTool(config)
+```
+
+#### 主要方法
+
+##### async execute(operation: str, **kwargs) -> ToolResult
+
+执行搜索操作。
+
+**支持的操作：**
+- `web_search` - 网络搜索
+- `knowledge_search` - 知识库搜索
+- `search_by_category` - 按类别搜索
+- `get_definition` - 获取定义
+- `get_features` - 获取特性
+- `get_applications` - 获取应用
+- `search_similar` - 相似搜索
+- `advanced_search` - 高级搜索
+
+**示例：**
+```python
+# 知识库搜索
+result = await search_tool.execute(
+    operation='knowledge_search',
+    query='python'
+)
+if result.success:
+    data = result.data
+    print(f"找到 {data['total_results']} 个结果")
+    for item in data['results']:
+        print(f"- {item['topic']}: {item['description']}")
+
+# 网络搜索
+result = await search_tool.execute(
+    operation='web_search',
+    query='人工智能',
+    max_results=5
+)
+for item in result.data['results']:
+    print(f"- {item['title']}: {item['snippet']}")
+
+# 按类别搜索
+result = await search_tool.execute(
+    operation='search_by_category',
+    category='technology'
+)
+for item in result.data['results']:
+    print(f"- {item['topic']}: {item['description']}")
+
+# 获取定义
+result = await search_tool.execute(
+    operation='get_definition',
+    topic='langchain',
+    category='technology'
+)
+if result.success:
+    print(f"LangChain定义: {result.data['definition']}")
+
+# 相似搜索
+result = await search_tool.execute(
+    operation='search_similar',
+    query='ai',
+    threshold=0.3
+)
+for item in result.data['results']:
+    print(f"- {item['topic']} (相似度: {item['similarity']:.2f})")
+
+# 高级搜索
+filters = {
+    'max_results': 10,
+    'categories': ['technology', 'science'],
+    'include_web': True,
+    'include_knowledge': True
+}
+result = await search_tool.execute(
+    operation='advanced_search',
+    query='机器学习',
+    filters=filters
+)
+```
 
 ## 智能体 API
 

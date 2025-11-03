@@ -16,6 +16,7 @@
 
 ```
 ├── modern_langchain_agent.py      # 🤖 LangChain 1.0+ 智能体 (主要功能)
+├── demo_new_tools_agent.py        # 🛠️ 新工具模块集成演示
 ├── enhanced_weather_service.py    # 🌤️ 增强天气服务 (全国覆盖)
 ├── weather_service.py             # 🌤️ 基础彩云天气 API 服务模块
 ├── enhanced_place_matcher.py      # 🧠 智能地名匹配系统
@@ -28,26 +29,49 @@
 ├── 批量修复层级关系.py            # 🔧 批量修复层级关系
 ├── test_national_coverage.py      # 🧪 全国覆盖测试脚本
 ├── verify_national_integration.py # ✅ 集成验证脚本
-├── data/                          # 📊 数据目录
-│   ├── admin_divisions.db         # 🗄️ SQLite数据库 (3,142+地区)
-│   ├── backup_regions.csv         # 💾 数据备份
-│   └── national_areas_raw.json    # 📋 原始数据
-├── tests/                         # 🧪 测试套件 (重新组织)
-│   ├── README.md                  # 📖 测试目录说明文档
-│   ├── unit/                      # 📋 单元测试
-│   ├── integration/               # 🔗 集成测试
-│   ├── demos/                     # 🎭 演示脚本
-│   └── weather/                   # 🌤️ 天气专项测试
-├── openspec/                      # 📋 OpenSpec 规范管理
-│   ├── changes/                   # 变更提案
-│   └── AGENTS.md                  # OpenSpec 工作流指南
-├── docs/                          # 📚 文档目录
+├── core/                          # 🏗️ 核心架构模块 (新增)
+│   ├── __init__.py                # 核心模块初始化
+│   ├── interfaces.py             # 📋 接口定义 (ITool, IAgent, IService)
+│   ├── base_tool.py              # 🔧 工具基类 (BaseTool, ConfigurableTool)
+│   ├── base_agent.py             # 🤖 智能体基类 (BaseAgent, ManagedAgent)
+│   ├── base_service.py           # 🌐 服务基类 (BaseService, DependentService)
+│   └── registry.py               # 📊 注册器 (ToolRegistry, ServiceRegistry)
+├── tools/                        # 🛠️ 工具模块 (重构)
+│   ├── __init__.py               # 工具模块导出
+│   ├── time_tool.py              # 🕐 时间工具 (TimeTool)
+│   ├── math_tool.py              # 🔢 数学工具 (MathTool)
+│   ├── weather_tool.py           # 🌤️ 天气工具 (WeatherTool)
+│   └── search_tool.py            # 🔍 搜索工具 (SearchTool)
+├── services/                     # 🌐 服务模块 (规划中)
+│   ├── __init__.py               # 服务模块导出
+│   └── weather/                  # 天气服务
+│       ├── __init__.py           # 天气服务导出
+│       ├── weather_service.py    # 基础天气服务
+│       └── enhanced_weather_service.py  # 增强天气服务
+├── agents/                       # 🤖 智能体模块 (规划中)
+│   ├── __init__.py               # 智能体模块导出
+│   └── modern_agent.py           # 现代智能体实现
+├── data/                         # 📊 数据目录
+│   ├── admin_divisions.db        # 🗄️ SQLite数据库 (3,142+地区)
+│   ├── backup_regions.csv        # 💾 数据备份
+│   └── national_areas_raw.json   # 📋 原始数据
+├── tests/                        # 🧪 测试套件 (重新组织)
+│   ├── README.md                 # 📖 测试目录说明文档
+│   ├── unit/                     # 📋 单元测试
+│   ├── integration/              # 🔗 集成测试
+│   ├── demos/                    # 🎭 演示脚本
+│   └── weather/                  # 🌤️ 天气专项测试
+├── openspec/                     # 📋 OpenSpec 规范管理
+│   ├── changes/                  # 变更提案
+│   │   └── refactor-project-structure/  # 🏗️ 项目结构重构提案
+│   └── AGENTS.md                 # OpenSpec 工作流指南
+├── docs/                         # 📚 文档目录
 │   ├── NATIONAL_COVERAGE_COMPLETION_REPORT.md  # 🎯 项目完成报告
 │   └── 其他报告文档...
-├── .env.example                   # 🔑 环境变量配置示例
-├── .env                           # 🔑 环境变量配置 (需要创建)
-├── pyproject.toml                 # 📦 项目依赖配置
-└── README.md                      # 📋 项目说明 (本文件)
+├── .env.example                  # 🔑 环境变量配置示例
+├── .env                          # 🔑 环境变量配置 (需要创建)
+├── pyproject.toml                # 📦 项目依赖配置
+└── README.md                     # 📋 项目说明 (本文件)
 ```
 
 ## 🚀 快速开始
@@ -97,6 +121,12 @@ OPENAI_API_KEY=your-openai-api-key-here
 ### 4. 运行测试
 
 ```bash
+# 🛠️ 运行新工具模块演示 (推荐)
+uv run python demo_new_tools_agent.py
+
+# 🤖 运行主要智能体 (需要智谱AI API)
+uv run python modern_langchain_agent.py
+
 # 🧪 运行所有测试
 uv run python -m pytest tests/ -v
 
@@ -115,9 +145,6 @@ uv run python tests/integration/test_agent_conversation.py
 # 🎭 运行演示脚本
 uv run python tests/demos/demo_weather_agent.py
 uv run python tests/demos/weather_example.py
-
-# 🤖 运行主要智能体 (需要智谱AI API)
-uv run python modern_langchain_agent.py
 
 # 📚 运行基础示例 (需要智谱AI API)
 uv run python zhipu_langchain_example.py
@@ -145,12 +172,95 @@ uv run python verify_national_integration.py
 
 ## 🤖 智能体功能 (新)
 
-### 内置工具
+### 内置工具 (基于新工具模块)
 
-- **⏰ get_current_time()** - 获取当前时间和日期
-- **🧮 calculate(expression)** - 计算数学表达式
-- **🌤️ get_weather(city)** - 查询城市天气信息 (支持真实数据)
-- **🔍 search_information(query)** - 搜索信息
+- **⏰ TimeTool** - 时间工具，支持时间查询、计算、格式化和时区转换
+- **🧮 MathTool** - 数学工具，支持基本运算、高级函数和统计计算
+- **🌤️ WeatherTool** - 天气工具，支持实时天气查询和预报 (支持真实数据)
+- **🔍 SearchTool** - 搜索工具，支持知识库检索和网络搜索
+
+### 新工具模块特性
+
+#### 模块化设计
+- **独立开发**: 每个工具都是独立的模块，可以单独开发和测试
+- **统一接口**: 所有工具都实现 `ITool` 接口，保证一致性
+- **异步支持**: 支持高性能异步调用
+- **配置化**: 支持通过配置文件自定义工具行为
+
+#### 核心功能
+- **时间工具** (`tools/time_tool.py`):
+  - 当前时间查询 (支持时区)
+  - 时间加减运算 (支持年月日)
+  - 时间格式化 (多种格式)
+  - 时区转换
+
+- **数学工具** (`tools/math_tool.py`):
+  - 基本运算 (加减乘除)
+  - 高级函数 (三角函数、对数、幂运算)
+  - 统计计算 (平均值、中位数、标准差)
+  - 随机数生成和四舍五入
+
+- **天气工具** (`tools/weather_tool.py`):
+  - 实时天气查询
+  - 坐标获取和位置搜索
+  - 批量天气查询
+  - 天气预报 (模拟)
+
+- **搜索工具** (`tools/search_tool.py`):
+  - 知识库搜索
+  - 网络搜索 (模拟)
+  - 相似度匹配
+  - 高级搜索和分类检索
+
+### 工具调用方式
+
+#### 1. 直接调用工具模块
+```python
+from tools import TimeTool, MathTool, WeatherTool, SearchTool
+import asyncio
+
+# 异步调用
+time_tool = TimeTool()
+result = await time_tool.execute(operation='current_time')
+print(result.data['formatted'])
+
+# 同步调用 (在异步上下文中)
+math_tool = MathTool()
+result = await math_tool.execute(operation='add', a=10, b=5)
+print(result.data['formatted'])
+```
+
+#### 2. 集成到LangChain智能体
+```python
+from langchain_core.tools import tool
+from tools import TimeTool, WeatherTool
+
+# 包装工具为LangChain兼容
+time_tool_instance = TimeTool()
+
+@tool
+def get_current_time() -> str:
+    """获取当前时间"""
+    result = asyncio.run(time_tool_instance.execute(operation='current_time'))
+    return result.data['formatted'] if result.success else "获取时间失败"
+```
+
+#### 3. 使用工具注册器
+```python
+from core.registry import ToolRegistry
+from tools import TimeTool, MathTool, WeatherTool, SearchTool
+
+# 创建注册器
+registry = ToolRegistry()
+
+# 注册工具
+registry.register("time_tool", TimeTool())
+registry.register("math_tool", MathTool())
+
+# 使用工具
+tool = registry.get_tool("time_tool")
+result = await tool.execute(operation='current_time')
+```
 
 ### 天气查询功能 (新)
 
