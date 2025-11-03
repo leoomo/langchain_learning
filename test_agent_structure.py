@@ -15,6 +15,9 @@ def test_imports():
         from langchain.agents import create_agent
         print("✅ langchain.agents.create_agent 导入成功")
 
+        from langchain.chat_models import init_chat_model
+        print("✅ langchain.chat_models.init_chat_model 导入成功")
+
         from langchain_anthropic import ChatAnthropic
         print("✅ langchain_anthropic 导入成功")
 
@@ -74,7 +77,7 @@ def test_agent_structure():
     try:
         # 模拟智能体类的基本结构
         class MockModernLangChainAgent:
-            def __init__(self, model_provider: str = "anthropic"):
+            def __init__(self, model_provider: str = "zhipu"):
                 self.model_provider = model_provider
                 print(f"✅ 智能体初始化成功，使用模型: {model_provider}")
 
@@ -90,11 +93,16 @@ def test_agent_structure():
                 print(f"✅ run 方法结构正确，输入: {user_input}")
                 return "模拟回复"
 
-        # 测试实例化
-        mock_agent = MockModernLangChainAgent("anthropic")
-        mock_agent._initialize_model()
-        mock_agent._create_agent()
-        mock_agent.run("测试输入")
+        # 测试不同模型的实例化
+        model_providers = ["zhipu", "anthropic", "openai"]
+
+        for provider in model_providers:
+            print(f"  📱 测试 {provider} 模型...")
+            mock_agent = MockModernLangChainAgent(provider)
+            mock_agent._initialize_model()
+            mock_agent._create_agent()
+            mock_agent.run("测试输入")
+            print(f"  ✅ {provider} 模型测试通过")
 
         return True
 
