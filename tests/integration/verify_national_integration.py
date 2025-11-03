@@ -14,8 +14,8 @@ from pathlib import Path
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from enhanced_place_matcher import EnhancedPlaceMatcher
-from enhanced_weather_service import EnhancedCaiyunWeatherService
+from services.matching.enhanced_place_matcher import EnhancedPlaceMatcher
+from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 
 def test_database_connectivity():
     """测试数据库连接"""

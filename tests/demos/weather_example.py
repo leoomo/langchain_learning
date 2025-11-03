@@ -10,7 +10,7 @@ import sys
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from weather_service import CaiyunWeatherService, get_weather_info
+from services.weather.weather_service import CaiyunWeatherService, get_weather_info
 
 def example_basic_usage():
     """基本使用示例"""

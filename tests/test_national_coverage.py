@@ -16,8 +16,8 @@ import os
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from enhanced_place_matcher import EnhancedPlaceMatcher
-from enhanced_weather_service import EnhancedCaiyunWeatherService
+from services.matching.enhanced_place_matcher import EnhancedPlaceMatcher
+from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 
 # 设置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

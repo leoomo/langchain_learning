@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from weather_service import get_weather_info, CaiyunWeatherService
+from services.weather.weather_service import get_weather_info, CaiyunWeatherService
 from modern_langchain_agent import get_weather
 
 # 加载环境变量

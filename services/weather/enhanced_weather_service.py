@@ -14,7 +14,7 @@ from dataclasses import dataclass, asdict
 
 # 导入自定义组件
 from weather_service import WeatherData, CaiyunWeatherService
-from city_coordinate_db import CityCoordinateDB, PlaceInfo
+from services.matching.city_coordinate_db import CityCoordinateDB, PlaceInfo
 from place_name_matcher import PlaceNameMatcher, MatchResult
 from weather_cache import WeatherCache, get_weather_cache
 

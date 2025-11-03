@@ -17,55 +17,60 @@
 ```
 ├── modern_langchain_agent.py      # 🤖 LangChain 1.0+ 智能体 (主要功能)
 ├── demo_new_tools_agent.py        # 🛠️ 新工具模块集成演示
-├── enhanced_weather_service.py    # 🌤️ 增强天气服务 (全国覆盖)
-├── weather_service.py             # 🌤️ 基础彩云天气 API 服务模块
-├── enhanced_place_matcher.py      # 🧠 智能地名匹配系统
-├── city_coordinate_db.py          # 🗺️ 城市坐标数据库
-├── weather_cache.py               # 💾 多级缓存系统
-├── zhipu_langchain_example.py     # 📚 智谱AI基础集成示例
-├── national_region_database.py    # 🇨🇳 全国地区数据库初始化
-├── coordinate_enrichment.py       # 📍 坐标信息丰富化
-├── 补充缺失重要城市.py            # 🏙️ 补充90个重要城市
-├── 批量修复层级关系.py            # 🔧 批量修复层级关系
-├── test_national_coverage.py      # 🧪 全国覆盖测试脚本
-├── verify_national_integration.py # ✅ 集成验证脚本
-├── core/                          # 🏗️ 核心架构模块 (新增)
+├── core/                          # 🏗️ 核心架构模块
 │   ├── __init__.py                # 核心模块初始化
 │   ├── interfaces.py             # 📋 接口定义 (ITool, IAgent, IService)
 │   ├── base_tool.py              # 🔧 工具基类 (BaseTool, ConfigurableTool)
 │   ├── base_agent.py             # 🤖 智能体基类 (BaseAgent, ManagedAgent)
 │   ├── base_service.py           # 🌐 服务基类 (BaseService, DependentService)
 │   └── registry.py               # 📊 注册器 (ToolRegistry, ServiceRegistry)
-├── tools/                        # 🛠️ 工具模块 (重构)
+├── tools/                        # 🛠️ 工具模块 (新架构)
 │   ├── __init__.py               # 工具模块导出
 │   ├── time_tool.py              # 🕐 时间工具 (TimeTool)
 │   ├── math_tool.py              # 🔢 数学工具 (MathTool)
 │   ├── weather_tool.py           # 🌤️ 天气工具 (WeatherTool)
 │   └── search_tool.py            # 🔍 搜索工具 (SearchTool)
-├── services/                     # 🌐 服务模块 (规划中)
+├── services/                     # 🌐 服务模块 (重组后)
 │   ├── __init__.py               # 服务模块导出
-│   └── weather/                  # 天气服务
-│       ├── __init__.py           # 天气服务导出
-│       ├── weather_service.py    # 基础天气服务
-│       └── enhanced_weather_service.py  # 增强天气服务
-├── agents/                       # 🤖 智能体模块 (规划中)
+│   ├── weather/                  # 🌤️ 天气服务
+│   │   ├── __init__.py           # 天气服务导出
+│   │   ├── weather_service.py    # 基础天气服务
+│   │   ├── enhanced_weather_service.py  # 增强天气服务 (全国覆盖)
+│   │   └── weather_cache.py      # 💾 多级缓存系统
+│   ├── matching/                 # 🧠 匹配服务
+│   │   ├── __init__.py           # 匹配服务导出
+│   │   ├── enhanced_place_matcher.py  # 智能地名匹配系统
+│   │   └── city_coordinate_db.py # 🗺️ 城市坐标数据库
+│   ├── cache/                    # 💾 缓存服务
+│   │   └── __init__.py           # 缓存服务导出
+│   └── database/                 # 🗄️ 数据库服务
+│       └── __init__.py           # 数据库服务导出
+├── agents/                       # 🤖 智能体模块
 │   ├── __init__.py               # 智能体模块导出
 │   └── modern_agent.py           # 现代智能体实现
 ├── data/                         # 📊 数据目录
 │   ├── admin_divisions.db        # 🗄️ SQLite数据库 (3,142+地区)
 │   ├── backup_regions.csv        # 💾 数据备份
-│   └── national_areas_raw.json   # 📋 原始数据
-├── tests/                        # 🧪 测试套件 (重新组织)
+│   ├── national_areas_raw.json   # 📋 原始数据
+│   ├── national_region_database.py    # 🇨🇳 全国地区数据库初始化
+│   └── coordinate_enrichment.py       # 📍 坐标信息丰富化
+├── tests/                        # 🧪 测试套件 (重组后)
 │   ├── README.md                 # 📖 测试目录说明文档
 │   ├── unit/                     # 📋 单元测试
 │   ├── integration/              # 🔗 集成测试
+│   │   └── verify_national_integration.py  # ✅ 集成验证脚本
 │   ├── demos/                    # 🎭 演示脚本
-│   └── weather/                  # 🌤️ 天气专项测试
+│   ├── weather/                  # 🌤️ 天气专项测试
+│   └── test_national_coverage.py # 🧪 全国覆盖测试脚本
 ├── openspec/                     # 📋 OpenSpec 规范管理
 │   ├── changes/                  # 变更提案
 │   │   └── refactor-project-structure/  # 🏗️ 项目结构重构提案
 │   └── AGENTS.md                 # OpenSpec 工作流指南
 ├── docs/                         # 📚 文档目录
+│   ├── QUICK_START.md            # 🚀 5分钟快速体验指南
+│   ├── TOOLS_GUIDE.md            # 🛠️ 详细工具使用指南
+│   ├── API.md                    # 📖 完整API参考文档
+│   ├── CHANGELOG.md              # 📋 版本更新日志
 │   ├── NATIONAL_COVERAGE_COMPLETION_REPORT.md  # 🎯 项目完成报告
 │   └── 其他报告文档...
 ├── .env.example                  # 🔑 环境变量配置示例
@@ -150,16 +155,16 @@ uv run python tests/demos/weather_example.py
 uv run python zhipu_langchain_example.py
 
 # 🇨🇳 初始化全国地区数据库 (首次运行)
-uv run python national_region_database.py
+uv run python data/national_region_database.py
 
 # 📍 丰富坐标信息 (数据库初始化后)
-uv run python coordinate_enrichment.py
+uv run python data/coordinate_enrichment.py
 
 # 🧪 测试全国覆盖功能
-uv run python test_national_coverage.py
+uv run python tests/test_national_coverage.py
 
 # ✅ 验证系统集成
-uv run python verify_national_integration.py
+uv run python tests/integration/verify_national_integration.py
 ```
 
 ### 5. 测试指南

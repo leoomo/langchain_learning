@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-from enhanced_weather_service import EnhancedCaiyunWeatherService, get_enhanced_weather_info
+from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService, get_enhanced_weather_info
 from modern_langchain_agent import ModernLangChainAgent
 
 

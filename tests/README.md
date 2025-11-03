@@ -7,8 +7,10 @@
 ```
 tests/
 ├── README.md                 # 本说明文档
+├── test_national_coverage.py # 全国覆盖测试脚本
 ├── unit/                     # 单元测试
 ├── integration/              # 集成测试
+│   └── verify_national_integration.py  # 集成验证脚本
 ├── demos/                    # 演示脚本
 └── weather/                  # 天气功能专项测试
 ```
@@ -42,6 +44,8 @@ uv run python tests/unit/test_weather_service.py
 - `test_integrated_weather_agent.py` - 智能体天气查询功能集成测试
 - `test_agent_conversation.py` - 智能体对话功能测试
 - `test_agent_weather_simulation.py` - 模拟智能体天气查询测试
+- `test_enhanced_weather_national_coverage.py` - 增强天气全国覆盖测试
+- `verify_national_integration.py` - 集成验证脚本
 
 **运行方式：**
 ```bash

@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-11-04
+
+### 🗂️ Project Structure Reorganization
+
+### 🔄 Changed
+- **Root Directory Cleanup**
+  - Moved 9 Python files from root directory to appropriate module directories
+  - Root directory now contains only 2 core files: `modern_langchain_agent.py` and `demo_new_tools_agent.py`
+  - Improved project organization and aesthetic appeal
+
+- **Services Module Reorganization (`services/`)**
+  - **Weather Services (`services/weather/`)**:
+    - Moved `weather_service.py`, `enhanced_weather_service.py`, `weather_cache.py`
+  - **Matching Services (`services/matching/`)**:
+    - Moved `enhanced_place_matcher.py`, `city_coordinate_db.py`
+  - Added new service subdirectories: `cache/`, `database/`
+
+- **Data Module Organization (`data/`)**
+  - Moved `national_region_database.py`, `coordinate_enrichment.py` to `data/` directory
+  - Centralized database management scripts
+
+- **Test Suite Reorganization (`tests/`)**
+  - Moved `test_national_coverage.py` to `tests/` root
+  - Moved `verify_national_integration.py` to `tests/integration/`
+  - Improved test organization and structure
+
+### 🔧 Fixed
+- Updated all import paths across the project to reflect new file locations
+- Fixed import references in `modern_langchain_agent.py`
+- Updated import paths in all test files and service modules
+- Ensured all functionality remains intact after reorganization
+
+### 📚 Documentation Updates
+- Updated `docs/README.md` with new project structure
+- Updated running commands in documentation to reflect new file paths
+- Added comprehensive file organization documentation
+- Updated CHANGELOG.md to reflect structural changes
+
+### ✅ Compatibility
+- All existing functionality preserved
+- No breaking changes to public APIs
+- Backward compatible import paths maintained where possible
+- All tests pass after reorganization
+
 ## [1.4.0] - 2025-11-03
 
 ### 🏗️ Major Release: Modular Architecture Refactoring

@@ -56,7 +56,7 @@ def get_weather(city: str) -> str:
         包含天气信息的字符串，包括温度、湿度、风速等详细信息
         支持智能地名匹配，可以处理各种地名输入格式
     """
-    from enhanced_weather_service import get_enhanced_weather_info
+    from services.weather.enhanced_weather_service import get_enhanced_weather_info
 
     try:
         return get_enhanced_weather_info(city)
