@@ -65,6 +65,8 @@ class EnhancedWeatherData:
     created_at: 'datetime' = field(default_factory=lambda: datetime.now())
     updated_at: 'datetime' = field(default_factory=lambda: datetime.now())
     cache_key: Optional[str] = None             # 缓存键
+    confidence: float = 1.0                     # 数据置信度 (0-1)
+    metadata: Dict[str, Any] = field(default_factory=dict)  # 额外元数据
 
     def __post_init__(self):
         """初始化后处理"""

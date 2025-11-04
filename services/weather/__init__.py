@@ -7,21 +7,23 @@ LangChain Learning - Weather Service
 from .weather_service import CaiyunWeatherService, WeatherData
 from .enhanced_weather_service import EnhancedCaiyunWeatherService
 from .enhanced_caiyun_weather_service import EnhancedCaiyunWeatherService as NewEnhancedCaiyunWeatherService
+from .datetime_weather_service import DateTimeWeatherService
 
 __all__ = [
     "CaiyunWeatherService",
     "WeatherData",
     "EnhancedCaiyunWeatherService",
     "NewEnhancedCaiyunWeatherService",
+    "DateTimeWeatherService",
     "create_weather_service",
 ]
 
 
-def create_weather_service() -> NewEnhancedCaiyunWeatherService:
+def create_weather_service() -> DateTimeWeatherService:
     """
     创建天气服务实例的工厂函数
 
     Returns:
-        NewEnhancedCaiyunWeatherService: 新的增强版天气服务实例
+        DateTimeWeatherService: 智能路由天气服务实例，支持多种API接口
     """
-    return NewEnhancedCaiyunWeatherService()
+    return DateTimeWeatherService()

@@ -376,11 +376,13 @@ def query_fishing_recommendation(location: str, date: str = None) -> str:
 
             # 最佳时间段
             best_slots = data.get('best_time_slots', [])
+            weather_summaries = data.get('weather_summaries', {})
             if best_slots:
                 response += "🏆 **推荐时间段**:\n"
                 for i, (period, score) in enumerate(best_slots, 1):
                     score_emoji = "🌟" if score >= 80 else "👍" if score >= 60 else "👌"
-                    response += f"  {i}. {period} - {score_emoji} 评分{score:.1f}/100\n"
+                    weather_info = weather_summaries.get(period, "无天气数据")
+                    response += f"  {i}. {score_emoji} {score:.1f}分 - {period} {weather_info}\n"
                 response += "\n"
 
             # 详细分析

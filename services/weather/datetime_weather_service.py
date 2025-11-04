@@ -910,6 +910,179 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
             source="模拟数据"
         )
 
+    # ==================== 新增智能路由方法 ====================
+
+    def __init_router_services(self):
+        """初始化路由服务（延迟初始化）"""
+        if not hasattr(self, '_router_initialized'):
+            try:
+                from .weather_api_router import WeatherApiRouter
+                from .hourly_weather_service import HourlyWeatherService
+                from .daily_weather_service import DailyWeatherService
+                from .simulation_service import SimulationService
+
+                # 初始化路由器
+                self._weather_router = WeatherApiRouter()
+
+                # 初始化服务
+                self._hourly_service = HourlyWeatherService()
+                self._daily_service = DailyWeatherService()
+                self._simulation_service = SimulationService()
+
+                # 设置服务到路由器
+                self._weather_router.set_services(
+                    hourly_service=self._hourly_service,
+                    daily_service=self._daily_service,
+                    simulation_service=self._simulation_service
+                )
+
+                self._router_initialized = True
+                logger.info("智能路由服务初始化完成")
+
+            except Exception as e:
+                logger.error(f"智能路由服务初始化失败: {e}")
+                self._router_initialized = False
+                self._weather_router = None
+
+    async def get_forecast_by_range(self, location_info: dict, date_str: str) -> tuple:
+        """
+        智能范围预报 - 新增核心接口
+        根据时间范围自动选择最优API获取天气预报
+
+        Args:
+            location_info: 地理位置信息
+                - name: 地点名称
+                - lng: 经度
+                - lat: 纬度
+                - adcode: 行政区划代码 (可选)
+            date_str: 查询日期，格式为"YYYY-MM-DD"
+
+        Returns:
+            tuple: (weather_data, status_message, error_code)
+                weather_data: 转换后的天气数据
+                status_message: 状态消息
+                error_code: 错误码 (0=成功, 1=缓存命中, >0=各种错误)
+        """
+        try:
+            # 延迟初始化路由服务
+            self.__init_router_services()
+
+            if not self._weather_router:
+                return self._create_error_enhanced_weather_data(
+                    location_info.get('name', 'unknown'),
+                    "智能路由服务未初始化"
+                ), "智能路由服务不可用", WeatherServiceErrorCode.API_ERROR
+
+            # 调用智能路由
+            weather_result = await self._weather_router.get_forecast(location_info, date_str)
+
+            # 转换为兼容格式
+            if weather_result.is_successful():
+                # 将新的WeatherResult转换为传统的EnhancedWeatherData
+                enhanced_data = self._convert_weather_result_to_enhanced(weather_result, location_info['name'])
+
+                # 确定状态消息
+                if weather_result.cached:
+                    status_msg = f"智能路由缓存数据（{weather_result.data_source}）"
+                    error_code = WeatherServiceErrorCode.CACHE_HIT
+                else:
+                    status_msg = f"智能路由API数据（{weather_result.data_source}）"
+                    error_code = WeatherServiceErrorCode.SUCCESS
+
+                return enhanced_data, status_msg, error_code
+            else:
+                # 返回错误
+                return self._create_error_enhanced_weather_data(
+                    location_info.get('name', 'unknown'),
+                    weather_result.error_message
+                ), f"智能路由错误: {weather_result.error_message}", WeatherServiceErrorCode.API_ERROR
+
+        except Exception as e:
+            logger.error(f"智能范围预报失败: {e}")
+            return self._create_error_enhanced_weather_data(
+                location_info.get('name', 'unknown'),
+                f"智能范围预报异常: {str(e)}"
+            ), f"智能范围预报异常: {str(e)}", WeatherServiceErrorCode.API_ERROR
+
+    def _convert_weather_result_to_enhanced(self, weather_result, place_name: str):
+        """
+        将新的WeatherResult转换为传统的EnhancedWeatherData格式
+        """
+        if not weather_result.hourly_data:
+            return self._create_error_enhanced_weather_data(place_name, "无有效天气数据")
+
+        # 计算平均值（使用24小时数据的平均）
+        temperatures = [h.get('temperature', 20) for h in weather_result.hourly_data if h.get('temperature') is not None]
+        humidities = [h.get('humidity', 60) for h in weather_result.hourly_data if h.get('humidity') is not None]
+        wind_speeds = [h.get('wind_speed', 3) for h in weather_result.hourly_data if h.get('wind_speed') is not None]
+        wind_directions = [h.get('wind_direction', 180) for h in weather_result.hourly_data if h.get('wind_direction') is not None]
+
+        # 获取主要天气状况
+        weather_conditions = [h.get('weather', '多云') for h in weather_result.hourly_data]
+        primary_weather = max(set(weather_conditions), key=weather_conditions.count) if weather_conditions else '多云'
+
+        # 计算体感温度
+        avg_temp = sum(temperatures) / len(temperatures) if temperatures else 20
+        avg_humidity = sum(humidities) / len(humidities) if humidities else 60
+        avg_wind_speed = sum(wind_speeds) / len(wind_speeds) if wind_speeds else 3
+
+        # 简单体感温度计算
+        apparent_temp = avg_temp - (avg_humidity - 50) * 0.1 - avg_wind_speed * 0.2
+
+        # 构建描述
+        temp_min, temp_max = weather_result.get_temperature_range()
+        description = f"{primary_weather}，温度范围{temp_min:.1f}-{temp_max:.1f}°C"
+
+        # 添加数据源信息
+        if weather_result.data_source:
+            description += f"（来源：{weather_result.data_source}）"
+
+        return EnhancedWeatherData(
+            temperature=round(avg_temp, 1),
+            apparent_temperature=round(apparent_temp, 1),
+            humidity=round(avg_humidity, 1),
+            pressure=1013.0,  # 使用默认气压
+            wind_speed=round(avg_wind_speed, 1),
+            wind_direction=round(sum(wind_directions) / len(wind_directions), 1) if wind_directions else 180.0,
+            condition=primary_weather,
+            description=description,
+            location=place_name,
+            timestamp=weather_result.timestamp.timestamp(),
+            source=weather_result.data_source,
+            datetime=weather_result.timestamp,
+            date_str=weather_result.timestamp.strftime('%Y-%m-%d'),
+            time_period=None,
+            data_type="intelligent_forecast",
+            forecast_hours=24,
+            is_aggregated=True,
+            api_source="intelligent_router",
+            api_version="v2.6",
+            original_response=None,
+            created_at=weather_result.timestamp,
+            updated_at=weather_result.timestamp,
+            cache_key=None,
+            confidence=weather_result.confidence,
+            metadata=weather_result.metadata
+        )
+
+    def get_router_stats(self) -> dict:
+        """获取智能路由统计信息"""
+        if hasattr(self, '_weather_router') and self._weather_router:
+            return self._weather_router.get_stats()
+        else:
+            return {"error": "智能路由未初始化"}
+
+    def health_check_router(self) -> dict:
+        """智能路由健康检查"""
+        if hasattr(self, '_weather_router') and self._weather_router:
+            return self._weather_router.health_check()
+        else:
+            return {
+                "status": "unavailable",
+                "message": "智能路由未初始化",
+                "timestamp": datetime.now().isoformat()
+            }
+
 
 def create_datetime_weather_service(api_key: Optional[str] = None) -> DateTimeWeatherService:
     """创建日期时间天气服务实例"""

@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import json
 import logging
+import math
+import random
 
 # 导入现有的天气工具
 try:
@@ -52,6 +54,9 @@ class FishingRecommendation:
     detailed_analysis: str                     # 详细分析
     hourly_conditions: List[FishingCondition] # 每小时条件
     summary: str                               # 总结建议
+    weather_overview: Optional[str] = None     # 天气概况
+    temperature_range: Optional[str] = None     # 温度范围
+    weather_summaries: Optional[Dict[str, str]] = None  # 各时间段天气摘要
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
@@ -69,7 +74,10 @@ class FishingRecommendation:
                     "overall_score": cond.overall_score
                 } for cond in self.hourly_conditions
             ],
-            "summary": self.summary
+            "summary": self.summary,
+            "weather_overview": self.weather_overview,
+            "temperature_range": self.temperature_range,
+            "weather_summaries": self.weather_summaries
         }
 
 
@@ -567,101 +575,93 @@ class FishingAnalyzer:
                 tomorrow = datetime.now() + timedelta(days=1)
                 date = tomorrow.strftime("%Y-%m-%d")
 
-            # 获取指定日期的小时级天气预报
-            # 智能查询策略：根据日期远近选择最优API
-            result = None
-            days_from_now = (datetime.strptime(date, "%Y-%m-%d") - datetime.now()).days
+            # 使用新的智能路由获取天气预报
+            try:
+                self._logger.debug(f"使用智能路由查询天气: {location}, {date}")
 
-            if days_from_now <= 3:
-                # 3天内：使用hourly_forecast API（最准确）
-                try:
-                    self._logger.debug(f"使用hourly_forecast查询{days_from_now}内天气: {location}, {date}")
-                    result = await self.weather_tool.execute(
-                        operation="hourly_forecast",
+                # 获取地理位置信息
+                from services.service_manager import get_coordinate_service
+                coordinate_service = get_coordinate_service()
+                coordinate_result = coordinate_service.get_coordinate(location)
+
+                if not coordinate_result:
+                    self._logger.error(f"无法获取地理位置信息: {location}")
+                    return FishingRecommendation(
                         location=location,
-                        hours=24
+                        date=date,
+                        best_time_slots=[],
+                        detailed_analysis=f"无法获取地理位置信息: {location}",
+                        hourly_conditions=[],
+                        summary="建议检查地点名称是否正确"
                     )
-                    if result.success:
-                        self._logger.info(f"hourly_forecast 查询成功: {location}, {date}")
-                    else:
-                        self._logger.debug(f"hourly_forecast查询失败: {result.error}")
-                except Exception as e:
-                    self._logger.debug(f"hourly_forecast 查询异常: {e}")
 
-            elif days_from_now <= 7:
-                # 3-7天：使用7天预报API（效率最优）
-                try:
-                    self._logger.debug(f"使用7天预报API查询{days_from_now}天天气: {location}, {date}")
-                    from services.weather.datetime_weather_service import DateTimeWeatherService
-                    from dotenv import load_dotenv
-                    import os
+                # 提取坐标信息
+                if hasattr(coordinate_result, 'longitude'):
+                    lng = coordinate_result.longitude
+                    lat = coordinate_result.latitude
+                else:
+                    # 如果是字典格式
+                    lng = coordinate_result.get('lng', 0)
+                    lat = coordinate_result.get('lat', 0)
 
-                    load_dotenv()
-                    api_key = os.getenv('CAIYUN_API_KEY')
+                location_info = {
+                    'name': location,
+                    'lng': lng,
+                    'lat': lat,
+                    'adcode': getattr(coordinate_result, 'adcode', '')
+                }
 
-                    if api_key:
-                        weather_service = DateTimeWeatherService(api_key=api_key)
-                        daily_data, status_message, error_code = weather_service.get_daily_forecast(location, 7)
+                # 使用智能路由获取天气
+                weather_data, status_message, error_code = await self.enhanced_weather_service.get_forecast_by_range(
+                    location_info, date
+                )
 
-                        if daily_data and error_code in [0, 1]:  # 0=成功, 1=缓存命中
-                            # 从7天预报数据中提取目标日期的天气
-                            days_diff = days_from_now
-                            daily_forecast_data = self._extract_daily_forecast_data(daily_data, days_diff)
-                            if daily_forecast_data:
-                                result = ToolResult(
-                                    success=True,
-                                    data=daily_forecast_data,
-                                    metadata={
-                                        "operation": "daily_forecast",
-                                        "source": "彩云天气API (7天预报)",
-                                        "status_message": status_message,
-                                        "error_code": error_code
-                                    }
-                                )
-                                self._logger.info(f"7天预报API查询成功: {location}, {date} - 数据已解析")
-                            else:
-                                self._logger.warning(f"7天预报数据解析失败: {location}, {date} - days_diff={days_diff}")
-                        else:
-                            self._logger.warning(f"7天预报API失败: error_code={error_code}")
-                except Exception as e:
-                    self._logger.debug(f"7天预报API查询异常: {e}")
-            else:
-                self._logger.debug(f"日期{date}超出7天预报范围，将使用模拟数据: {location}")
-
-            # 如果所有API都失败，最后尝试 hourly_forecast 作为后备
-            if not result or not result.success:
-                try:
-                    self._logger.debug(f"后备查询hourly_forecast: {location}, {date}")
-                    result = await self.weather_tool.execute(
-                        operation="hourly_forecast",
+                if weather_data and error_code in [0, 1]:  # 0=成功, 1=缓存命中
+                    result = ToolResult(
+                        success=True,
+                        data=weather_data,
+                        metadata={
+                            "operation": "intelligent_router",
+                            "source": "智能路由系统",
+                            "status_message": status_message,
+                            "error_code": error_code
+                        }
+                    )
+                    self._logger.info(f"智能路由查询成功: {location}, {date} - {status_message}")
+                else:
+                    self._logger.error(f"智能路由查询失败: {location}, {date} - {status_message}")
+                    return FishingRecommendation(
                         location=location,
-                        hours=24
+                        date=date,
+                        best_time_slots=[],
+                        detailed_analysis=f"天气查询失败: {status_message}",
+                        hourly_conditions=[],
+                        summary="建议查询其他日期或地点"
                     )
-                except Exception as e:
-                    self._logger.debug(f"后备hourly_forecast查询失败: {e}")
 
-            # 注意：查询逻辑已在上面优化，避免重复查询
-            # 这里不需要额外的查询逻辑，因为已经在上面进行了智能查询
-
-            if not result.success:
+            except Exception as e:
+                self._logger.error(f"智能路由查询异常: {location}, {date} - {e}")
                 return FishingRecommendation(
                     location=location,
                     date=date,
                     best_time_slots=[],
-                    detailed_analysis=f"无法获取天气数据: {result.error}",
+                    detailed_analysis=f"天气服务异常: {str(e)}",
                     hourly_conditions=[],
-                    summary="建议查询其他日期或地点"
+                    summary="建议稍后重试或联系技术支持"
                 )
 
             # 分析每小时的条件
             hourly_conditions = []
 
-            # 根据不同的数据来源处理数据
-            operation = result.metadata.get("operation", "")
+            # 根据智能路由的数据处理数据
+            operation = result.metadata.get("operation", "intelligent_router")
             weather_data = result.data
 
             if not weather_data:
                 hourly_data = []
+            elif operation == "intelligent_router":
+                # 智能路由返回的是EnhancedWeatherData格式，需要转换为小时数据
+                hourly_data = self._generate_hourly_data_from_intelligent_router(weather_data, date)
             elif operation == "daily_forecast":
                 # daily_forecast 返回的是7天预报数据，需要转换为小时数据
                 hourly_data = self._generate_hourly_data_from_daily(weather_data, date)
@@ -716,16 +716,31 @@ class FishingAnalyzer:
             # 生成总结建议
             summary = self._generate_summary(best_time_slots, hourly_conditions)
 
+            # 生成天气概况和温度范围
+            weather_overview = self._generate_weather_overview(hourly_conditions)
+            temperature_range = self._generate_temperature_range(hourly_conditions)
+
+            # 生成各时间段的天气摘要
+            weather_summaries = {}
+            for period_name, score in best_time_slots:
+                weather_summaries[period_name] = self._get_period_weather_summary(period_name, hourly_conditions)
+
             return FishingRecommendation(
                 location=location,
                 date=date,
                 best_time_slots=best_time_slots,
                 detailed_analysis=detailed_analysis,
                 hourly_conditions=hourly_conditions,
-                summary=summary
+                summary=summary,
+                weather_overview=weather_overview,
+                temperature_range=temperature_range,
+                weather_summaries=weather_summaries
             )
 
         except Exception as e:
+            import traceback
+            error_details = f"分析过程中出现错误: {str(e)}\n详细错误: {traceback.format_exc()}"
+            self._logger.error(f"钓鱼分析异常: {error_details}")
             return FishingRecommendation(
                 location=location,
                 date=date or "未知",
@@ -821,6 +836,215 @@ class FishingAnalyzer:
                 summary_parts.append("**注意**: 风力较大，请注意安全并调整钓法。")
 
         return "\n".join(summary_parts)
+
+    def _get_period_weather_summary(self, period_name: str, hourly_conditions: List[FishingCondition]) -> str:
+        """
+        生成指定时间段的天气摘要
+
+        Args:
+            period_name: 时间段名称（如"早上"、"上午"等）
+            hourly_conditions: 每小时条件列表
+
+        Returns:
+            天气摘要字符串（如"18.2°C 多云 风力3.5km/h 湿度65%"）
+        """
+        # 筛选指定时间段的小时条件
+        period_conditions = [
+            cond for cond in hourly_conditions
+            if cond.period_name == period_name
+        ]
+
+        if not period_conditions:
+            return "无数据"
+
+        # 计算平均值
+        avg_temp = sum(cond.temperature for cond in period_conditions) / len(period_conditions)
+        avg_wind = sum(cond.wind_speed for cond in period_conditions) / len(period_conditions)
+        avg_humidity = sum(cond.humidity for cond in period_conditions) / len(period_conditions)
+
+        # 获取最常见的天气状况
+        weather_counts = {}
+        for cond in period_conditions:
+            weather = cond.condition
+            weather_counts[weather] = weather_counts.get(weather, 0) + 1
+
+        most_common_weather = max(weather_counts.items(), key=lambda x: x[1])[0]
+
+        # 翻译天气代码为中文
+        weather_translation = {
+            'CLEAR_DAY': '晴天',
+            'CLEAR_NIGHT': '晴夜',
+            'PARTLY_CLOUDY_DAY': '多云',
+            'PARTLY_CLOUDY_NIGHT': '多云',
+            'CLOUDY': '阴天',
+            'LIGHT_HAZE': '轻度雾霾',
+            'MODERATE_HAZE': '中度雾霾',
+            'HEAVY_HAZE': '重度雾霾',
+            'LIGHT_RAIN': '小雨',
+            'MODERATE_RAIN': '中雨',
+            'HEAVY_RAIN': '大雨',
+            'STORM_RAIN': '暴雨',
+            'LIGHT_SNOW': '小雪',
+            'MODERATE_SNOW': '中雪',
+            'HEAVY_SNOW': '大雪',
+            'STORM_SNOW': '暴雪',
+            'DUST': '浮尘',
+            'SAND': '沙尘',
+            'WIND': '大风'
+        }
+
+        chinese_weather = weather_translation.get(most_common_weather, most_common_weather)
+
+        # 格式化天气摘要
+        return f"{avg_temp:.1f}°C {chinese_weather} 风力{avg_wind:.1f}km/h 湿度{avg_humidity:.0f}%"
+
+    def _generate_weather_overview(self, hourly_conditions: List[FishingCondition]) -> str:
+        """生成天气概况"""
+        if not hourly_conditions:
+            return "无天气数据"
+
+        # 统计各种天气条件
+        weather_counts = {}
+        for condition in hourly_conditions:
+            weather = condition.condition
+            weather_counts[weather] = weather_counts.get(weather, 0) + 1
+
+        # 找出最主要的天气状况
+        main_weather = max(weather_counts.items(), key=lambda x: x[1])[0]
+        percentage = weather_counts[main_weather] / len(hourly_conditions) * 100
+
+        # 转换天气代码为中文
+        weather_translation = {
+            'CLEAR_DAY': '晴',
+            'CLEAR_NIGHT': '晴',
+            'PARTLY_CLOUDY_DAY': '多云',
+            'PARTLY_CLOUDY_NIGHT': '多云',
+            'CLOUDY': '阴',
+            'LIGHT_RAIN': '小雨',
+            'MODERATE_RAIN': '中雨',
+            'HEAVY_RAIN': '大雨',
+            'STORM': '暴雨',
+            'LIGHT_SNOW': '小雪',
+            'MODERATE_SNOW': '中雪',
+            'HEAVY_SNOW': '大雪',
+            'FOGGY': '雾'
+        }
+
+        chinese_weather = weather_translation.get(main_weather, main_weather)
+        return f"{chinese_weather}(占比{percentage:.0f}%)"
+
+    def _generate_temperature_range(self, hourly_conditions: List[FishingCondition]) -> str:
+        """生成温度范围"""
+        if not hourly_conditions:
+            return "无温度数据"
+
+        temperatures = [condition.temperature for condition in hourly_conditions]
+        min_temp = min(temperatures)
+        max_temp = max(temperatures)
+
+        return f"{min_temp:.1f}°C - {max_temp:.1f}°C"
+
+    def _generate_hourly_data_from_intelligent_router(self, weather_data, date: str) -> List[Dict]:
+        """
+        从智能路由的EnhancedWeatherData生成24小时数据
+
+        Args:
+            weather_data: 智能路由返回的EnhancedWeatherData
+            date: 日期字符串
+
+        Returns:
+            24小时数据列表
+        """
+        hourly_data = []
+
+        # 从EnhancedWeatherData中提取基础天气信息
+        temp_avg = getattr(weather_data, 'temperature', 20.0)
+        condition = getattr(weather_data, 'condition', '多云')
+        wind_speed = getattr(weather_data, 'wind_speed', 3.0)
+        humidity = getattr(weather_data, 'humidity', 60.0)
+        pressure = getattr(weather_data, 'pressure', 1013.0)
+
+        # 获取置信度
+        confidence = getattr(weather_data, 'confidence', 1.0)
+
+        # 获取元数据中的额外信息
+        metadata = getattr(weather_data, 'metadata', {})
+        data_source = metadata.get('data_source', 'unknown')
+
+        # 根据日期计算days_from_now，而不是从元数据获取
+        from services.weather.utils.datetime_utils import calculate_days_from_now
+        try:
+            days_from_now = calculate_days_from_now(date)
+        except:
+            days_from_now = 0
+
+        # 根据数据源调整数据质量
+        if data_source == 'hourly_api':
+            data_quality = 1.0
+            temp_variation = 5.0
+        elif data_source == 'daily_api':
+            data_quality = 0.85
+            temp_variation = 8.0
+        elif data_source == 'simulation':
+            data_quality = 0.6
+            temp_variation = 12.0
+        else:
+            data_quality = 0.7
+            temp_variation = 10.0
+
+        # 获取温度范围
+        temp_min = temp_avg - temp_variation / 2
+        temp_max = temp_avg + temp_variation / 2
+
+        # 生成24小时数据，支持相对日期
+        try:
+            target_date = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            # 处理相对日期
+            from services.weather.utils.datetime_utils import calculate_days_from_now
+            days_from_now = calculate_days_from_now(date)
+            target_date = datetime.now() + timedelta(days=days_from_now)
+
+        for hour in range(24):
+            # 计算小时的温度变化
+            if 6 <= hour <= 14:
+                # 上午到下午，温度上升
+                progress = (hour - 6) / 8
+                temp = temp_min + (temp_max - temp_min) * progress
+            else:
+                # 下午到次日早晨，温度下降
+                if hour > 14:
+                    progress = (24 - hour) / 10
+                else:  # 0-6点
+                    progress = (hour + 10) / 10
+                temp = temp_min + (temp_max - temp_min) * progress
+
+            # 添加随机变化
+            temp += random.gauss(0, temp_variation * 0.1)
+
+            # 计算风速和湿度的变化
+            hour_wind = wind_speed * (0.7 + 0.6 * math.sin(hour * math.pi / 12))
+            hour_humidity = humidity - (temp - temp_avg) * 2 + random.gauss(0, 5)
+            hour_humidity = max(20, min(95, hour_humidity))
+
+            # 根据时间和天气状况调整
+            hour_data = {
+                'datetime': target_date.replace(hour=hour, minute=0, second=0).isoformat(),
+                'temperature': round(temp, 1),
+                'condition': condition,
+                'wind_speed': round(max(0, hour_wind), 1),
+                'humidity': round(hour_humidity, 1),
+                'pressure': round(pressure + random.gauss(0, 5), 1),
+                'hour': hour,
+                'data_source': data_source,
+                'confidence': confidence * data_quality,
+                'days_from_now': days_from_now
+            }
+
+            hourly_data.append(hour_data)
+
+        self._logger.debug(f"从智能路由数据生成了{len(hourly_data)}小时数据: {data_source}")
+        return hourly_data
 
 
 # 全局分析器实例
