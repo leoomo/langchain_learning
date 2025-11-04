@@ -625,8 +625,43 @@ class WeatherTool(ConfigurableTool):
             )
 
     def _get_location_coordinates(self, location: str) -> Optional[Tuple[float, float]]:
-        """获取位置坐标"""
-        return self._city_coordinates.get(location.strip())
+        """获取位置坐标（使用增强版服务）"""
+        # 首先尝试从预定义城市坐标中查找
+        coords = self._city_coordinates.get(location.strip())
+        if coords:
+            return coords
+
+        # 如果预定义中没有，使用增强版天气服务（支持高德API）
+        try:
+            # 使用绝对导入
+            import sys
+            from pathlib import Path
+            project_root = Path(__file__).parent.parent
+            sys.path.insert(0, str(project_root))
+
+            from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
+            if not hasattr(self, '_enhanced_service'):
+                self._enhanced_service = EnhancedCaiyunWeatherService()
+                self._logger.info("增强版天气服务已初始化")
+
+            coords = self._enhanced_service.get_coordinates(location.strip())
+            if coords:
+                # 将结果缓存到城市坐标字典中（内存缓存）
+                self._city_coordinates[location.strip()] = coords
+                self._logger.debug(f"坐标已缓存到内存: {location.strip()} -> {coords}")
+                return coords
+            else:
+                self._logger.warning(f"增强版天气服务未能获取坐标: {location.strip()}")
+        except Exception as e:
+            self._logger.error(f"增强版坐标查询失败: {e}")
+            import traceback
+            self._logger.debug(traceback.format_exc())
+        finally:
+            # 清理sys.path
+            if 'project_root' in locals() and str(project_root) in sys.path:
+                sys.path.remove(str(project_root))
+
+        return None
 
     async def _call_weather_api(self, longitude: float, latitude: float, location: str) -> WeatherData:
         """调用天气API"""

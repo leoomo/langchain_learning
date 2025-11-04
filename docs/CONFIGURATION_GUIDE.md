@@ -23,6 +23,17 @@ cp .env.example .env
 # 获取方式: https://www.caiyunapp.com/
 # 免费注册后可获得 API 密钥，支持一定次数的免费调用
 CAIYUN_API_KEY=your-caiyun-api-key-here
+
+# 高德地图 API 密钥 (用于坐标查询服务)
+# 获取方式: https://console.amap.com/dev/key/app
+# 注册成为开发者并创建 Web 服务 API 应用
+AMAP_API_KEY=your-amap-api-key-here
+
+# 调试日志开关 (全局日志控制)
+# true/false, 1/0, yes/no, on/off - 支持多种格式
+# 默认值: true (开启详细调试日志)
+# 生产环境建议设置为: false (关闭详细日志)
+DEBUG_LOGGING=true
 ```
 
 将 `your-caiyun-api-key-here` 替换为您实际的 API 密钥。

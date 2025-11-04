@@ -7,6 +7,7 @@
 import os
 import json
 import requests
+import time
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Union
@@ -211,7 +212,7 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
                 "data": asdict(weather_data),
                 "source": source_message,
                 "coordinates": coordinates,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": time.time()
             }
 
             # 设置不同的缓存时间
@@ -323,7 +324,7 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
                     "data": asdict(period_data),
                     "source": source_message,
                     "coordinates": coordinates,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": time.time()
                 }
                 self.cache.set(cache_key, cache_data, ttl=3600, extra_params={"type": "weather_datetime"})
 
@@ -406,7 +407,7 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
                     "data": asdict(forecast),
                     "source": source_message,
                     "coordinates": coordinates,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": time.time()
                 }
                 self.cache.set(cache_key, cache_data, ttl=3600, extra_params={"type": "hourly_forecast"})
 

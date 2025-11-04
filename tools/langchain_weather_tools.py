@@ -11,11 +11,15 @@ import logging
 
 from tools.weather_tool import WeatherTool
 from tools.fishing_analyzer import find_best_fishing_time
+from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 
 logger = logging.getLogger(__name__)
 
 # 创建全局天气工具实例
 weather_tool = WeatherTool()
+
+# 创建增强版天气服务实例（用于坐标查询）
+enhanced_weather_service = EnhancedCaiyunWeatherService()
 
 
 @tool

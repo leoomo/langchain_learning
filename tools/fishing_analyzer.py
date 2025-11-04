@@ -12,11 +12,14 @@ import json
 # 导入现有的天气工具
 try:
     from .weather_tool import WeatherTool
+    from ..services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 except ImportError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent))
     from weather_tool import WeatherTool
+    sys.path.append(str(Path(__file__).parent.parent))
+    from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 
 
 @dataclass
@@ -74,7 +77,9 @@ class FishingAnalyzer:
 
     def __init__(self):
         """初始化钓鱼分析器"""
+        # 使用增强版天气服务，支持高德API坐标查询
         self.weather_tool = WeatherTool()
+        self.enhanced_weather_service = EnhancedCaiyunWeatherService()
 
         # 钓鱼最佳条件参数
         self.optimal_temp_range = (15, 25)        # 最佳温度范围

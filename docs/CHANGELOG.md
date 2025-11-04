@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2025-11-04
+
+### 🔧 Bug Fixes
+
+#### Enhanced Cache System Reliability
+- **Fixed datetime serialization issues**: Resolved "Object of type datetime is not JSON serializable" errors
+- **Fixed open function conflicts**: Resolved "name 'open' is not defined" errors in cache operations
+- **Unified timestamp format**: Standardized all cache timestamps to Unix time format (float) for consistency
+- **Enhanced error debugging**: Added detailed caller method tracking for better error diagnosis
+
+#### Cache Performance Improvements
+- **Custom serialization handlers**: Implemented robust datetime and complex object serialization
+- **Graceful error handling**: Improved cache saving to skip unserializable entries without data loss
+- **Detailed error reporting**: Enhanced error messages with method context and stack traces
+- **Cache integrity validation**: Added automatic validation of serialized data consistency
+
+### 📚 Documentation Updates
+- **Updated cache configuration**: Enhanced environment variable documentation for debug logging control
+- **Improved error handling guide**: Added troubleshooting section for cache serialization issues
+- **Enhanced API documentation**: Updated coordinate service documentation with new logging features
+
+### 🔍 Technical Improvements
+- **BusinessLogger class**: Created unified logging system with DEBUG_LOGGING environment variable control
+- **Cache serialization**: Added `_serialize_value()` and `_deserialize_value()` methods for datetime handling
+- **Error diagnostics**: Enhanced `_save_file_cache()` with detailed caller method tracking
+- **Import reliability**: Added builtins module imports to prevent function name conflicts
+
 ## [1.4.3] - 2025-11-04
 
 ### 🎯 New Features

@@ -17,6 +17,7 @@ from .weather_service import WeatherData, CaiyunWeatherService
 from ..matching.city_coordinate_db import CityCoordinateDB, PlaceInfo
 from ..matching.enhanced_place_matcher import EnhancedPlaceMatcher
 from .weather_cache import WeatherCache, get_weather_cache
+from ..coordinate.amap_coordinate_service import AmapCoordinateService
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
         self.coordinate_db = CityCoordinateDB()
         self.place_matcher = EnhancedPlaceMatcher()
         self.cache = get_weather_cache()
+        self.amap_service = AmapCoordinateService()
 
         # 连接数据库
         self.place_matcher.connect()
@@ -51,6 +53,7 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
     def get_coordinates(self, place_name: str) -> Optional[Tuple[float, float]]:
         """
         获取地名坐标（增强版本，支持全国地区）
+        查询优先级: 1.本地数据库 -> 2.高德API -> 3.原有逻辑降级
 
         Args:
             place_name: 地名（支持省、市、县、乡各级）
@@ -62,13 +65,16 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
             return None
 
         # 1. 检查缓存
-        cache_key = f"coordinates:{place_name}"
+        cache_key = self.cache._generate_key(place_name, {"type": "coordinates"})
         cached_coords = self.cache.get(place_name, extra_params={"type": "coordinates"})
+
+        logger.debug(f"缓存查询: place={place_name}, key={cache_key}, result={cached_coords}")
+
         if cached_coords:
-            logger.debug(f"从缓存获取坐标: {place_name} -> {cached_coords}")
+            logger.info(f"从缓存获取坐标: {place_name} -> {cached_coords}")
             return cached_coords
 
-        # 2. 智能地名匹配
+        # 2. 优先查询本地数据库（智能地名匹配）
         match_result = self.place_matcher.match_place(place_name)
         if match_result:
             coords = (match_result['longitude'], match_result['latitude'])
@@ -76,19 +82,44 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
             # 缓存结果（缓存1小时）
             self.cache.set(place_name, coords, ttl=3600, extra_params={"type": "coordinates"})
 
-            logger.info(f"智能匹配成功: {place_name} -> {match_result['name']} "
+            logger.info(f"本地数据库匹配成功: {place_name} -> {match_result['name']} "
                        f"({coords[0]:.4f}, {coords[1]:.4f}) "
                        f"级别: {match_result['level_name']}")
 
             return coords
 
-        # 3. 降级到原有逻辑
-        logger.warning(f"智能匹配失败: {place_name}，降级到原有坐标查询")
+        # 3. 本地数据库无匹配，查询高德API
+        logger.info(f"本地数据库无匹配: {place_name}，尝试高德API查询")
+        try:
+            amap_result = self.amap_service.get_coordinate(place_name)
+            if amap_result:
+                coords = (amap_result.longitude, amap_result.latitude)
+
+                # 缓存结果（缓存1小时）
+                cache_key = self.cache._generate_key(place_name, {"type": "coordinates"})
+                self.cache.set(place_name, coords, ttl=3600, extra_params={"type": "coordinates"})
+
+                logger.info(f"高德API查询成功: {place_name} -> "
+                           f"({coords[0]:.4f}, {coords[1]:.4f}) "
+                           f"级别: {amap_result.level}")
+                logger.info(f"坐标已缓存: key={cache_key}, place={place_name}")
+
+                return coords
+            else:
+                logger.warning(f"高德API查询失败: {place_name}")
+        except Exception as e:
+            logger.error(f"高德API查询异常: {place_name}, error={e}")
+
+        # 4. 高德API也失败，降级到原有逻辑
+        logger.warning(f"高德API查询失败: {place_name}，降级到原有坐标查询")
         original_coords = super().get_coordinates(place_name)
 
         if original_coords:
             # 缓存原有坐标
             self.cache.set(place_name, original_coords, ttl=3600, extra_params={"type": "coordinates"})
+            logger.info(f"原有逻辑查询成功: {place_name} -> ({original_coords[0]:.4f}, {original_coords[1]:.4f})")
+        else:
+            logger.warning(f"所有查询方式都失败: {place_name}")
 
         return original_coords
 
@@ -279,6 +310,9 @@ class EnhancedCaiyunWeatherService(CaiyunWeatherService):
                 self.coordinate_db.close()
             if hasattr(self, 'place_matcher'):
                 self.place_matcher.close()
+            # 保存缓存到文件
+            if hasattr(self, 'cache') and hasattr(self.cache, '_save_file_cache'):
+                self.cache._save_file_cache()
         except:
             pass
 

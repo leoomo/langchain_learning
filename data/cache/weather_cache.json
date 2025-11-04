@@ -1,28 +1,1545 @@
 {
-  "8e4a3f95e5d8aaf0": {
-    "key": "8e4a3f95e5d8aaf0",
+  "83860f0aa2b6d197": {
+    "key": "83860f0aa2b6d197",
     "value": [
-      120.8644,
-      32.0116
+      102.886134,
+      36.49996
     ],
-    "timestamp": 1762227053.223566,
+    "timestamp": 1762239102.378795,
+    "ttl": 3600,
+    "access_count": 6,
+    "last_access": 1762239573.335894
+  },
+  "1d89b259ef1bef0a": {
+    "key": "1d89b259ef1bef0a",
+    "value": {
+      "temperature": 25.5,
+      "weather_time": {
+        "__datetime__": true,
+        "value": "2025-11-04T14:53:27.528558"
+      },
+      "coordinates": [
+        102.886134,
+        36.49996
+      ]
+    },
+    "timestamp": 1762239207.528585,
     "ttl": 3600,
     "access_count": 1,
-    "last_access": 1762227053.223567
+    "last_access": 1762239207.528586
   },
-  "a046d676077d51ab": {
-    "key": "a046d676077d51ab",
+  "a1a196c07ca7e83c": {
+    "key": "a1a196c07ca7e83c",
     "value": {
       "data": {
-        "temperature": 23.872727272727275,
-        "apparent_temperature": 24.0,
-        "humidity": 61.90909090909091,
-        "pressure": 1009.1818181818181,
-        "wind_speed": 10.374527638953586,
+        "location": "河桥镇",
+        "forecast_type": "hourly",
+        "created_at": {
+          "__datetime__": true,
+          "value": "2025-11-04T14:54:31.544205"
+        },
+        "hourly_data": [
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T14:00:00+08:00"
+            },
+            "temperature": 12.76,
+            "apparent_temperature": 10.8,
+            "humidity": 0.52,
+            "pressure": 76791.28,
+            "wind_speed": 7.3,
+            "wind_direction": 156.6,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 33.88,
+            "aqi": {
+              "datetime": "2025-11-04T14:00+08:00",
+              "value": {
+                "chn": 54,
+                "usa": 107
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T14:00+08:00",
+              "value": 38
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T15:00:00+08:00"
+            },
+            "temperature": 13.73,
+            "apparent_temperature": 11.3,
+            "humidity": 0.36,
+            "pressure": 76744.484,
+            "wind_speed": 7.98,
+            "wind_direction": 144.36,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 33.65,
+            "aqi": {
+              "datetime": "2025-11-04T15:00+08:00",
+              "value": {
+                "chn": 46,
+                "usa": 92
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T15:00+08:00",
+              "value": 32
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T16:00:00+08:00"
+            },
+            "temperature": 14.33,
+            "apparent_temperature": 11.7,
+            "humidity": 0.34,
+            "pressure": 76728.59,
+            "wind_speed": 9.04,
+            "wind_direction": 123.27,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 32.36,
+            "aqi": {
+              "datetime": "2025-11-04T16:00+08:00",
+              "value": {
+                "chn": 45,
+                "usa": 90
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T16:00+08:00",
+              "value": 31
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T17:00:00+08:00"
+            },
+            "temperature": 14.42,
+            "apparent_temperature": 11.8,
+            "humidity": 0.34,
+            "pressure": 76742.96,
+            "wind_speed": 8.99,
+            "wind_direction": 112.32,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 30.36,
+            "aqi": {
+              "datetime": "2025-11-04T17:00+08:00",
+              "value": {
+                "chn": 43,
+                "usa": 88
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T17:00+08:00",
+              "value": 30
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T18:00:00+08:00"
+            },
+            "temperature": 12.71,
+            "apparent_temperature": 10.3,
+            "humidity": 0.45,
+            "pressure": 76764.555,
+            "wind_speed": 8.55,
+            "wind_direction": 112.95,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 27.79,
+            "aqi": {
+              "datetime": "2025-11-04T18:00+08:00",
+              "value": {
+                "chn": 45,
+                "usa": 88
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T18:00+08:00",
+              "value": 30
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T19:00:00+08:00"
+            },
+            "temperature": 11.38,
+            "apparent_temperature": 8.9,
+            "humidity": 0.48,
+            "pressure": 76794.45,
+            "wind_speed": 8.57,
+            "wind_direction": 98.35,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 24.75,
+            "aqi": {
+              "datetime": "2025-11-04T19:00+08:00",
+              "value": {
+                "chn": 50,
+                "usa": 92
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T19:00+08:00",
+              "value": 32
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T20:00:00+08:00"
+            },
+            "temperature": 10.57,
+            "apparent_temperature": 8.2,
+            "humidity": 0.5,
+            "pressure": 76818.72,
+            "wind_speed": 7.84,
+            "wind_direction": 77.2,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 21.9,
+            "aqi": {
+              "datetime": "2025-11-04T20:00+08:00",
+              "value": {
+                "chn": 53,
+                "usa": 97
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T20:00+08:00",
+              "value": 34
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T21:00:00+08:00"
+            },
+            "temperature": 9.59,
+            "apparent_temperature": 7.5,
+            "humidity": 0.51,
+            "pressure": 76841.53,
+            "wind_speed": 5.32,
+            "wind_direction": 75.66,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 19.87,
+            "aqi": {
+              "datetime": "2025-11-04T21:00+08:00",
+              "value": {
+                "chn": 55,
+                "usa": 102
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T21:00+08:00",
+              "value": 36
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T22:00:00+08:00"
+            },
+            "temperature": 8.54,
+            "apparent_temperature": 6.5,
+            "humidity": 0.52,
+            "pressure": 76843.15,
+            "wind_speed": 4.55,
+            "wind_direction": 54.72,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.06,
+            "visibility": 16.29,
+            "aqi": {
+              "datetime": "2025-11-04T22:00+08:00",
+              "value": {
+                "chn": 56,
+                "usa": 102
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T22:00+08:00",
+              "value": 36
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T23:00:00+08:00"
+            },
+            "temperature": 7.74,
+            "apparent_temperature": 5.5,
+            "humidity": 0.54,
+            "pressure": 76815.266,
+            "wind_speed": 5.57,
+            "wind_direction": 42.02,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.17,
+            "visibility": 11.95,
+            "aqi": {
+              "datetime": "2025-11-04T23:00+08:00",
+              "value": {
+                "chn": 56,
+                "usa": 99
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T23:00+08:00",
+              "value": 35
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T00:00:00+08:00"
+            },
+            "temperature": 7.18,
+            "apparent_temperature": 5.1,
+            "humidity": 0.55,
+            "pressure": 76758.74,
+            "wind_speed": 4.54,
+            "wind_direction": 48.15,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.17,
+            "visibility": 10.45,
+            "aqi": {
+              "datetime": "2025-11-05T00:00+08:00",
+              "value": {
+                "chn": 54,
+                "usa": 94
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T00:00+08:00",
+              "value": 33
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T01:00:00+08:00"
+            },
+            "temperature": 6.58,
+            "apparent_temperature": 4.6,
+            "humidity": 0.56,
+            "pressure": 76685.69,
+            "wind_speed": 3.36,
+            "wind_direction": 68.73,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.19,
+            "visibility": 10.77,
+            "aqi": {
+              "datetime": "2025-11-05T01:00+08:00",
+              "value": {
+                "chn": 52,
+                "usa": 88
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T01:00+08:00",
+              "value": 30
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T02:00:00+08:00"
+            },
+            "temperature": 6.31,
+            "apparent_temperature": 4.3,
+            "humidity": 0.57,
+            "pressure": 76620.625,
+            "wind_speed": 3.38,
+            "wind_direction": 68.85,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.41,
+            "visibility": 10.99,
+            "aqi": {
+              "datetime": "2025-11-05T02:00+08:00",
+              "value": {
+                "chn": 50,
+                "usa": 86
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T02:00+08:00",
+              "value": 29
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T03:00:00+08:00"
+            },
+            "temperature": 6.03,
+            "apparent_temperature": 4.3,
+            "humidity": 0.61,
+            "pressure": 76586.24,
+            "wind_speed": 2.28,
+            "wind_direction": 105.33,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.5,
+            "visibility": 10.74,
+            "aqi": {
+              "datetime": "2025-11-05T03:00+08:00",
+              "value": {
+                "chn": 47,
+                "usa": 84
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T03:00+08:00",
+              "value": 28
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T04:00:00+08:00"
+            },
+            "temperature": 5.77,
+            "apparent_temperature": 4.0,
+            "humidity": 0.64,
+            "pressure": 76530.0,
+            "wind_speed": 2.49,
+            "wind_direction": 74.56,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.61,
+            "visibility": 10.52,
+            "aqi": {
+              "datetime": "2025-11-05T04:00+08:00",
+              "value": {
+                "chn": 45,
+                "usa": 84
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T04:00+08:00",
+              "value": 28
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T05:00:00+08:00"
+            },
+            "temperature": 5.75,
+            "apparent_temperature": 4.2,
+            "humidity": 0.68,
+            "pressure": 76513.81,
+            "wind_speed": 1.91,
+            "wind_direction": 132.21,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.58,
+            "visibility": 10.2,
+            "aqi": {
+              "datetime": "2025-11-05T05:00+08:00",
+              "value": {
+                "chn": 44,
+                "usa": 84
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T05:00+08:00",
+              "value": 28
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T06:00:00+08:00"
+            },
+            "temperature": 5.21,
+            "apparent_temperature": 3.3,
+            "humidity": 0.73,
+            "pressure": 76492.83,
+            "wind_speed": 4.05,
+            "wind_direction": 118.28,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.59,
+            "visibility": 9.72,
+            "aqi": {
+              "datetime": "2025-11-05T06:00+08:00",
+              "value": {
+                "chn": 44,
+                "usa": 84
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T06:00+08:00",
+              "value": 28
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T07:00:00+08:00"
+            },
+            "temperature": 4.84,
+            "apparent_temperature": 3.0,
+            "humidity": 0.77,
+            "pressure": 76502.28,
+            "wind_speed": 3.81,
+            "wind_direction": 142.09,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.58,
+            "visibility": 9.16,
+            "aqi": {
+              "datetime": "2025-11-05T07:00+08:00",
+              "value": {
+                "chn": 45,
+                "usa": 86
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T07:00+08:00",
+              "value": 29
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T08:00:00+08:00"
+            },
+            "temperature": 4.72,
+            "apparent_temperature": 3.1,
+            "humidity": 0.83,
+            "pressure": 76509.78,
+            "wind_speed": 2.88,
+            "wind_direction": 116.81,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.59,
+            "visibility": 8.49,
+            "aqi": {
+              "datetime": "2025-11-05T08:00+08:00",
+              "value": {
+                "chn": 46,
+                "usa": 88
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T08:00+08:00",
+              "value": 30
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T09:00:00+08:00"
+            },
+            "temperature": 6.79,
+            "apparent_temperature": 5.0,
+            "humidity": 0.78,
+            "pressure": 76525.71,
+            "wind_speed": 4.93,
+            "wind_direction": 117.06,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.69,
+            "visibility": 8.42,
+            "aqi": {
+              "datetime": "2025-11-05T09:00+08:00",
+              "value": {
+                "chn": 49,
+                "usa": 90
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T09:00+08:00",
+              "value": 31
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T10:00:00+08:00"
+            },
+            "temperature": 8.82,
+            "apparent_temperature": 7.4,
+            "humidity": 0.8,
+            "pressure": 76518.41,
+            "wind_speed": 4.98,
+            "wind_direction": 103.92,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.77,
+            "visibility": 8.75,
+            "aqi": {
+              "datetime": "2025-11-05T10:00+08:00",
+              "value": {
+                "chn": 52,
+                "usa": 92
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T10:00+08:00",
+              "value": 32
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T11:00:00+08:00"
+            },
+            "temperature": 10.42,
+            "apparent_temperature": 9.1,
+            "humidity": 0.78,
+            "pressure": 76500.836,
+            "wind_speed": 5.39,
+            "wind_direction": 128.2,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.71,
+            "visibility": 9.36,
+            "aqi": {
+              "datetime": "2025-11-05T11:00+08:00",
+              "value": {
+                "chn": 53,
+                "usa": 94
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T11:00+08:00",
+              "value": 33
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T12:00:00+08:00"
+            },
+            "temperature": 11.72,
+            "apparent_temperature": 10.4,
+            "humidity": 0.72,
+            "pressure": 76460.66,
+            "wind_speed": 6.12,
+            "wind_direction": 119.45,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.5,
+            "visibility": 10.26,
+            "aqi": {
+              "datetime": "2025-11-05T12:00+08:00",
+              "value": {
+                "chn": 54,
+                "usa": 94
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T12:00+08:00",
+              "value": 33
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T13:00:00+08:00"
+            },
+            "temperature": 12.93,
+            "apparent_temperature": 11.4,
+            "humidity": 0.68,
+            "pressure": 76379.92,
+            "wind_speed": 7.84,
+            "wind_direction": 122.74,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.37,
+            "visibility": 11.47,
+            "aqi": {
+              "datetime": "2025-11-05T13:00+08:00",
+              "value": {
+                "chn": 55,
+                "usa": 97
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T13:00+08:00",
+              "value": 34
+            }
+          }
+        ],
+        "daily_data": [],
+        "forecast_hours": 24,
+        "source": "caiyun_api"
+      },
+      "source": "小时预报数据（彩云天气 API)",
+      "coordinates": [
+        102.886134,
+        36.49996
+      ],
+      "timestamp": 1762239271.545907
+    },
+    "timestamp": 1762239271.545942,
+    "ttl": 3600,
+    "access_count": 3,
+    "last_access": 1762239570.8256068
+  },
+  "eb1ecee814194045": {
+    "key": "eb1ecee814194045",
+    "value": {
+      "test": "data"
+    },
+    "timestamp": 1762239383.813967,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762239383.813968
+  },
+  "e0a7963f14969dcf": {
+    "key": "e0a7963f14969dcf",
+    "value": {
+      "data": {
+        "temperature": 7.362142857142857,
+        "apparent_temperature": 5.6571428571428575,
+        "humidity": 0.6928571428571428,
+        "pressure": 76541.82364285714,
+        "wind_speed": 4.14,
         "wind_direction": 0,
-        "condition": "晴天",
-        "description": "晴天，平均23.9°C",
-        "location": "上海",
-        "timestamp": 1762227053.223679,
+        "condition": "多云",
+        "description": "多云，平均7.4°C",
+        "location": "河桥镇",
+        "timestamp": 1762239466.25015,
         "source": "彩云天气API",
-        "datetime": 
+        "datetime": {
+          "__datetime__": true,
+          "value": "2025-11-05T14:57:46.107904"
+        },
+        "date_str": "2025-11-05",
+        "time_period": null,
+        "data_type": "daily_forecast",
+        "forecast_hours": 0,
+        "is_aggregated": true,
+        "api_source": "caiyun",
+        "api_version": "v2.6",
+        "original_response": null,
+        "created_at": {
+          "__datetime__": true,
+          "value": "2025-11-04T14:57:46.250221"
+        },
+        "updated_at": {
+          "__datetime__": true,
+          "value": "2025-11-04T14:57:46.250223"
+        },
+        "cache_key": null
+      },
+      "source": "天气预报数据（彩云天气 API)",
+      "coordinates": [
+        102.886134,
+        36.49996
+      ],
+      "timestamp": 1762239466.250327
+    },
+    "timestamp": 1762239466.250387,
+    "ttl": 3600,
+    "access_count": 2,
+    "last_access": 1762239571.7212758
+  },
+  "f9bae6632e3aacac": {
+    "key": "f9bae6632e3aacac",
+    "value": [
+      117.2147,
+      29.2975
+    ],
+    "timestamp": 1762239507.4075232,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762239507.4075232
+  },
+  "223ad57517912614": {
+    "key": "223ad57517912614",
+    "value": {
+      "data": {
+        "location": "景德镇",
+        "forecast_type": "hourly",
+        "created_at": {
+          "__datetime__": true,
+          "value": "2025-11-04T14:58:27.534047"
+        },
+        "hourly_data": [
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T14:00:00+08:00"
+            },
+            "temperature": 16.59,
+            "apparent_temperature": 15.9,
+            "humidity": 0.74,
+            "pressure": 100210.28,
+            "wind_speed": 8.04,
+            "wind_direction": 144.57,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.61,
+            "visibility": 17.39,
+            "aqi": {
+              "datetime": "2025-11-04T14:00+08:00",
+              "value": {
+                "chn": 20,
+                "usa": 42
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T14:00+08:00",
+              "value": 10
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T15:00:00+08:00"
+            },
+            "temperature": 16.18,
+            "apparent_temperature": 14.9,
+            "humidity": 0.57,
+            "pressure": 100171.484,
+            "wind_speed": 7.23,
+            "wind_direction": 144.32,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.59,
+            "visibility": 17.43,
+            "aqi": {
+              "datetime": "2025-11-04T15:00+08:00",
+              "value": {
+                "chn": 21,
+                "usa": 50
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T15:00+08:00",
+              "value": 12
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T16:00:00+08:00"
+            },
+            "temperature": 16.7,
+            "apparent_temperature": 15.8,
+            "humidity": 0.61,
+            "pressure": 100181.59,
+            "wind_speed": 6.44,
+            "wind_direction": 147.5,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.56,
+            "visibility": 16.04,
+            "aqi": {
+              "datetime": "2025-11-04T16:00+08:00",
+              "value": {
+                "chn": 21,
+                "usa": 52
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T16:00+08:00",
+              "value": 13
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T17:00:00+08:00"
+            },
+            "temperature": 16.5,
+            "apparent_temperature": 16.1,
+            "humidity": 0.67,
+            "pressure": 100198.96,
+            "wind_speed": 4.83,
+            "wind_direction": 134.96,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.44,
+            "visibility": 13.71,
+            "aqi": {
+              "datetime": "2025-11-04T17:00+08:00",
+              "value": {
+                "chn": 22,
+                "usa": 54
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T17:00+08:00",
+              "value": 14
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T18:00:00+08:00"
+            },
+            "temperature": 16.04,
+            "apparent_temperature": 16.0,
+            "humidity": 0.7,
+            "pressure": 100225.555,
+            "wind_speed": 3.18,
+            "wind_direction": 115.85,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.44,
+            "visibility": 12.44,
+            "aqi": {
+              "datetime": "2025-11-04T18:00+08:00",
+              "value": {
+                "chn": 22,
+                "usa": 57
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T18:00+08:00",
+              "value": 15
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T19:00:00+08:00"
+            },
+            "temperature": 15.91,
+            "apparent_temperature": 16.0,
+            "humidity": 0.72,
+            "pressure": 100275.45,
+            "wind_speed": 2.67,
+            "wind_direction": 108.5,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.37,
+            "visibility": 12.89,
+            "aqi": {
+              "datetime": "2025-11-04T19:00+08:00",
+              "value": {
+                "chn": 23,
+                "usa": 59
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T19:00+08:00",
+              "value": 16
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T20:00:00+08:00"
+            },
+            "temperature": 15.55,
+            "apparent_temperature": 15.6,
+            "humidity": 0.73,
+            "pressure": 100298.72,
+            "wind_speed": 2.65,
+            "wind_direction": 113.79,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.45,
+            "visibility": 14.02,
+            "aqi": {
+              "datetime": "2025-11-04T20:00+08:00",
+              "value": {
+                "chn": 23,
+                "usa": 59
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T20:00+08:00",
+              "value": 16
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T21:00:00+08:00"
+            },
+            "temperature": 15.42,
+            "apparent_temperature": 15.4,
+            "humidity": 0.75,
+            "pressure": 100278.53,
+            "wind_speed": 3.0,
+            "wind_direction": 107.76,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.48,
+            "visibility": 14.57,
+            "aqi": {
+              "datetime": "2025-11-04T21:00+08:00",
+              "value": {
+                "chn": 25,
+                "usa": 61
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T21:00+08:00",
+              "value": 17
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T22:00:00+08:00"
+            },
+            "temperature": 14.95,
+            "apparent_temperature": 14.8,
+            "humidity": 0.76,
+            "pressure": 100243.15,
+            "wind_speed": 3.37,
+            "wind_direction": 113.29,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.52,
+            "visibility": 14.23,
+            "aqi": {
+              "datetime": "2025-11-04T22:00+08:00",
+              "value": {
+                "chn": 25,
+                "usa": 61
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T22:00+08:00",
+              "value": 17
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-04T23:00:00+08:00"
+            },
+            "temperature": 14.87,
+            "apparent_temperature": 14.9,
+            "humidity": 0.78,
+            "pressure": 100215.266,
+            "wind_speed": 2.85,
+            "wind_direction": 101.68,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.49,
+            "visibility": 13.3,
+            "aqi": {
+              "datetime": "2025-11-04T23:00+08:00",
+              "value": {
+                "chn": 25,
+                "usa": 61
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-04T23:00+08:00",
+              "value": 17
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T00:00:00+08:00"
+            },
+            "temperature": 14.37,
+            "apparent_temperature": 14.5,
+            "humidity": 0.81,
+            "pressure": 100172.74,
+            "wind_speed": 1.98,
+            "wind_direction": 65.15,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.47,
+            "visibility": 11.8,
+            "aqi": {
+              "datetime": "2025-11-05T00:00+08:00",
+              "value": {
+                "chn": 25,
+                "usa": 61
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T00:00+08:00",
+              "value": 17
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T01:00:00+08:00"
+            },
+            "temperature": 14.44,
+            "apparent_temperature": 14.5,
+            "humidity": 0.82,
+            "pressure": 100150.69,
+            "wind_speed": 2.9,
+            "wind_direction": 49.07,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.37,
+            "visibility": 11.14,
+            "aqi": {
+              "datetime": "2025-11-05T01:00+08:00",
+              "value": {
+                "chn": 25,
+                "usa": 61
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T01:00+08:00",
+              "value": 17
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T02:00:00+08:00"
+            },
+            "temperature": 14.61,
+            "apparent_temperature": 14.8,
+            "humidity": 0.83,
+            "pressure": 100118.625,
+            "wind_speed": 2.4,
+            "wind_direction": 42.98,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.34,
+            "visibility": 9.91,
+            "aqi": {
+              "datetime": "2025-11-05T02:00+08:00",
+              "value": {
+                "chn": 26,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T02:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T03:00:00+08:00"
+            },
+            "temperature": 14.45,
+            "apparent_temperature": 14.7,
+            "humidity": 0.84,
+            "pressure": 100092.24,
+            "wind_speed": 2.07,
+            "wind_direction": 45.48,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.29,
+            "visibility": 9.77,
+            "aqi": {
+              "datetime": "2025-11-05T03:00+08:00",
+              "value": {
+                "chn": 26,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T03:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T04:00:00+08:00"
+            },
+            "temperature": 14.3,
+            "apparent_temperature": 14.7,
+            "humidity": 0.84,
+            "pressure": 100092.0,
+            "wind_speed": 0.92,
+            "wind_direction": 352.79,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.2,
+            "visibility": 9.86,
+            "aqi": {
+              "datetime": "2025-11-05T04:00+08:00",
+              "value": {
+                "chn": 26,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T04:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T05:00:00+08:00"
+            },
+            "temperature": 14.22,
+            "apparent_temperature": 14.4,
+            "humidity": 0.84,
+            "pressure": 100108.81,
+            "wind_speed": 2.0,
+            "wind_direction": 24.74,
+            "condition": "晴夜",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.05,
+            "visibility": 9.95,
+            "aqi": {
+              "datetime": "2025-11-05T05:00+08:00",
+              "value": {
+                "chn": 26,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T05:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T06:00:00+08:00"
+            },
+            "temperature": 13.91,
+            "apparent_temperature": 13.9,
+            "humidity": 0.85,
+            "pressure": 100132.83,
+            "wind_speed": 3.38,
+            "wind_direction": 57.35,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 10.0,
+            "aqi": {
+              "datetime": "2025-11-05T06:00+08:00",
+              "value": {
+                "chn": 26,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T06:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T07:00:00+08:00"
+            },
+            "temperature": 13.67,
+            "apparent_temperature": 13.6,
+            "humidity": 0.85,
+            "pressure": 100150.28,
+            "wind_speed": 3.09,
+            "wind_direction": 72.78,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 10.0,
+            "aqi": {
+              "datetime": "2025-11-05T07:00+08:00",
+              "value": {
+                "chn": 28,
+                "usa": 65
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T07:00+08:00",
+              "value": 19
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T08:00:00+08:00"
+            },
+            "temperature": 14.51,
+            "apparent_temperature": 14.3,
+            "humidity": 0.78,
+            "pressure": 100157.78,
+            "wind_speed": 3.85,
+            "wind_direction": 84.7,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 11.25,
+            "aqi": {
+              "datetime": "2025-11-05T08:00+08:00",
+              "value": {
+                "chn": 28,
+                "usa": 65
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T08:00+08:00",
+              "value": 19
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T09:00:00+08:00"
+            },
+            "temperature": 15.63,
+            "apparent_temperature": 15.3,
+            "humidity": 0.69,
+            "pressure": 100161.71,
+            "wind_speed": 3.89,
+            "wind_direction": 87.47,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.02,
+            "visibility": 13.48,
+            "aqi": {
+              "datetime": "2025-11-05T09:00+08:00",
+              "value": {
+                "chn": 28,
+                "usa": 65
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T09:00+08:00",
+              "value": 19
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T10:00:00+08:00"
+            },
+            "temperature": 17.62,
+            "apparent_temperature": 17.5,
+            "humidity": 0.61,
+            "pressure": 100134.41,
+            "wind_speed": 3.02,
+            "wind_direction": 106.83,
+            "condition": "晴天",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.0,
+            "visibility": 15.36,
+            "aqi": {
+              "datetime": "2025-11-05T10:00+08:00",
+              "value": {
+                "chn": 30,
+                "usa": 65
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T10:00+08:00",
+              "value": 19
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T11:00:00+08:00"
+            },
+            "temperature": 20.05,
+            "apparent_temperature": 20.0,
+            "humidity": 0.55,
+            "pressure": 100059.836,
+            "wind_speed": 3.82,
+            "wind_direction": 95.71,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.41,
+            "visibility": 16.86,
+            "aqi": {
+              "datetime": "2025-11-05T11:00+08:00",
+              "value": {
+                "chn": 31,
+                "usa": 65
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T11:00+08:00",
+              "value": 19
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T12:00:00+08:00"
+            },
+            "temperature": 21.29,
+            "apparent_temperature": 21.5,
+            "humidity": 0.51,
+            "pressure": 99961.66,
+            "wind_speed": 2.63,
+            "wind_direction": 80.26,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.78,
+            "visibility": 18.31,
+            "aqi": {
+              "datetime": "2025-11-05T12:00+08:00",
+              "value": {
+                "chn": 30,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T12:00+08:00",
+              "value": 18
+            }
+          },
+          {
+            "datetime": {
+              "__datetime__": true,
+              "value": "2025-11-05T13:00:00+08:00"
+            },
+            "temperature": 22.15,
+            "apparent_temperature": 22.2,
+            "humidity": 0.5,
+            "pressure": 99825.92,
+            "wind_speed": 4.47,
+            "wind_direction": 87.57,
+            "condition": "多云",
+            "precipitation_probability": 0,
+            "precipitation_value": 0.0,
+            "cloud_rate": 0.66,
+            "visibility": 18.71,
+            "aqi": {
+              "datetime": "2025-11-05T13:00+08:00",
+              "value": {
+                "chn": 29,
+                "usa": 63
+              }
+            },
+            "pm25": {
+              "datetime": "2025-11-05T13:00+08:00",
+              "value": 18
+            }
+          }
+        ],
+        "daily_data": [],
+        "forecast_hours": 24,
+        "source": "caiyun_api"
+      },
+      "source": "小时预报数据（彩云天气 API)",
+      "coordinates": [
+        117.2147,
+        29.2975
+      ],
+      "timestamp": 1762239507.534959
+    },
+    "timestamp": 1762239507.5349782,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762239507.5349782
+  },
+  "c9f5fe8eb2edaaa2": {
+    "key": "c9f5fe8eb2edaaa2",
+    "value": {
+      "data": {
+        "location": "河桥镇",
+        "date": "2025-11-05",
+        "time_period": "上午",
+        "start_time": {
+          "__datetime__": true,
+          "value": "2025-11-05T09:00:00"
+        },
+        "end_time": {
+          "__datetime__": true,
+          "value": "2025-11-05T12:00:00"
+        },
+        "temperature_avg": 8.676666666666668,
+        "temperature_min": 6.79,
+        "temperature_max": 10.42,
+        "precipitation_total": 0.0,
+        "precipitation_probability_max": 0,
+        "wind_speed_avg": 5.1000000000000005,
+        "wind_direction_avg": 116.39333333333333,
+        "humidity_avg": 0.7866666666666667,
+        "pressure_avg": 76514.98533333333,
+        "condition_primary": "多云",
+        "hours_count": 3,
+        "data_source": "aggregated_hourly",
+        "created_at": {
+          "__datetime__": true,
+          "value": "2025-11-04T14:59:33.474713"
+        }
+      },
+      "source": "时间段聚合数据（24小时预报)",
+      "coordinates": [
+        102.886134,
+        36.49996
+      ],
+      "timestamp": 1762239573.474798
+    },
+    "timestamp": 1762239573.4748642,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1762239573.474865
+  }
+}

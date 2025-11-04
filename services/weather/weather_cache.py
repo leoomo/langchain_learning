@@ -7,6 +7,8 @@
 import json
 import time
 import hashlib
+import builtins
+import inspect
 from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -152,10 +154,14 @@ class WeatherCache:
         """从文件加载缓存"""
         try:
             if self.file_path.exists():
-                with open(self.file_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                with open(self.file_path, 'r', encoding='utf-8') as cache_file:
+                    data = json.load(cache_file)
 
                 for key, entry_data in data.items():
+                    # 反序列化value字段
+                    if 'value' in entry_data:
+                        entry_data['value'] = self._deserialize_value(entry_data['value'])
+
                     entry = CacheEntry(**entry_data)
                     if not entry.is_expired():
                         self.file_cache[key] = entry
@@ -166,6 +172,32 @@ class WeatherCache:
             print(f"⚠️ 加载文件缓存失败: {e}")
             self.file_cache = {}
 
+    def _serialize_value(self, value):
+        """序列化值，处理特殊类型"""
+        if isinstance(value, datetime):
+            return {"__datetime__": True, "value": value.isoformat()}
+        elif isinstance(value, (list, tuple)):
+            return [self._serialize_value(item) for item in value]
+        elif isinstance(value, dict):
+            return {k: self._serialize_value(v) for k, v in value.items()}
+        else:
+            return value
+
+    def _deserialize_value(self, value):
+        """反序列化值，处理特殊类型"""
+        if isinstance(value, dict) and value.get("__datetime__"):
+            # 反序列化datetime对象
+            try:
+                return datetime.fromisoformat(value["value"])
+            except:
+                return value
+        elif isinstance(value, list):
+            return [self._deserialize_value(item) for item in value]
+        elif isinstance(value, dict):
+            return {k: self._deserialize_value(v) for k, v in value.items()}
+        else:
+            return value
+
     def _save_file_cache(self):
         """保存缓存到文件"""
         try:
@@ -174,15 +206,58 @@ class WeatherCache:
 
             # 只保存未过期的条目
             data_to_save = {}
+            failed_entries = []
+
             for key, entry in self.file_cache.items():
                 if not entry.is_expired():
-                    data_to_save[key] = asdict(entry)
+                    try:
+                        # 序列化value字段以处理datetime等特殊类型
+                        serialized_value = self._serialize_value(entry.value)
 
-            with open(self.file_path, 'w', encoding='utf-8') as f:
-                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+                        entry_dict = {
+                            'key': entry.key,
+                            'value': serialized_value,
+                            'timestamp': entry.timestamp,
+                            'ttl': entry.ttl,
+                            'access_count': entry.access_count,
+                            'last_access': entry.last_access
+                        }
+
+                        data_to_save[key] = entry_dict
+                    except Exception as e:
+                        failed_entries.append((key, str(e)))
+                        print(f"⚠️ 跳过无法序列化的缓存条目 {key}: {e}")
+
+            # 使用绝对路径打开文件
+            # 使用不同的变量名避免冲突
+            with open(str(self.file_path), 'w', encoding='utf-8') as cache_file:
+                json.dump(data_to_save, cache_file, ensure_ascii=False, indent=2)
+
+            if failed_entries:
+                print(f"⚠️ 有 {len(failed_entries)} 个缓存条目因序列化问题被跳过")
+            else:
+                print(f"✅ 成功保存 {len(data_to_save)} 个缓存条目到文件")
 
         except Exception as e:
+            import traceback
+            import inspect
+
+            # 获取调用栈信息
+            caller_info = "未知方法"
+            try:
+                # 获取调用栈
+                stack = inspect.stack()
+                for frame_info in stack:
+                    # 跳过当前方法和内部调用
+                    if frame_info.function not in ['_save_file_cache', 'save', 'set']:
+                        caller_info = f"{frame_info.function} ({frame_info.filename}:{frame_info.lineno})"
+                        break
+            except:
+                pass
+
             print(f"⚠️ 保存文件缓存失败: {e}")
+            print(f"🔍 触发方法: {caller_info}")
+            print(f"📋 详细错误: {traceback.format_exc()}")
 
     def _cleanup_file_cache(self):
         """清理文件缓存中的过期条目"""
