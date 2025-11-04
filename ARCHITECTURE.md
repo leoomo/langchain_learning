@@ -188,6 +188,34 @@ uv run python test_new_architecture.py
 - 使用 `manager.get_service_status()` 查看服务状态
 - 运行测试脚本验证架构完整性
 
+### 🔧 常见问题修复
+
+#### WeatherTool 服务调用错误 (2025-11-04)
+**问题**: `WeatherTool` 中出现 `AttributeError: 'EnhancedCaiyunWeatherService' object has no attribute 'get_coordinate'`
+
+**原因**:
+- `WeatherTool` 错误地使用 `get_weather_service()` 来获取坐标服务
+- 天气服务没有 `get_coordinate` 方法，应该使用专门的坐标服务
+
+**解决方案**:
+```python
+# 修复前 (错误)
+from services.service_manager import get_weather_service
+self._enhanced_service = get_weather_service()
+coordinate_obj = self._enhanced_service.get_coordinate(location)
+
+# 修复后 (正确)
+from services.service_manager import get_coordinate_service
+self._coordinate_service = get_coordinate_service()
+coordinate_obj = self._coordinate_service.get_coordinate(location)
+```
+
+**验证结果**:
+- ✅ 坐标查询功能恢复正常
+- ✅ 天气查询通过API正常获取数据
+- ✅ 架构测试7/7全部通过
+- ✅ 服务职责分离清晰（坐标服务 vs 天气服务）
+
 ## 📈 未来扩展
 
 ### 可能的改进
@@ -209,3 +237,4 @@ uv run python test_new_architecture.py
 **重构范围**：服务架构全面重构
 **测试覆盖率**：100%（7/7测试通过）
 **向后兼容性**：完全兼容
+**最后修复**：2025-11-04，WeatherTool服务集成问题已解决

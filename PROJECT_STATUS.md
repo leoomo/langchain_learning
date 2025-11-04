@@ -5,8 +5,8 @@
 这是一个基于 LangChain 1.0+ 的综合学习项目，专注于探索和实现现代 LLM 应用程序，具有实时天气 API 集成和**全国地区覆盖**功能。
 
 **最后更新**: 2025-11-04
-**版本**: 2.0.0-refactored
-**状态**: 服务架构重构完成，核心功能稳定，API密钥需要更新
+**版本**: 2.0.0-refactored-fixed
+**状态**: 服务架构重构完成，工具集成问题已修复，核心功能稳定，API密钥需要更新
 
 ## 🎯 核心功能状态
 
@@ -42,6 +42,7 @@
 - **线程安全**: 多线程环境下安全的服务创建和访问
 - **统一配置**: 环境变量和配置文件的集中管理系统
 - **100%测试覆盖**: 7/7项架构验证测试通过
+- **工具集成修复**: WeatherTool正确使用坐标服务，消除方法调用错误
 
 ### ⚠️ 当前问题
 
@@ -208,10 +209,13 @@ CAIYUN_API_KEY=your-caiyun-api-key
 - ✅ `get_weather_by_date` 缓存逻辑bug修复
 - ✅ 智能体工具选择优化
 - ✅ 文档更新和整理
+- ✅ **WeatherTool服务调用修复**: 解决了"EnhancedCaiyunWeatherService object has no attribute 'get_coordinate'"错误
+- ✅ **服务架构集成完善**: WeatherTool正确使用coordinate_service而非weather_service进行坐标查询
 
 ### 已知问题
 - ❌ LLM API密钥需要更新 (智谱/Claude/GPT)
 - ✅ 天气API功能正常
+- ✅ 新架构工具集成问题已完全解决
 
 ## 📋 下一步计划
 

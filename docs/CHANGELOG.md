@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0-refactored] - 2025-11-04
+## [2.0.0-refactored-fixed] - 2025-11-04
 
-### 🏗️ Major Architecture Refactoring
+### 🔧 Bug Fixes
+
+#### WeatherTool Service Integration Fix
+- **Fixed service call error**: Resolved `AttributeError: 'EnhancedCaiyunWeatherService' object has no attribute 'get_coordinate'`
+- **Corrected service usage**: Changed from `get_weather_service()` to `get_coordinate_service()` for coordinate queries
+- **Service responsibility separation**: WeatherTool now properly uses coordinate service for location queries
+- **Interface compliance**: Ensured all tools correctly use the new service manager architecture
+
+#### Technical Details
+- **Root cause**: WeatherTool was calling coordinate methods on weather service instance
+- **Solution**: Updated to use dedicated coordinate service through service manager
+- **Impact**: Restored coordinate lookup and weather query functionality
+- **Verification**: All 7/7 architecture tests now pass successfully
+
+### 🏗️ Major Architecture Refactoring (from 2.0.0-refactored)
 
 #### Service Management Overhaul
 - **Central Service Manager**: Implemented singleton pattern for unified service instance management
