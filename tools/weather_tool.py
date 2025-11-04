@@ -631,7 +631,7 @@ class WeatherTool(ConfigurableTool):
         if coords:
             return coords
 
-        # 如果预定义中没有，使用服务管理器获取天气服务（支持高德API）
+        # 如果预定义中没有，使用服务管理器获取坐标服务（支持高德API）
         try:
             # 使用绝对导入
             import sys
@@ -639,13 +639,13 @@ class WeatherTool(ConfigurableTool):
             project_root = Path(__file__).parent.parent
             sys.path.insert(0, str(project_root))
 
-            from services.service_manager import get_weather_service
-            if not hasattr(self, '_enhanced_service'):
-                self._enhanced_service = get_weather_service()
-                self._logger.info("增强版天气服务已通过服务管理器初始化")
+            from services.service_manager import get_coordinate_service
+            if not hasattr(self, '_coordinate_service'):
+                self._coordinate_service = get_coordinate_service()
+                self._logger.info("增强版坐标服务已通过服务管理器初始化")
 
-            # 使用新接口获取坐标
-            coordinate_obj = self._enhanced_service.get_coordinate(location.strip())
+            # 使用坐标服务获取坐标
+            coordinate_obj = self._coordinate_service.get_coordinate(location.strip())
             if coordinate_obj:
                 coords = (coordinate_obj.longitude, coordinate_obj.latitude)
             else:
@@ -656,7 +656,7 @@ class WeatherTool(ConfigurableTool):
                 self._logger.debug(f"坐标已缓存到内存: {location.strip()} -> {coords}")
                 return coords
             else:
-                self._logger.warning(f"增强版天气服务未能获取坐标: {location.strip()}")
+                self._logger.warning(f"增强版坐标服务未能获取坐标: {location.strip()}")
         except Exception as e:
             self._logger.error(f"增强版坐标查询失败: {e}")
             import traceback
