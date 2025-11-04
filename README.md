@@ -16,11 +16,13 @@
 
 ### 🎣 智能钓鱼推荐系统
 **已完全实现并测试通过**：
-- 🎯 专业钓鱼分析工具，基于天气条件进行评分
+- 🎯 专业钓鱼分析工具，基于7因子评分算法（温度、天气、风力、气压、湿度、季节、月相）
 - 📊 实时天气数据处理，支持全国3,142+行政区划查询
 - 🧠 自然语言理解，智能识别钓鱼相关查询
-- ⏰ 基于温度、天气、风力条件的时间段推荐
+- ⏰ 基于多维度条件的时间段推荐，解决"86分问题"
 - 📍 支持日期时间查询，如"明天早上6-8点"
+- ⚡ 增强评分器：基于专业钓鱼研究，提供更精准的评分区分度
+- 🔬 科学算法：气压趋势分析、季节性规律、月相影响等专业因子
 
 ### 🗺️ 智能坐标服务
 **高性能多级缓存系统**：
@@ -141,6 +143,34 @@ for query in queries:
     print("-" * 50)
 ```
 
+### 增强钓鱼评分器示例
+
+```python
+from tools.enhanced_fishing_scorer import EnhancedFishingScorer
+
+# 创建增强评分器
+scorer = EnhancedFishingScorer()
+
+# 分析钓鱼条件
+conditions = {
+    'datetime': '2024-11-06T14:00:00',
+    'temperature': 22.0,
+    'condition': '阴',
+    'wind_speed': 8.0,
+    'humidity': 75.0,
+    'pressure': 1008.0
+}
+
+# 计算评分
+from datetime import datetime
+date = datetime(2024, 11, 6, 14, 0)
+score = scorer.calculate_comprehensive_score(conditions, historical_data, date)
+
+print(f"综合评分: {score.overall:.1f}/100")
+print(f"气压评分: {score.pressure:.1f} (下降气压奖励!)")
+print(f"7因子详细评分: 温度{score.temperature:.1f}, 天气{score.weather:.1f}, 风力{score.wind:.1f}, 气压{score.pressure:.1f}, 湿度{score.humidity:.1f}, 季节{score.seasonal:.1f}, 月相{score.lunar:.1f}")
+```
+
 ### 坐标服务示例
 
 ```python
@@ -209,7 +239,9 @@ langchain_learning/
 ├── 🛠️ tools/                          # 工具模块
 │   ├── langchain_weather_tools.py     # LangChain天气工具
 │   ├── weather_tool.py               # 天气工具
-│   └── fishing_analyzer.py           # 钓鱼分析器
+│   ├── fishing_analyzer.py           # 钓鱼分析器
+│   ├── enhanced_fishing_scorer.py    # 增强钓鱼评分器
+│   └── fishing_tools.py              # 钓鱼工具集合
 ├── 🧪 tests/                          # 测试模块
 ├── 📝 examples/                       # 示例代码
 └── 📋 .env.example                    # 环境变量模板
@@ -230,10 +262,12 @@ langchain_learning/
 - **错误诊断**: 详细的错误代码和诊断信息
 
 ### 🎣 钓鱼推荐系统
-- **智能分析**: 基于天气条件的专业钓鱼分析
-- **时间推荐**: 最佳钓鱼时间段的智能推荐
+- **智能分析**: 基于7因子评分算法的专业钓鱼分析（温度、天气、风力、气压、湿度、季节、月相）
+- **时间推荐**: 最佳钓鱼时间段的智能推荐，解决传统"86分问题"
 - **自然语言**: 支持自然的中文查询方式
-- **多维度评分**: 温度、天气、风力等综合评分
+- **增强评分器**: 专业钓鱼研究算法，气压趋势分析、季节性规律、月相影响
+- **向后兼容**: 双模式评分接口，支持传统3因子和增强7因子算法
+- **科学权重**: 精细化权重分配（温度26.3%、天气21.1%、风力15.8%、气压15.8%、湿度10.5%、季节5.3%、月相5.3%）
 
 ### 📊 业务日志系统
 - **统一管理**: BusinessLogger统一管理所有业务日志
@@ -313,6 +347,12 @@ uv run python services/weather/enhanced_weather_service.py
 
 # 测试钓鱼推荐
 uv run python tools/fishing_analyzer.py
+
+# 运行增强钓鱼评分器演示
+uv run python demo_enhanced_fishing_scorer.py
+
+# 运行增强钓鱼评分器测试
+uv run python tests/test_enhanced_fishing_scorer.py
 ```
 
 ### 添加新功能

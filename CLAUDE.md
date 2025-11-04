@@ -27,11 +27,14 @@ This is a comprehensive LangChain learning project focused on exploring and impl
 
 ### 🎯 Smart Fishing Recommendation System
 **Successfully implemented and functional**:
-- ✅ Professional fishing analysis tools with weather condition scoring
+- ✅ Professional fishing analysis tools with 7-factor enhanced scoring algorithm
 - ✅ Enhanced weather tool ecosystem (6 specialized tools)
 - ✅ LangChain 1.0+ agent integration with fishing expertise
 - ✅ Intent understanding for fishing-related queries
-- ✅ Time-slot recommendations based on weather conditions
+- ✅ Time-slot recommendations based on comprehensive weather conditions
+- ✅ Enhanced Fishing Scorer with pressure trend, humidity, seasonal, and lunar analysis
+- ✅ Backward-compatible dual-mode scoring (3-factor traditional vs 7-factor enhanced)
+- ✅ Scientific weight distribution solving the "86-point problem"
 
 ### 🗺️ Enhanced Coordinate System
 **High-performance location services**:
@@ -107,6 +110,8 @@ A comprehensive LangChain learning project with organized structure:
 - `city_coordinate_db.py` - Coordinate database for Chinese administrative divisions
 - `weather_cache.py` - Multi-level caching system for weather data
 - `zhipu_langchain_example.py` - Basic LangChain integration examples with ZhipuAI
+- `demo_enhanced_fishing_scorer.py` - Comprehensive demonstration of the 7-factor enhanced fishing scoring system
+- `tools/enhanced_fishing_scorer.py` - Enhanced fishing scorer with 7-factor algorithm (temperature, weather, wind, pressure, humidity, seasonal, lunar)
 
 ### National Coverage Database
 - `data/admin_divisions.db` - SQLite database with 3,142+ Chinese regions (95%+ coverage)
@@ -120,6 +125,7 @@ A comprehensive LangChain learning project with organized structure:
 - `tests/integration/` - Integration tests for multi-component workflows
 - `tests/demos/` - Demonstration scripts and examples
 - `tests/weather/` - Specialized weather API testing
+- `tests/test_enhanced_fishing_scorer.py` - Comprehensive test suite for enhanced fishing scorer (16 tests, 100% pass rate)
 - `tests/README.md` - Comprehensive testing documentation
 - `test_national_coverage.py` - Comprehensive national coverage testing script
 - `verify_national_integration.py` - Integration verification for enhanced features
@@ -152,17 +158,22 @@ All API keys are configured in the `.env` file in the project root directory:
 
 ### 🎯 Smart Fishing Recommendation System
 **Successfully implemented and functional**:
-- ✅ Professional fishing analysis tools with weather condition scoring
+- ✅ Professional fishing analysis tools with 7-factor enhanced scoring algorithm
 - ✅ Enhanced weather tool ecosystem (6 specialized tools)
 - ✅ LangChain 1.0+ agent integration with fishing expertise
 - ✅ Intent understanding for fishing-related queries
-- ✅ Time-slot recommendations based on weather conditions
+- ✅ Time-slot recommendations based on comprehensive weather conditions
+- ✅ Enhanced Fishing Scorer with pressure trend, humidity, seasonal, and lunar analysis
+- ✅ Backward-compatible dual-mode scoring (3-factor traditional vs 7-factor enhanced)
+- ✅ Scientific weight distribution solving the "86-point problem"
 
 **Key Features**:
 - 🎣 `query_fishing_recommendation(location, date)` - Specialized fishing time analysis
-- 📊 Weather condition scoring (0-100) for optimal fishing times
+- 📊 Enhanced 7-factor weather condition scoring (0-100) for optimal fishing times
 - 🧠 Natural language intent understanding for fishing queries
-- 🎯 Professional recommendations based on temperature, weather, wind conditions
+- 🎯 Professional recommendations based on temperature, weather, wind, pressure, humidity, seasonal, and lunar conditions
+- ⚡ Scientific weight distribution: Temperature 26.3%, Weather 21.1%, Wind 15.8%, Pressure 15.8%, Humidity 10.5%, Seasonal 5.3%, Lunar 5.3%
+- 🔄 Backward-compatible dual-mode scoring with environment variable control (`ENABLE_ENHANCED_FISHING_SCORING`)
 
 **Usage Example**:
 ```

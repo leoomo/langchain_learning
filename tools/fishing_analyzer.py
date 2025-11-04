@@ -2,6 +2,7 @@
 """
 钓鱼分析工具
 基于天气数据分析最佳的钓鱼时间
+支持3因子传统评分和7因子增强评分
 """
 
 from typing import Dict, List, Tuple, Optional, Any
@@ -11,11 +12,13 @@ import json
 import logging
 import math
 import random
+import os
 
 # 导入现有的天气工具
 try:
     from .weather_tool import WeatherTool, ToolResult
     from ..services.service_manager import get_weather_service
+    from .enhanced_fishing_scorer import EnhancedFishingScorer, FishingScore
 except ImportError:
     import sys
     from pathlib import Path
@@ -23,6 +26,7 @@ except ImportError:
     from weather_tool import WeatherTool, ToolResult
     sys.path.append(str(Path(__file__).parent.parent))
     from services.service_manager import get_weather_service
+    from enhanced_fishing_scorer import EnhancedFishingScorer, FishingScore
 
 
 @dataclass
@@ -35,7 +39,7 @@ class FishingCondition:
     humidity: float             # 湿度 (%)
     pressure: float             # 气压 (hPa)
 
-    # 钓鱼适宜性评分 (0-100)
+    # 传统3因子评分 (0-100)
     temperature_score: float    # 温度评分
     weather_score: float        # 天气评分
     wind_score: float          # 风力评分
@@ -43,6 +47,12 @@ class FishingCondition:
 
     # 时间段名称
     period_name: str           # 时间段名称（如"早上"、"上午"等）
+
+    # 增强7因子评分 (可选)
+    enhanced_score: Optional[FishingScore] = None  # 增强评分结果
+
+    # 评分模式标识
+    is_enhanced: bool = False  # 是否使用增强评分
 
 
 @dataclass
@@ -94,8 +104,23 @@ class FishingAnalyzer:
         # 延迟初始化：使用服务管理器获取天气服务
         self._enhanced_weather_service = None
 
+        # 初始化增强评分器
+        self._enhanced_scorer = None
+
         # 初始化其他参数
         self._init_parameters()
+
+    @property
+    def enhanced_scorer(self):
+        """获取增强评分器实例（懒加载）"""
+        if self._enhanced_scorer is None:
+            self._enhanced_scorer = EnhancedFishingScorer()
+        return self._enhanced_scorer
+
+    @property
+    def use_enhanced_scoring(self) -> bool:
+        """是否使用增强评分"""
+        return os.getenv('ENABLE_ENHANCED_FISHING_SCORING', 'true').lower() == 'true'
 
     @property
     def enhanced_weather_service(self):
@@ -512,12 +537,14 @@ class FishingAnalyzer:
             self._logger.warning(f"解析7天预报数据失败: {e}")
             return None
 
-    def analyze_hourly_condition(self, hourly_data: Dict) -> FishingCondition:
+    def analyze_hourly_condition(self, hourly_data: Dict, historical_data: List[Dict] = None, date: datetime = None) -> FishingCondition:
         """
         分析单小时的钓鱼条件
 
         Args:
             hourly_data: 小时天气数据
+            historical_data: 历史数据序列 (用于增强评分)
+            date: 目标日期 (用于增强评分)
 
         Returns:
             钓鱼条件评分
@@ -530,19 +557,40 @@ class FishingAnalyzer:
         humidity = hourly_data.get("humidity", 0)
         pressure = hourly_data.get("pressure", 0)
 
-        # 计算各项评分
+        # 计算传统3因子评分
         temp_score = self.calculate_temperature_score(temperature)
         weather_score = self.calculate_weather_score(condition)
         wind_score = self.calculate_wind_score(wind_speed)
 
         # 综合评分 (加权平均)
-        overall_score = (
+        traditional_overall_score = (
             temp_score * 0.4 +      # 温度权重40%
             weather_score * 0.35 +  # 天气权重35%
             wind_score * 0.25       # 风力权重25%
         )
 
         period_name = self.get_time_period(hour)
+
+        # 决定使用的评分系统
+        if self.use_enhanced_scoring and historical_data and date:
+            try:
+                # 使用增强7因子评分
+                enhanced_score = self.enhanced_scorer.calculate_comprehensive_score(
+                    hourly_data, historical_data, date
+                )
+                overall_score = enhanced_score.overall
+                is_enhanced = True
+                self._logger.debug(f"使用增强评分: {hour}时, 评分{overall_score:.1f}")
+            except Exception as e:
+                self._logger.warning(f"增强评分失败，回退到传统评分: {e}")
+                overall_score = traditional_overall_score
+                enhanced_score = None
+                is_enhanced = False
+        else:
+            # 使用传统3因子评分
+            overall_score = traditional_overall_score
+            enhanced_score = None
+            is_enhanced = False
 
         return FishingCondition(
             hour=hour,
@@ -555,7 +603,9 @@ class FishingAnalyzer:
             weather_score=weather_score,
             wind_score=wind_score,
             overall_score=overall_score,
-            period_name=period_name
+            enhanced_score=enhanced_score,
+            period_name=period_name,
+            is_enhanced=is_enhanced
         )
 
     async def find_best_fishing_time(self, location: str, date: str = None) -> FishingRecommendation:
@@ -681,8 +731,33 @@ class FishingAnalyzer:
                     self._logger.warning(f"未知数据格式，生成模拟数据: operation={operation}")
                     hourly_data = self._generate_fallback_hourly_data(date)
 
-            for data in hourly_data:
-                condition = self.analyze_hourly_condition(data)
+            # 解析目标日期
+            try:
+                target_date = datetime.strptime(date, "%Y-%m-%d")
+            except ValueError:
+                # 处理相对日期
+                from services.weather.utils.datetime_utils import calculate_days_from_now
+                days_from_now = calculate_days_from_now(date)
+                target_date = datetime.now() + timedelta(days=days_from_now)
+
+            # 准备历史数据用于增强评分
+            if len(hourly_data) > 0:
+                # 使用已有数据作为历史数据（前面的小时数据）
+                historical_data_for_enhanced = hourly_data[:max(0, len(hourly_data)-6)]
+            else:
+                historical_data_for_enhanced = []
+
+            for i, data in enumerate(hourly_data):
+                # 为每个小时提供历史数据（排除当前及之后的数据）
+                historical_for_this_hour = hourly_data[:i] if i > 0 else []
+                if len(historical_for_this_hour) == 0 and len(historical_data_for_enhanced) > 0:
+                    historical_for_this_hour = historical_data_for_enhanced[-6:]
+
+                condition = self.analyze_hourly_condition(
+                    data,
+                    historical_for_this_hour,
+                    target_date
+                )
                 hourly_conditions.append(condition)
 
             # 按时间段分组并找出最佳时间
