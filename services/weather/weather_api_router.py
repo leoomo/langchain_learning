@@ -361,3 +361,23 @@ class WeatherApiRouter:
             'stats': self.get_stats(),
             'timestamp': datetime.now().isoformat()
         }
+
+    def __del__(self):
+        """析构函数，确保服务被正确清理"""
+        try:
+            # 清理服务实例
+            if hasattr(self, '_hourly_service') and self._hourly_service:
+                if hasattr(self._hourly_service, '_api_client'):
+                    self._hourly_service._api_client.close()
+
+            if hasattr(self, '_daily_service') and self._daily_service:
+                if hasattr(self._daily_service, '_api_client'):
+                    self._daily_service._api_client.close()
+
+            if hasattr(self, '_simulation_service') and self._simulation_service:
+                # Simulation service may not have API client, but检查一下
+                if hasattr(self._simulation_service, '_api_client'):
+                    self._simulation_service._api_client.close()
+
+        except Exception:
+            pass

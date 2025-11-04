@@ -278,9 +278,39 @@ class CaiyunApiClient:
             'timestamp': asyncio.get_event_loop().time()
         }
     
-    def __del__(self):
-        """析构函数，确保会话被关闭"""
+    def close(self):
+        """显式关闭客户端会话"""
         if hasattr(self, '_session') and self._session and not self._session.closed:
-            # 注意：这里不能直接使用await，因为析构函数不是协程
-            task = asyncio.create_task(self.close())
-            task.add_done_callback(lambda t: t.exception() and print(f"关闭会话时出错: {t.exception()}"))
+            loop = None
+            try:
+                # 尝试获取当前事件循环
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # 如果循环正在运行，创建任务
+                    asyncio.create_task(self._close_async())
+                else:
+                    # 如果循环没有运行，直接关闭
+                    loop.run_until_complete(self._close_async())
+            except RuntimeError:
+                # 没有事件循环，创建新的
+                loop = asyncio.new_event_loop()
+                try:
+                    loop.run_until_complete(self._close_async())
+                finally:
+                    loop.close()
+            except Exception as e:
+                print(f"Warning: Error closing session: {e}", file=sys.stderr)
+
+    async def _close_async(self):
+        """异步关闭会话"""
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    def __del__(self):
+        """析构函数，尝试清理资源"""
+        try:
+            if hasattr(self, '_session') and self._session:
+                # 简单清理，避免在析构函数中使用异步操作
+                self._session = None
+        except Exception:
+            pass  # 完全忽略析构函数中的错误

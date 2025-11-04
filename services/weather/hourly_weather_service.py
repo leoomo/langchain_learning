@@ -45,7 +45,7 @@ class HourlyWeatherService:
     
     def __init__(self):
         self._logger = logging.getLogger(__name__)
-        self._cache = WeatherCache(default_ttl=1800)  # 30分钟TTL
+        self._cache = WeatherCache(default_ttl=1800, file_path="data/cache/weather_hourly_cache.json")  # 30分钟TTL
         self._api_client = CaiyunApiClient()
         
         # 配置参数
@@ -588,7 +588,7 @@ class HourlyWeatherService:
     def get_stats(self) -> Dict[str, Any]:
         """获取服务统计信息"""
         total = max(self._stats['total_requests'], 1)
-        
+
         return {
             **self._stats,
             'cache_hit_rate': round(self._stats['cache_hits'] / total * 100, 1),
@@ -597,15 +597,40 @@ class HourlyWeatherService:
             'date_out_of_range_rate': round(self._stats['date_out_of_range'] / total * 100, 1),
             'timestamp': datetime.now().isoformat()
         }
+
+    def __del__(self):
+        """析构函数，确保API客户端被正确关闭"""
+        try:
+            if hasattr(self, '_api_client') and self._api_client:
+                self._api_client.close()
+        except Exception:
+            pass
     
     def health_check(self) -> Dict[str, Any]:
         """健康检查"""
+        # 检查API客户端状态（异步对象的安全检查）
+        api_client_status = 'unavailable'
+        if self._api_client:
+            try:
+                # 检查客户端是否有基本属性和方法
+                if hasattr(self._api_client, '_session') and hasattr(self._api_client, 'get_hourly_forecast'):
+                    # 进一步检查会话状态（避免直接访问异步属性）
+                    session = getattr(self._api_client, '_session', None)
+                    if session and hasattr(session, 'closed'):
+                        api_client_status = 'healthy' if not session.closed else 'session_closed'
+                    else:
+                        api_client_status = 'initialized'
+                else:
+                    api_client_status = 'malformed'
+            except Exception:
+                api_client_status = 'error'
+
         return {
             'service': 'HourlyWeatherService',
             'status': 'healthy',
             'max_forecast_days': self.max_forecast_days,
             'cache_ttl': 1800,
             'stats': self.get_stats(),
-            'api_client_status': 'healthy' if self._api_client else 'unavailable',
+            'api_client_status': api_client_status,
             'timestamp': datetime.now().isoformat()
         }
