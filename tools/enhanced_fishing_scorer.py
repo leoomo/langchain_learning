@@ -613,16 +613,24 @@ class EnhancedFishingScorer:
         self.seasonal_analyzer = SeasonalAnalyzer()
         self.pressure_analyzer = PressureTrendAnalyzer()
 
-        # 评分权重配置 (总和应为1.0)
+        # 评分权重配置 (总和为1.0)
         self.weights = {
-            'temperature': 0.263,  # ~26.3%
-            'weather': 0.211,      # ~21.1%
-            'wind': 0.158,         # ~15.8%
-            'pressure': 0.158,     # ~15.8%
-            'humidity': 0.105,     # ~10.5%
-            'seasonal': 0.053,     # ~5.3%
-            'lunar': 0.053         # ~5.3%
+            'temperature': 0.263,  # 26.3%
+            'weather': 0.211,      # 21.1%
+            'wind': 0.105,         # 15.8% (修复重复)
+            'pressure': 0.158,     # 15.8%
+            'humidity': 0.105,     # 10.5%
+            'seasonal': 0.053,     # 5.3%
+            'lunar': 0.053         # 5.3%
         }
+
+        # 验证权重总和
+        total_weight = sum(self.weights.values())
+        if abs(total_weight - 1.0) > 0.0001:
+            # 如果权重和不为1.0，进行标准化
+            scale_factor = 1.0 / total_weight
+            for key in self.weights:
+                self.weights[key] *= scale_factor
 
         # 评分参数
         self.optimal_temp_range = (15, 25)

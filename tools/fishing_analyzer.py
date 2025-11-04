@@ -136,23 +136,13 @@ class FishingAnalyzer:
         self.optimal_wind_speed = (0, 15)         # 最佳风速范围
         self.preferred_weather = ["晴", "多云", "阴", "小雨"]  # 偏好天气
 
-        # 时间段定义
-        self.time_periods = {
-            "深夜": (0, 5),
-            "早上": (5, 9),
-            "上午": (9, 12),
-            "中午": (12, 14),
-            "下午": (14, 18),
-            "傍晚": (18, 21),
-            "晚上": (21, 24)
-        }
+        # 时间段定义 - 使用datetime_utils中的统一定义
+        # 不再需要self.time_periods，直接使用get_time_period_name函数
 
     def get_time_period(self, hour: int) -> str:
         """获取小时对应的时间段"""
-        for period, (start, end) in self.time_periods.items():
-            if start <= hour < end:
-                return period
-        return "深夜"
+        from services.weather.utils.datetime_utils import get_time_period_name
+        return get_time_period_name(hour)
 
     def calculate_temperature_score(self, temperature: float) -> float:
         """
@@ -781,7 +771,15 @@ class FishingAnalyzer:
                 reverse=True
             )
 
-            best_time_slots = sorted_periods[:3]  # 取前3个最佳时间段
+            # 为时间段添加时间范围信息
+            enhanced_time_slots = []
+            for period_name, score in sorted_periods[:3]:  # 取前3个最佳时间段
+                # 导入时间工具函数
+                from services.weather.utils.datetime_utils import get_time_period_range
+                time_range = get_time_period_range(period_name)
+                enhanced_time_slots.append((f"{period_name} ({time_range})", score))
+
+            best_time_slots = enhanced_time_slots
 
             # 生成详细分析
             detailed_analysis = self._generate_detailed_analysis(
@@ -797,8 +795,10 @@ class FishingAnalyzer:
 
             # 生成各时间段的天气摘要
             weather_summaries = {}
-            for period_name, score in best_time_slots:
-                weather_summaries[period_name] = self._get_period_weather_summary(period_name, hourly_conditions)
+            for period_with_range, score in best_time_slots:
+                # 提取纯时间段名称（去掉时间范围）
+                period_name = period_with_range.split(' ')[0]
+                weather_summaries[period_with_range] = self._get_period_weather_summary(period_name, hourly_conditions)
 
             return FishingRecommendation(
                 location=location,
@@ -876,7 +876,9 @@ class FishingAnalyzer:
 
         # 推荐最佳时间
         if best_time_slots:
-            best_period, best_score = best_time_slots[0]
+            best_period_with_range, best_score = best_time_slots[0]
+            # 提取纯时间段名称（去掉时间范围）
+            best_period = best_period_with_range.split(' ')[0]
             if best_score >= 80:
                 summary_parts.append(f"**强烈推荐**在{best_period}钓鱼，条件极佳！")
             elif best_score >= 60:
@@ -886,7 +888,9 @@ class FishingAnalyzer:
 
         # 次佳选择
         if len(best_time_slots) >= 2:
-            second_period, second_score = best_time_slots[1]
+            second_period_with_range, second_score = best_time_slots[1]
+            # 提取纯时间段名称（去掉时间范围）
+            second_period = second_period_with_range.split(' ')[0]
             if second_score >= 60:
                 summary_parts.append(f"次佳选择是{second_period}。")
 

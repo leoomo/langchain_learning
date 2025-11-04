@@ -204,6 +204,54 @@ def get_date_range(date_str: str, days_before: int = 0, days_after: int = 0) -> 
         raise ValueError(f"日期格式错误，应为YYYY-MM-DD格式: {e}")
 
 
+def get_time_period_range(period_name: str) -> str:
+    """
+    根据时间段名称获取具体的时间范围
+
+    Args:
+        period_name: 时间段名称
+
+    Returns:
+        str: 时间范围描述
+    """
+    time_ranges = {
+        "夜间": "22:00-05:00",
+        "早上": "05:00-08:00",
+        "上午": "08:00-11:00",
+        "中午": "11:00-13:00",
+        "下午": "13:00-17:00",
+        "傍晚": "17:00-19:00",
+        "晚上": "19:00-22:00",
+        "全天": "00:00-24:00"
+    }
+
+    return time_ranges.get(period_name, "未知时间段")
+
+
+def get_time_period_hours(period_name: str) -> list:
+    """
+    根据时间段名称获取包含的小时列表
+
+    Args:
+        period_name: 时间段名称
+
+    Returns:
+        list: 小时列表
+    """
+    period_hours = {
+        "夜间": [22, 23, 0, 1, 2, 3, 4],
+        "早上": [5, 6, 7],
+        "上午": [8, 9, 10],
+        "中午": [11, 12],
+        "下午": [13, 14, 15, 16],
+        "傍晚": [17, 18],
+        "晚上": [19, 20, 21],
+        "全天": list(range(24))
+    }
+
+    return period_hours.get(period_name, [])
+
+
 def get_time_period_name(hour: int) -> str:
     """
     根据小时数获取时间段名称
