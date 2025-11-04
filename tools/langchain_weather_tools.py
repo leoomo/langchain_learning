@@ -2,6 +2,8 @@
 """
 LangChain 工具函数 - 增强版天气查询
 支持日期时间查询和时间粒度细化查询
+
+重构版本：使用服务管理器获取服务实例，避免重复初始化。
 """
 
 import asyncio
@@ -11,15 +13,21 @@ import logging
 
 from tools.weather_tool import WeatherTool
 from tools.fishing_analyzer import find_best_fishing_time
-from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
+from services.service_manager import get_weather_service
 
 logger = logging.getLogger(__name__)
 
 # 创建全局天气工具实例
 weather_tool = WeatherTool()
 
-# 创建增强版天气服务实例（用于坐标查询）
-enhanced_weather_service = EnhancedCaiyunWeatherService()
+# 延迟初始化：使用服务管理器获取天气服务
+def get_enhanced_weather_service():
+    """获取增强版天气服务实例（懒加载）"""
+    try:
+        return get_weather_service()
+    except Exception as e:
+        logger.error(f"获取天气服务失败: {e}")
+        raise
 
 
 @tool

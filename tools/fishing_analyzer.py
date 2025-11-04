@@ -12,14 +12,14 @@ import json
 # 导入现有的天气工具
 try:
     from .weather_tool import WeatherTool
-    from ..services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
+    from ..services.service_manager import get_weather_service
 except ImportError:
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent))
     from weather_tool import WeatherTool
     sys.path.append(str(Path(__file__).parent.parent))
-    from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
+    from services.service_manager import get_weather_service
 
 
 @dataclass
@@ -77,10 +77,23 @@ class FishingAnalyzer:
 
     def __init__(self):
         """初始化钓鱼分析器"""
-        # 使用增强版天气服务，支持高德API坐标查询
+        # 使用天气工具
         self.weather_tool = WeatherTool()
-        self.enhanced_weather_service = EnhancedCaiyunWeatherService()
+        # 延迟初始化：使用服务管理器获取天气服务
+        self._enhanced_weather_service = None
 
+        # 初始化其他参数
+        self._init_parameters()
+
+    @property
+    def enhanced_weather_service(self):
+        """获取增强版天气服务实例（懒加载）"""
+        if self._enhanced_weather_service is None:
+            self._enhanced_weather_service = get_weather_service()
+        return self._enhanced_weather_service
+
+    def _init_parameters(self):
+        """初始化后的设置"""
         # 钓鱼最佳条件参数
         self.optimal_temp_range = (15, 25)        # 最佳温度范围
         self.optimal_wind_speed = (0, 15)         # 最佳风速范围

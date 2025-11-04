@@ -631,7 +631,7 @@ class WeatherTool(ConfigurableTool):
         if coords:
             return coords
 
-        # 如果预定义中没有，使用增强版天气服务（支持高德API）
+        # 如果预定义中没有，使用服务管理器获取天气服务（支持高德API）
         try:
             # 使用绝对导入
             import sys
@@ -639,12 +639,17 @@ class WeatherTool(ConfigurableTool):
             project_root = Path(__file__).parent.parent
             sys.path.insert(0, str(project_root))
 
-            from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
+            from services.service_manager import get_weather_service
             if not hasattr(self, '_enhanced_service'):
-                self._enhanced_service = EnhancedCaiyunWeatherService()
-                self._logger.info("增强版天气服务已初始化")
+                self._enhanced_service = get_weather_service()
+                self._logger.info("增强版天气服务已通过服务管理器初始化")
 
-            coords = self._enhanced_service.get_coordinates(location.strip())
+            # 使用新接口获取坐标
+            coordinate_obj = self._enhanced_service.get_coordinate(location.strip())
+            if coordinate_obj:
+                coords = (coordinate_obj.longitude, coordinate_obj.latitude)
+            else:
+                coords = None
             if coords:
                 # 将结果缓存到城市坐标字典中（内存缓存）
                 self._city_coordinates[location.strip()] = coords
