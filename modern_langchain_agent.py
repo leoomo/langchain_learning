@@ -18,9 +18,9 @@ from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 
-# 导入增强的天气工具
-from tools.langchain_weather_tools import (
-    get_weather_tools,
+# 导入同步版本的天气工具
+from tools.langchain_weather_tools_sync import (
+    get_weather_tools_sync,
     create_weather_tool_system_prompt
 )
 
@@ -87,8 +87,8 @@ class ModernLangChainAgent:
         """
         self.model_provider = model_provider
         self.model = self._initialize_model()
-        # 使用增强的天气工具集，包含钓鱼推荐功能
-        weather_tools = get_weather_tools()
+        # 使用同步版本的天气工具集，包含钓鱼推荐功能
+        weather_tools = get_weather_tools_sync()
         self.tools = [get_current_time, calculate, search_information] + weather_tools
         self.agent = self._create_agent()
 
@@ -277,7 +277,7 @@ def demonstrate_agent_capabilities():
             # "余杭区今天天气怎么样？",
             # "景德镇明天天气怎么样？",
             # "临安今天天气怎么样？",
-            "明天什么时间段去富阳区钓鱼比较好？",
+            "明天还是后天去富阳区钓鱼比较好？",
             # "今天是什么日子？"
         ]
 

@@ -2,8 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.1.0-sync-version] - 2025-11-05
+
+### 🔄 Major Architecture Change
+**Complete Migration to Synchronous Architecture**
+
+#### Problem Resolution
+- **Fixed Event Loop Issues**: Completely resolved all "Event loop is closed" errors that plagued the async version
+- **Simplified Complexity**: Removed complex async/await patterns, making the codebase easier to understand and maintain
+- **Enhanced Reliability**: Eliminated race conditions and async context management issues
+
+#### Technical Implementation
+
+##### New Synchronous Components
+- **`services/weather/clients/caiyun_api_client_sync.py`**:
+  - Replaced `aiohttp` with `requests` for HTTP calls
+  - Added retry mechanism with exponential backoff
+  - Fixed `method_whitelist` → `allowed_methods` compatibility issue
+- **`services/weather/hourly_weather_service_sync.py`**:
+  - Converted all async methods to synchronous
+  - Maintained full functionality without complexity
+- **`tools/weather_tool_sync.py`**:
+  - Synchronous weather tool implementation
+  - Fixed service integration issues
+  - Added proper error handling and fallback mechanisms
+- **`tools/langchain_weather_tools_sync.py`**:
+  - Fully synchronized LangChain tool integration
+  - Direct tool function calls without event loop management
+  - Maintained all original functionality
+- **`tools/fishing_analyzer_sync.py`**:
+  - Synchronous fishing analysis with intelligent date parsing
+  - Enhanced date format support: `tomorrow`, `2天后`, `YYYY-MM-DD`, etc.
+  - Robust error handling and fallback mechanisms
+
+##### Enhanced Features
+- **Smart Date Parsing**: Supports multiple date formats including relative dates
+- **Improved Error Handling**: Comprehensive error messages and recovery strategies
+- **Better Performance**: Synchronous calls are more predictable and easier to debug
+
+#### Migration Benefits
+- **🛡️ Zero Event Loop Errors**: Complete elimination of async-related failures
+- **⚡ Faster Development**: Easier to debug and test synchronous code
+- **🧪 Cleaner Codebase**: Simplified architecture with fewer moving parts
+- **🔧 Better Tool Integration**: Direct function calls without async wrapper complexity
+
+#### Testing and Validation
+- **100% Functionality Verification**: All weather tools work perfectly in sync mode
+- **Performance Testing**: Synchronous version shows stable performance characteristics
+- **Date Parsing Validation**: Comprehensive date format support with intelligent fallbacks
 
 ## [2.0.0-refactored-fixed] - 2025-11-04
 

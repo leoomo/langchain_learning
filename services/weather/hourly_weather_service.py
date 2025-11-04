@@ -65,7 +65,7 @@ class HourlyWeatherService:
     async def get_forecast(self, location_info: dict, date_str: str) -> WeatherResult:
         """
         获取指定日期的逐小时天气预报数据。
-        
+
         Args:
             location_info: 地理位置信息
                 - name: 地点名称
@@ -74,19 +74,26 @@ class HourlyWeatherService:
                 - adcode: 行政区划代码 (可选)
             date_str: 查询日期，格式为"YYYY-MM-DD"
                 必须在当前日期的3天内 (包括今天)
-        
+
         Returns:
             WeatherResult: 统一格式的天气查询结果
         """
+    
         self._stats['total_requests'] += 1
         start_time = datetime.now()
         
         try:
             # 1. 验证日期范围
             days_from_now = calculate_days_from_now(date_str)
-            if days_from_now > self.max_forecast_days or days_from_now < 0:
+
+            if days_from_now < 0:
+                # 过去日期的错误提示
                 self._stats['date_out_of_range'] += 1
-                raise DateOutOfRangeException(f"查询日期{date_str}超出逐小时预报范围({self.max_forecast_days}天)")
+                raise DateOutOfRangeException(f"查询日期{date_str}是过去日期，逐小时预报服务仅支持未来天气查询")
+            elif days_from_now > self.max_forecast_days:
+                # 未来日期超出范围的错误提示
+                self._stats['date_out_of_range'] += 1
+                raise DateOutOfRangeException(f"查询日期{date_str}超出逐小时预报范围({self.max_forecast_days}天)，当前仅支持未来{self.max_forecast_days}天内的天气预报")
             
             # 2. 生成缓存键
             cache_key = self._generate_cache_key(location_info, date_str)
@@ -115,33 +122,39 @@ class HourlyWeatherService:
             
             return result
             
+        except DateOutOfRangeException as e:
+            # 日期范围错误特殊处理
+            self._stats['date_out_of_range'] += 1
+            self._logger.warning(f"逐小时预报日期范围错误: {location_info['name']} {date_str} - {e}")
+
+            # 对于日期范围错误，直接返回历史日期模拟数据或提示
+            return await self._handle_date_out_of_range(location_info, date_str, str(e))
+
         except Exception as e:
             self._stats['errors'] += 1
             self._logger.error(f"逐小时预报查询失败: {location_info['name']} {date_str} 错误: {e}")
-            
+
             # 错误回退
             return await self._fallback_to_simulation(location_info, date_str, str(e))
     
     async def _call_api_with_retry(self, location_info: dict) -> Dict[str, Any]:
         """带重试机制的API调用"""
         last_exception = None
-        
+
         for attempt in range(self.max_retry_attempts):
             try:
-                self._logger.debug(f"API调用尝试 {attempt + 1}/{self.max_retry_attempts}")
-                
                 api_data = await self._api_client.get_hourly_forecast(
                     lng=location_info['lng'],
                     lat=location_info['lat'],
                     hourlysteps=72
                 )
-                
+
                 # 验证API响应
                 if not self._validate_api_response(api_data):
                     raise WeatherDataCorruptionException("API响应数据格式错误")
-                
+
                 return api_data
-                
+
             except NetworkTimeoutException as e:
                 last_exception = e
                 if attempt < self.max_retry_attempts - 1:
@@ -157,6 +170,11 @@ class HourlyWeatherService:
                 raise
                 
             except Exception as e:
+                # 检查是否是已知的API异常类型
+                if isinstance(e, (WeatherDataCorruptionException, NetworkTimeoutException,
+                                ApiQuotaExceededException, LocationNotFoundException)):
+                    raise
+
                 last_exception = e
                 if attempt < self.max_retry_attempts - 1:
                     wait_time = 1 + attempt
@@ -518,10 +536,107 @@ class HourlyWeatherService:
         normalized_name = re.sub(r'[^\w\u4e00-\u9fff]', '', location_name)
         return f"hourly_{normalized_name}_{date_str}"
     
+    async def _handle_date_out_of_range(self, location_info: dict, date_str: str, error_msg: str) -> WeatherResult:
+        """
+        专门处理日期超出范围的情况
+
+        Args:
+            location_info: 地理位置信息
+            date_str: 查询日期
+            error_msg: 错误信息
+
+        Returns:
+            WeatherResult: 包含错误信息的结果
+        """
+        from datetime import datetime
+        from .enums import WeatherDataSource
+
+        # 计算日期差值用于更详细的提示
+        try:
+            days_from_now = calculate_days_from_now(date_str)
+
+            if days_from_now < 0:
+                # 过去日期：提供历史天气的概念性数据
+                suggestion = f"历史日期({abs(days_from_now)}天前)，无法提供准确的逐小时天气预报"
+                data_source = WeatherDataSource.HISTORICAL.value
+                confidence = 0.2  # 历史数据置信度很低
+            else:
+                # 未来日期超出范围
+                suggestion = f"超出预报范围({days_from_now - self.max_forecast_days}天)，建议查询未来{self.max_forecast_days}天内天气"
+                data_source = WeatherDataSource.SIMULATION.value
+                confidence = 0.1  # 超出范围数据置信度极低
+
+            # 生成基础的24小时数据（用于钓鱼推荐等下游服务）
+            hourly_data = []
+            try:
+                target_date = datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                target_date = datetime.now()
+                date_str = target_date.strftime("%Y-%m-%d")
+
+            base_temp = 18.0 + (days_from_now * 0.1)  # 简单的温度变化模拟
+
+            for hour in range(24):
+                hour_dt = target_date.replace(hour=hour, minute=0, second=0)
+
+                # 简单的24小时温度变化
+                temp_variation = 8 * (1 - abs(hour - 14) / 10)
+                temperature = base_temp + temp_variation
+
+                hour_data = {
+                    'time': hour_dt,
+                    'temperature': round(temperature, 1),
+                    'weather': '多云',
+                    'wind_speed': 3.0,
+                    'wind_direction': 180.0,
+                    'humidity': 65.0,
+                    'pressure': 1013.0,
+                    'visibility': 10.0,
+                    'precipitation': 0.0,
+                    'ultraviolet': 3.0,
+                    'air_quality': {},
+                    'hour_of_day': hour,
+                    'data_source': data_source,
+                    'fishing_score': 60.0,  # 默认评分
+                    'error': f'日期范围错误: {suggestion}'
+                }
+                hourly_data.append(hour_data)
+
+            return WeatherResult(
+                data_source=data_source,
+                hourly_data=hourly_data,
+                confidence=confidence,
+                api_url="date_out_of_range",
+                error_code=2,
+                error_message=suggestion,
+                cached=False,
+                metadata={
+                    'reason': 'date_out_of_range',
+                    'days_from_now': days_from_now,
+                    'max_forecast_days': self.max_forecast_days,
+                    'suggestion': suggestion,
+                    'historical_data': days_from_now < 0
+                }
+            )
+
+        except Exception as e:
+            # 如果连错误处理都失败了，返回最基础的错误结果
+            return WeatherResult(
+                data_source=WeatherDataSource.EMERGENCY.value,
+                hourly_data=[],
+                confidence=0.0,
+                api_url="error_handling_failed",
+                error_code=3,
+                error_message=f"日期处理失败: {error_msg}，错误处理异常: {e}",
+                cached=False,
+                metadata={'error': True, 'date_processing_failed': True}
+            )
+
     async def _fallback_to_simulation(self, location_info: dict, date_str: str, error_msg: str) -> WeatherResult:
         """错误回退到模拟数据"""
         self._logger.warning(f"逐小时服务回退到模拟数据: {error_msg}")
-        
+
+      
         try:
             # 尝试从模拟服务获取数据
             from .simulation_service import SimulationService
@@ -529,10 +644,11 @@ class HourlyWeatherService:
             return await simulation_service.get_forecast(location_info, date_str)
         except Exception as e:
             self._logger.error(f"模拟服务也无法获取数据: {e}")
-            
+
             # 最后的紧急回退
             return self._emergency_fallback(location_info, date_str, error_msg)
-    
+
+        
     def _emergency_fallback(self, location_info: dict, date_str: str, error_msg: str) -> WeatherResult:
         """紧急回退数据"""
         try:

@@ -4,6 +4,7 @@
 """
 import asyncio
 import logging
+import sys
 from typing import Dict, Any, Optional
 import aiohttp
 
@@ -143,17 +144,18 @@ class CaiyunApiClient:
     async def _make_api_request(self, endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         发起API请求
-        
+
         Args:
             endpoint: API端点
             params: 请求参数
-        
+
         Returns:
             Dict[str, Any]: API响应数据
-        
+
         Raises:
             WeatherApiException: API调用相关异常
         """
+  
         await self._ensure_session()
         
         # 获取API密钥
@@ -208,7 +210,7 @@ class CaiyunApiClient:
                     continue
                 else:
                     raise last_exception
-                    
+
             except asyncio.TimeoutError as e:
                 last_exception = NetworkTimeoutException(f"网络请求超时: {e}")
                 if attempt < self._retry_attempts - 1:
@@ -223,7 +225,7 @@ class CaiyunApiClient:
                 # 检查是否是已知的API异常
                 if isinstance(e, WeatherApiException):
                     raise
-                
+
                 last_exception = WeatherApiException(f"未知错误: {e}")
                 if attempt < self._retry_attempts - 1:
                     wait_time = 1 + attempt
@@ -268,38 +270,54 @@ class CaiyunApiClient:
     
     def get_stats(self) -> Dict[str, Any]:
         """获取客户端统计信息"""
+        try:
+            # 安全获取时间戳
+            try:
+                timestamp = asyncio.get_event_loop().time()
+            except (RuntimeError, AttributeError):
+                # 如果没有事件循环或循环已关闭，使用系统时间
+                import time
+                timestamp = time.time()
+        except Exception:
+            timestamp = 0.0
+
+        # 安全检查会话状态
+        session_status = 'inactive'
+        if self._session:
+            try:
+                session_status = 'active' if not self._session.closed else 'closed'
+            except Exception:
+                session_status = 'error'
+
         return {
             'client': 'CaiyunApiClient',
             'base_url': self._base_url,
             'timeout': self._timeout.total,
             'retry_attempts': self._retry_attempts,
-            'session_status': 'active' if self._session and not self._session.closed else 'inactive',
+            'session_status': session_status,
             'api_key_set': bool(self._api_key or self._get_api_key_from_env()),
-            'timestamp': asyncio.get_event_loop().time()
+            'timestamp': timestamp
         }
     
     def close(self):
         """显式关闭客户端会话"""
         if hasattr(self, '_session') and self._session and not self._session.closed:
-            loop = None
+            # 简单同步关闭，不依赖现有事件循环
             try:
-                # 尝试获取当前事件循环
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # 如果循环正在运行，创建任务
-                    asyncio.create_task(self._close_async())
-                else:
-                    # 如果循环没有运行，直接关闭
-                    loop.run_until_complete(self._close_async())
-            except RuntimeError:
-                # 没有事件循环，创建新的
-                loop = asyncio.new_event_loop()
+                import asyncio
+                # 创建独立的事件循环来关闭会话
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
                 try:
-                    loop.run_until_complete(self._close_async())
+                    new_loop.run_until_complete(self._close_async())
                 finally:
-                    loop.close()
+                    new_loop.close()
+                    self._session = None
             except Exception as e:
-                print(f"Warning: Error closing session: {e}", file=sys.stderr)
+                # 忽略关闭错误，记录日志
+                self._logger.debug(f"Session cleanup error ignored: {e}")
+                # 强制清理引用，让GC处理
+                self._session = None
 
     async def _close_async(self):
         """异步关闭会话"""

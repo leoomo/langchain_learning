@@ -31,3 +31,4 @@ class WeatherDataSource(Enum):
     CACHE = "cache"                     # 缓存数据
     FALLBACK = "fallback"               # 回退数据
     EMERGENCY = "emergency_fallback"    # 紧急回退
+    HISTORICAL = "historical_estimate"  # 历史数据估算

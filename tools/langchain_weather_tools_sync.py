@@ -1,34 +1,20 @@
 #!/usr/bin/env python3
 """
-LangChain 工具函数 - 增强版天气查询
+LangChain 工具函数 - 同步版本
 支持日期时间查询和时间粒度细化查询
-
-重构版本：使用服务管理器获取服务实例，避免重复初始化。
 """
 
-import asyncio
 from typing import Optional, Dict, Any
 from langchain_core.tools import tool
 import logging
 
-from tools.weather_tool import WeatherTool
-from tools.fishing_analyzer import find_best_fishing_time
-from services.service_manager import get_weather_service
+from tools.weather_tool_sync import WeatherTool
+from tools.fishing_analyzer_sync import find_best_fishing_time
 
 logger = logging.getLogger(__name__)
 
 # 创建全局天气工具实例
 weather_tool = WeatherTool()
-
-# 延迟初始化：使用服务管理器获取天气服务
-def get_enhanced_weather_service():
-    """获取增强版天气服务实例（懒加载）"""
-    try:
-        return get_weather_service()
-    except Exception as e:
-        logger.error(f"获取天气服务失败: {e}")
-        raise
-
 
 @tool
 def query_weather_by_date(place: str, date: str = "today") -> str:
@@ -50,20 +36,11 @@ def query_weather_by_date(place: str, date: str = "today") -> str:
         query_weather_by_date("广州", "昨天")
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                weather_tool.execute(
-                    operation="weather_by_date",
-                    location=place,
-                    date=date
-                )
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = weather_tool.execute(
+            operation="weather_by_date",
+            location=place,
+            date=date
+        )
 
         if result.success:
             data = result.data
@@ -107,20 +84,11 @@ def query_weather_by_datetime(place: str, datetime: str) -> str:
         query_weather_by_datetime("深圳", "后天早上")
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                weather_tool.execute(
-                    operation="weather_by_datetime",
-                    location=place,
-                    datetime_str=datetime
-                )
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = weather_tool.execute(
+            operation="weather_by_datetime",
+            location=place,
+            datetime_str=datetime
+        )
 
         if result.success:
             data = result.data
@@ -155,8 +123,6 @@ def query_weather_by_datetime(place: str, datetime: str) -> str:
     except Exception as e:
         logger.error(f"查询指定时间段天气失败: {str(e)}")
         return f"❌ 查询失败: {str(e)}"
-    finally:
-        loop.close()
 
 
 @tool
@@ -176,20 +142,11 @@ def query_hourly_forecast(place: str, hours: int = 24) -> str:
         query_hourly_forecast("广州", 48)
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                weather_tool.execute(
-                    operation="hourly_forecast",
-                    location=place,
-                    hours=min(hours, 48)  # 限制最大48小时
-                )
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = weather_tool.execute(
+            operation="hourly_forecast",
+            location=place,
+            hours=min(hours, 48)  # 限制最大48小时
+        )
 
         if result.success:
             data = result.data
@@ -253,21 +210,12 @@ def query_time_period_weather(place: str, date: str, time_period: str) -> str:
         query_time_period_weather("广州", "today", "下午")
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                weather_tool.execute(
-                    operation="time_period_weather",
-                    location=place,
-                    date=date,
-                    time_period=time_period
-                )
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = weather_tool.execute(
+            operation="time_period_weather",
+            location=place,
+            date=date,
+            time_period=time_period
+        )
 
         if result.success:
             data = result.data
@@ -299,8 +247,6 @@ def query_time_period_weather(place: str, date: str, time_period: str) -> str:
     except Exception as e:
         logger.error(f"查询时间段天气失败: {str(e)}")
         return f"❌ 查询失败: {str(e)}"
-    finally:
-        loop.close()
 
 
 # 原有的通用天气查询工具，保持向后兼容
@@ -315,19 +261,10 @@ def query_current_weather(place: str) -> str:
         当前天气信息字符串，包含温度、天气状况、湿度等详细信息
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                weather_tool.execute(
-                    operation="current_weather",
-                    location=place
-                )
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = weather_tool.execute(
+            operation="current_weather",
+            location=place
+        )
 
         if result.success:
             data = result.data
@@ -369,16 +306,7 @@ def query_fishing_recommendation(location: str, date: str = None) -> str:
         query_fishing_recommendation("杭州西湖", "tomorrow")
     """
     try:
-        # 简化方案：总是创建自己的事件循环
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(
-                find_best_fishing_time(location, date)
-            )
-        finally:
-            # 关闭我们创建的事件循环
-            loop.close()
+        result = find_best_fishing_time(location, date)
 
         # 解析JSON结果并格式化输出
         import json
@@ -429,7 +357,7 @@ def query_fishing_recommendation(location: str, date: str = None) -> str:
 
 
 # 工具列表，用于LangChain智能体
-WEATHER_TOOLS = [
+WEATHER_TOOLS_SYNC = [
     query_current_weather,
     query_weather_by_date,
     query_weather_by_datetime,
@@ -439,13 +367,13 @@ WEATHER_TOOLS = [
 ]
 
 
-def get_weather_tools() -> list:
+def get_weather_tools_sync() -> list:
     """获取所有天气查询工具
 
     Returns:
         LangChain工具列表
     """
-    return WEATHER_TOOLS
+    return WEATHER_TOOLS_SYNC
 
 
 def create_weather_tool_system_prompt() -> str:

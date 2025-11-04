@@ -2,6 +2,24 @@
 
 本文档描述了 LangChain 智能体项目中的主要 API 接口和使用方法。
 
+## 🔄 版本说明
+
+### 同步版本架构 (v2.1.0+) ⭐ **推荐**
+
+项目已完全重构为**同步版本**，提供更好的稳定性和易用性：
+
+- ✅ **完全同步**: 移除所有 `async/await` 代码，消除事件循环复杂性
+- ✅ **稳定性提升**: 彻底解决 "Event loop is closed" 错误
+- ✅ **简化架构**: 标准Python函数调用，易于理解和维护
+- ✅ **同步API客户端**: 使用 `requests` 替代 `aiohttp`，性能稳定
+- ✅ **工具集成完善**: LangChain工具完全同步化，支持智能体调用
+
+### 异步版本 (已弃用)
+
+为保持向后兼容性，保留原有的异步版本文件，但不推荐在新项目中使用。
+
+---
+
 ## 目录
 
 - [核心架构 API](#核心架构-api)
@@ -20,7 +38,10 @@
 - [地名匹配 API](#地名匹配-api)
 - [缓存系统 API](#缓存系统-api)
 - [数据库 API](#数据库-api)
-- [工具函数 API](#工具函数-api)
+- [同步工具函数 API](#同步工具函数-api-)
+  - [LangChain 同步工具](#langchain-同步工具)
+  - [同步天气工具](#同步天气工具)
+  - [同步钓鱼分析工具](#同步钓鱼分析工具)
 - [环境配置](#环境配置)
 - [错误处理](#错误处理)
 - [使用示例](#使用示例)
@@ -72,6 +93,39 @@ class ITool(ABC):
     def validate_input(self, **kwargs) -> bool:
         """验证输入参数"""
         pass
+
+### 同步工具接口 (Sync Version)
+
+**新增同步版本的工具接口**，提供更简单易用的API：
+
+```python
+@dataclass
+class SyncToolResult:
+    """同步工具执行结果"""
+    success: bool
+    data: Any = None
+    error: str = None
+    metadata: Dict[str, Any] = None
+
+class ISyncTool(ABC):
+    """同步工具接口"""
+
+    @property
+    @abstractmethod
+    def metadata(self) -> ToolMetadata:
+        """工具元数据"""
+        pass
+
+    @abstractmethod
+    def execute(self, **kwargs) -> SyncToolResult:
+        """执行工具操作 (同步版本)"""
+        pass
+
+    @abstractmethod
+    def validate_input(self, **kwargs) -> bool:
+        """验证输入参数"""
+        pass
+```
 ```
 
 ### BaseTool 基类
@@ -1213,8 +1267,272 @@ from verify_national_integration import main
 main()  # 验证所有组件集成状态
 ```
 
+## 同步工具函数 API
+
+### LangChain 同步工具
+
+**推荐使用** - 同步版本的LangChain工具，稳定可靠，无异步问题。
+
+#### 导入和初始化
+
+```python
+from tools.langchain_weather_tools_sync import (
+    query_current_weather,
+    query_weather_by_date,
+    query_hourly_forecast,
+    query_fishing_recommendation,
+    get_weather_tools_sync,
+    create_weather_tool_system_prompt
+)
+
+# 直接使用工具（推荐）
+result = query_current_weather.invoke({'place': '北京'})
+print(result)
+
+# 或获取工具列表集成到智能体
+weather_tools = get_weather_tools_sync()
+system_prompt = create_weather_tool_system_prompt()
+```
+
+#### 主要工具函数
+
+##### query_current_weather(place: str) -> str
+
+查询当前天气信息（同步版本）。
+
+**参数：**
+- `place` (str): 地点名称
+
+**返回：**
+- `str`: 格式化的天气信息
+
+**示例：**
+```python
+from tools.langchain_weather_tools_sync import query_current_weather
+
+# 稳定的同步调用，无事件循环问题
+result = query_current_weather.invoke({'place': '杭州'})
+print(result)
+# 输出: 📍 杭州当前天气:
+# 🌡️ 温度: 22.0°C
+# 🌤️ 天气: 多云
+# 💧 湿度: 65%
+# 🌬️ 风速: 8.5km/h
+```
+
+##### query_fishing_recommendation(location: str, date: str) -> str
+
+智能钓鱼推荐（同步版本）。
+
+**参数：**
+- `location` (str): 地点名称
+- `date` (str): 日期，支持多种格式：
+  - 标准格式: "2024-12-25"
+  - 相对日期: "tomorrow", "yesterday", "today"
+  - 中文相对日期: "明天", "昨天", "今天", "后天"
+  - 数字+时间: "2天后", "3天前"
+
+**返回：**
+- `str`: 钓鱼推荐分析结果
+
+**示例：**
+```python
+from tools.langchain_weather_tools_sync import query_fishing_recommendation
+
+# 支持多种日期格式
+queries = [
+    {'location': '富阳区', 'date': '后天'},     # ✅ 相对日期
+    {'location': '余杭区', 'date': 'tomorrow'}, # ✅ 英文相对日期
+    {'location': '北京', 'date': '2024-12-25'}, # ✅ 标准日期格式
+]
+
+for query in queries:
+    result = query_fishing_recommendation.invoke(query)
+    print(result)
+```
+
+##### query_weather_by_date(place: str, date: str) -> str
+
+指定日期天气查询（同步版本）。
+
+**参数：**
+- `place` (str): 地点名称
+- `date` (str): 日期，支持同上多种格式
+
+**返回：**
+- `str`: 指定日期的天气信息
+
+**示例：**
+```python
+from tools.langchain_weather_tools_sync import query_weather_by_date
+
+# 历史天气查询
+result = query_weather_by_date.invoke({
+    'place': '上海',
+    'date': '2024-11-01'
+})
+
+# 未来天气查询
+result = query_weather_by_date.invoke({
+    'place': '广州',
+    'date': '后天'
+})
+```
+
+##### query_hourly_forecast(place: str, hours: int = 24) -> str
+
+小时级天气预报（同步版本）。
+
+**参数：**
+- `place` (str): 地点名称
+- `hours` (int): 预报小时数，默认24小时
+
+**返回：**
+- `str`: 小时级天气预报信息
+
+**示例：**
+```python
+from tools.langchain_weather_tools_sync import query_hourly_forecast
+
+# 查询未来12小时预报
+result = query_hourly_forecast.invoke({
+    'place': '深圳',
+    'hours': 12
+})
+
+print(result)
+# 输出详细的小时级预报数据，包括温度、天气、风速等
+```
+
+#### 工具集合
+
+##### get_weather_tools_sync() -> List[BaseTool]
+
+获取所有同步天气工具的列表。
+
+**返回：**
+- `List[BaseTool]`: LangChain工具对象列表
+
+**示例：**
+```python
+from tools.langchain_weather_tools_sync import get_weather_tools_sync
+
+# 获取所有同步工具
+tools = get_weather_tools_sync()
+
+# 集成到智能体
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model="claude-sonnet-4-5-20250929",
+    tools=tools,
+    system_prompt="你是一个天气助手，可以帮助用户查询天气信息。"
+)
+```
+
+### 同步天气工具
+
+#### WeatherTool 同步版本
+
+```python
+from tools.weather_tool_sync import WeatherTool
+
+# 创建同步天气工具
+weather_tool = WeatherTool()
+
+# 执行操作（同步调用）
+result = weather_tool.execute(
+    operation='current_weather',
+    location='北京'
+)
+
+if result.success:
+    data = result.data
+    print(f"温度: {data.get('temperature', 'N/A')}°C")
+else:
+    print(f"查询失败: {result.error}")
+```
+
+**支持的操作：**
+- `current_weather` - 当前天气
+- `weather_by_date` - 指定日期天气
+- `hourly_forecast` - 小时级预报
+- `batch_weather` - 批量查询
+
+### 同步钓鱼分析工具
+
+#### FishingAnalyzer 同步版本
+
+```python
+from tools.fishing_analyzer_sync import find_best_fishing_time, parse_date_input
+
+# 日期解析（增强版）
+date_input = "后天"
+parsed_date = parse_date_input(date_input)
+print(f"解析结果: {parsed_date.strftime('%Y-%m-%d')}")
+
+# 钓鱼时间推荐
+result = find_best_fishing_time(
+    location='富阳区',
+    date='后天'  # 支持所有日期格式
+)
+
+print(result)  # 输出JSON格式的详细分析结果
+```
+
+#### Enhanced Fishing Scorer
+
+```python
+from tools.enhanced_fishing_scorer import EnhancedFishingScorer
+
+# 创建增强评分器
+scorer = EnhancedFishingScorer()
+
+# 分析钓鱼条件
+conditions = {
+    'datetime': '2024-11-06T14:00:00',
+    'temperature': 22.0,
+    'condition': '阴',
+    'wind_speed': 8.0,
+    'humidity': 75.0,
+    'pressure': 1008.0
+}
+
+from datetime import datetime
+date = datetime(2024, 11, 6, 14, 0)
+score = scorer.calculate_comprehensive_score(conditions, historical_data, date)
+
+print(f"综合评分: {score.overall:.1f}/100")
+print(f"7因子评分: 温度{score.temperature:.1f}, 天气{score.weather:.1f}, 风力{score.wind:.1f}, 气压{score.pressure:.1f}, 湿度{score.humidity:.1f}, 季节{score.seasonal:.1f}, 月相{score.lunar:.1f}")
+```
+
+### 同步API客户端
+
+#### CaiyunApiClient 同步版本
+
+```python
+from services.weather.clients.caiyun_api_client_sync import CaiyunApiClient
+
+# 创建同步API客户端
+client = CaiyunApiClient(api_key="your-api-key")
+
+# 同步调用，无需await
+result = client.get_realtime_weather(116.4074, 39.9042)
+
+if result['success']:
+    print(f"温度: {result['result']['temperature']}°C")
+else:
+    print(f"错误: {result['error']}")
+```
+
+**优势：**
+- 使用 `requests` 库替代 `aiohttp`
+- 内置重试机制和错误处理
+- 线程安全的会话管理
+- 无事件循环问题
+
 ---
 
-**更新时间**: 2025-11-03
-**版本**: 1.3.0
+**更新时间**: 2025-11-05
+**版本**: 2.1.0-sync-version
 **维护者**: LangChain 学习项目
