@@ -20,8 +20,9 @@ def calculate_days_from_now(date_str: str) -> int:
     Raises:
         ValueError: 日期格式错误
     """
-    # 相对日期映射
+    # 相对日期映射 - 支持中英文
     relative_dates = {
+        # 中文相对日期
         '今天': 0,
         '明天': 1,
         '后天': 2,
@@ -29,13 +30,28 @@ def calculate_days_from_now(date_str: str) -> int:
         '前天': -2,
         '大前天': -3,
         '大后天': 3,
+        # 英文相对日期
+        'today': 0,
+        'tomorrow': 1,
+        'day after tomorrow': 2,
+        'yesterday': -1,
+        'day before yesterday': -2,
+        'three days ago': -3,
+        'three days later': 3,
+        # 简化英文
+        'tmrw': 1,
+        'yst': -1,
+        'tmw': 1,
     }
 
-    # 首先检查是否为相对日期
-    if date_str in relative_dates:
-        return relative_dates[date_str]
+    # 标准化输入（去除多余空格，转换为小写）
+    normalized_date_str = date_str.strip().lower()
 
-    # 检查是否为"X天后"格式
+    # 首先检查是否为相对日期
+    if normalized_date_str in relative_dates:
+        return relative_dates[normalized_date_str]
+
+    # 检查中文"X天后"格式
     if date_str.endswith('天后'):
         try:
             days = int(date_str[:-2])
@@ -43,12 +59,84 @@ def calculate_days_from_now(date_str: str) -> int:
         except ValueError:
             pass
 
-    # 检查是否为"X天前"格式
+    # 检查中文"X天前"格式
     if date_str.endswith('天前'):
         try:
             days = int(date_str[:-2])
             return -days
         except ValueError:
+            pass
+
+    # 检查英文"X days later"格式
+    if normalized_date_str.endswith(' days later'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X day later"格式（单数）
+    if normalized_date_str.endswith(' day later'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X days after"格式
+    if normalized_date_str.endswith(' days after'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X day after"格式（单数）
+    if normalized_date_str.endswith(' day after'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X days ago"格式
+    if normalized_date_str.endswith(' days ago'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return -days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X day ago"格式（单数）
+    if normalized_date_str.endswith(' day ago'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return -days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X days before"格式
+    if normalized_date_str.endswith(' days before'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return -days
+        except (ValueError, IndexError):
+            pass
+
+    # 检查英文"X day before"格式（单数）
+    if normalized_date_str.endswith(' day before'):
+        try:
+            parts = normalized_date_str.split(' ')
+            days = int(parts[0])
+            return -days
+        except (ValueError, IndexError):
             pass
 
     # 尝试解析为绝对日期
