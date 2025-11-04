@@ -248,6 +248,96 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
             fallback_data = self._create_error_enhanced_weather_data(place_name, error_msg)
             return fallback_data, f"错误: {error_msg}", WeatherServiceErrorCode.DATA_PARSE_ERROR
 
+    def get_daily_forecast(self, place_name: str, days: int = 7) -> Tuple[Optional[Dict], str, int]:
+        """
+        获取未来7天逐天天气预报
+
+        Args:
+            place_name: 地区名称
+            days: 预报天数 (1-7)
+
+        Returns:
+            (forecast_data, status_message, error_code) 元组
+        """
+        try:
+            # 参数验证
+            if not place_name or not place_name.strip():
+                error_msg = "地区名称不能为空"
+                logger.error(error_msg)
+                return None, f"错误: {error_msg}", WeatherServiceErrorCode.PARAMETER_ERROR
+
+            if not 1 <= days <= 7:
+                error_msg = f"预报天数必须在1-7之间，当前为: {days}"
+                logger.error(error_msg)
+                return None, f"错误: {error_msg}", WeatherServiceErrorCode.PARAMETER_ERROR
+
+            # 检查缓存
+            cache_key = f"daily_forecast:{place_name}:{days}days"
+            cached_forecast = self.cache.get(cache_key, extra_params={"type": "daily_forecast"})
+            if cached_forecast:
+                logger.info(f"从缓存获取逐天预报: {place_name} {days}天")
+                return cached_forecast["data"], f"缓存数据（{cached_forecast.get('source', '未知来源')})", WeatherServiceErrorCode.CACHE_HIT
+
+            # 获取坐标
+            coordinates = self.get_coordinates(place_name)
+            if not coordinates:
+                error_msg = f"未找到地区 '{place_name}' 的坐标信息"
+                logger.warning(error_msg)
+                return None, f"错误: 坐标未找到", WeatherServiceErrorCode.COORDINATE_NOT_FOUND
+
+            # 调用彩云天气7天预报API
+            if not self.api_key:
+                error_msg = "API密钥未配置"
+                logger.error(error_msg)
+                return None, f"错误: {error_msg}", WeatherServiceErrorCode.API_ERROR
+
+            url = f"{self.base_url}/{self.api_key}/{coordinates[0]},{coordinates[1]}/daily?dailysteps={days}"
+
+            try:
+                response = requests.get(url, timeout=self.timeout)
+                response.raise_for_status()
+                data = response.json()
+
+                if data.get("status") != "ok":
+                    logger.error(f"逐天预报API返回错误: {data.get('status')}")
+                    return None, f"API错误: {data.get('status')}", WeatherServiceErrorCode.API_ERROR
+
+                result = data.get("result", {})
+                daily = result.get("daily", {})
+
+                if daily.get("status") != "ok":
+                    logger.error(f"逐天预报数据状态异常: {daily.get('status')}")
+                    return None, f"数据状态异常: {daily.get('status')}", WeatherServiceErrorCode.API_ERROR
+
+                # 缓存结果
+                cache_data = {
+                    "data": daily,
+                    "source": "彩云天气API (7天预报)",
+                    "coordinates": coordinates,
+                    "timestamp": time.time()
+                }
+                self.cache.set(cache_key, cache_data, ttl=3600, extra_params={"type": "daily_forecast"})
+
+                return daily, "7天天气预报数据", WeatherServiceErrorCode.SUCCESS
+
+            except requests.exceptions.Timeout:
+                error_msg = f"获取逐天预报网络超时: {place_name}"
+                logger.error(error_msg)
+                return None, f"错误: 网络超时", WeatherServiceErrorCode.NETWORK_TIMEOUT
+            except requests.exceptions.RequestException as e:
+                error_msg = f"获取逐天预报网络请求失败: {str(e)}"
+                logger.error(error_msg)
+                return None, f"错误: 网络请求失败", WeatherServiceErrorCode.API_ERROR
+            except (ValueError, KeyError, json.JSONDecodeError) as e:
+                error_msg = f"获取逐天预报数据解析失败: {str(e)}"
+                logger.error(error_msg)
+                return None, f"错误: 数据解析失败", WeatherServiceErrorCode.DATA_PARSE_ERROR
+
+        except Exception as e:
+            error_msg = f"获取逐天预报未知错误: {str(e)}"
+            logger.error(error_msg)
+            return None, f"错误: {error_msg}", WeatherServiceErrorCode.DATA_PARSE_ERROR
+
     def get_weather_by_datetime(self, place_name: str, datetime_str: str) -> Tuple[Optional[TimePeriodWeatherData], str, int]:
         """
         获取指定日期时间段的天气信息
@@ -301,6 +391,16 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
                 logger.warning(error_msg)
                 fallback_data = self._create_error_time_period_data(place_name, datetime_str, error_msg)
                 return fallback_data, f"模拟数据（坐标未找到)", WeatherServiceErrorCode.COORDINATE_NOT_FOUND
+
+            # 检查日期是否超出预报范围
+            days_from_now = (date_obj - datetime.now()).days
+            max_forecast_days = 3  # 彩云天气API最多支持3天(72小时)预报
+
+            if days_from_now > max_forecast_days:
+                error_msg = f"查询日期{datetime_str}超出预报范围({max_forecast_days}天)"
+                logger.warning(error_msg)
+                fallback_data = self._create_error_time_period_data(place_name, datetime_str, error_msg)
+                return fallback_data, f"模拟数据（{error_msg}）", WeatherServiceErrorCode.DATA_OUT_OF_RANGE
 
             # 获取小时级预报数据
             hourly_forecast = self._get_hourly_forecast(coordinates[0], coordinates[1], place_name)
@@ -614,7 +714,14 @@ class DateTimeWeatherService(EnhancedCaiyunWeatherService):
         if not self.api_key:
             return self._create_fallback_forecast(place_name, hours)
 
-        url = f"{self.base_url}/{self.api_key}/{longitude},{latitude}/hourly?hourlysteps={hours}"
+        # 彩云天气API最多支持72小时预报
+        max_hours = 72
+        actual_hours = min(hours, max_hours)
+
+        if hours > max_hours:
+            logger.warning(f"请求的小时数({hours})超过API限制({max_hours}小时)，将获取{actual_hours}小时数据")
+
+        url = f"{self.base_url}/{self.api_key}/{longitude},{latitude}/hourly?hourlysteps={actual_hours}"
 
         try:
             response = requests.get(url, timeout=self.timeout)
