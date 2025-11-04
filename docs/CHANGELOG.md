@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2025-11-04
+
+### 🎯 New Features
+
+#### Comprehensive Error Code System for Weather Services
+- **10 distinct error codes** covering all possible failure scenarios
+- **Detailed status messages** providing clear error descriptions
+- **Backward compatible** implementation with existing APIs
+- **Enhanced metadata** in tool results with error information
+
+#### New Weather Operations with Error Codes
+- `weather_by_date` - Query weather for specific dates with error feedback
+- `weather_by_datetime` - Query weather for time periods with error feedback
+- `hourly_forecast` - Get hourly forecasts with comprehensive error handling
+
+#### Error Code Classification
+- **Success Codes (0, 1)**: API success and cache hits
+- **API Issues (2, 4)**: API errors and network timeouts
+- **Data Issues (3, 5, 9)**: Coordinate not found, parse failures, out of range
+- **Parameter Issues (6, 7, 8)**: Invalid parameters, date errors, time period errors
+
+### 📚 Documentation Updates
+- **New Error Code Guide**: Comprehensive documentation ([`docs/WEATHER_ERROR_CODES_GUIDE.md`](WEATHER_ERROR_CODES_GUIDE.md))
+- **Updated API Documentation**: Enhanced weather service API docs ([`docs/API.md`](API.md))
+- **Updated Tools Guide**: Added error code examples to tools documentation ([`docs/TOOLS_GUIDE.md`](TOOLS_GUIDE.md))
+- **New Demo Script**: Complete error code demonstration ([`examples/weather_error_codes_demo.py`](examples/weather_error_codes_demo.py))
+
+### 🔧 Technical Improvements
+- **Enhanced WeatherTool**: Integrated error code metadata in all weather operations
+- **DateTimeWeatherService**: Added comprehensive error handling with 3-value returns
+- **Error Code Classes**: `WeatherServiceErrorCode` with descriptive error handling
+- **Convenience Methods**: Helper methods for success checking and error categorization
+
+### ✨ Usage Examples
+
+```python
+# Basic error handling
+result = await weather_tool.execute(
+    operation="weather_by_date",
+    location="北京",
+    date="2024-12-25"
+)
+
+if result.metadata:
+    error_code = result.metadata.get("error_code")
+    description = result.metadata.get("description")
+    print(f"Error {error_code}: {description}")
+
+# Service-level error handling
+weather_data, status_msg, error_code = service.get_weather_by_date("北京", "2024-12-25")
+if service.is_weather_query_successful(error_code):
+    print(f"Success: {status_msg}")
+```
+
 ## [1.4.2] - 2025-11-04
 
 ### 🗺️ Major Coordinate Data Quality Fix

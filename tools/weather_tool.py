@@ -13,6 +13,61 @@ from dataclasses import dataclass, asdict
 from core.base_tool import BaseTool, ConfigurableTool
 from core.interfaces import ToolMetadata, ToolResult
 
+# 导入错误码类
+try:
+    from services.weather.datetime_weather_service import WeatherServiceErrorCode, HourlyForecastErrorCode
+except ImportError:
+    # 如果导入失败，创建一个简单的替代
+    class WeatherServiceErrorCode:
+        SUCCESS = 0
+        CACHE_HIT = 1
+        API_ERROR = 2
+        COORDINATE_NOT_FOUND = 3
+        NETWORK_TIMEOUT = 4
+        DATA_PARSE_ERROR = 5
+        PARAMETER_ERROR = 6
+        DATE_PARSE_ERROR = 7
+        TIME_PERIOD_ERROR = 8
+        DATA_OUT_OF_RANGE = 9
+
+        @classmethod
+        def get_description(cls, error_code: int) -> str:
+            descriptions = {
+                0: "成功",
+                1: "缓存命中",
+                2: "API错误",
+                3: "坐标未找到",
+                4: "网络超时",
+                5: "数据解析失败",
+                6: "参数错误",
+                7: "日期解析错误",
+                8: "时间段错误",
+                9: "数据超出范围"
+            }
+            return descriptions.get(error_code, "未知错误码")
+
+    class HourlyForecastErrorCode:
+        SUCCESS = 0
+        CACHE_HIT = 1
+        API_ERROR = 2
+        COORDINATE_NOT_FOUND = 3
+        NETWORK_TIMEOUT = 4
+        DATA_PARSE_ERROR = 5
+        PARAMETER_ERROR = 6
+
+        @classmethod
+        def get_description(cls, error_code: int) -> str:
+            descriptions = {
+                0: "成功",
+                1: "缓存命中",
+                2: "API错误",
+                3: "坐标未找到",
+                4: "网络超时",
+                5: "数据解析失败",
+                6: "参数错误"
+            }
+            return descriptions.get(error_code, "未知错误码")
+
 
 @dataclass
 class WeatherData:
@@ -107,7 +162,10 @@ class WeatherTool(ConfigurableTool):
         operation = kwargs.get("operation")
         return operation in [
             "current_weather", "get_coordinates", "get_weather",
-            "batch_weather", "search_locations", "weather_forecast"
+            "batch_weather", "search_locations", "weather_forecast",
+            # 新增日期时间查询操作
+            "weather_by_date", "weather_by_datetime", "hourly_forecast",
+            "time_period_weather"
         ]
 
     async def _execute(self, **kwargs) -> ToolResult:
@@ -127,6 +185,14 @@ class WeatherTool(ConfigurableTool):
                 return await self._search_locations(**kwargs)
             elif operation == "weather_forecast":
                 return await self._weather_forecast(**kwargs)
+            elif operation == "weather_by_date":
+                return await self._weather_by_date(**kwargs)
+            elif operation == "weather_by_datetime":
+                return await self._weather_by_datetime(**kwargs)
+            elif operation == "hourly_forecast":
+                return await self._hourly_forecast(**kwargs)
+            elif operation == "time_period_weather":
+                return await self._time_period_weather(**kwargs)
             else:
                 return ToolResult(
                     success=False,
@@ -336,6 +402,226 @@ class WeatherTool(ConfigurableTool):
             return ToolResult(
                 success=False,
                 error=f"天气预报失败: {str(e)}"
+            )
+
+    async def _weather_by_date(self, location: str, date: str, **kwargs) -> ToolResult:
+        """获取指定日期的天气"""
+        try:
+            # 导入日期时间天气服务
+            try:
+                from services.weather.datetime_weather_service import DateTimeWeatherService
+            except ImportError:
+                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
+                # 创建简单的模拟天气数据
+                import random
+                mock_data = {
+                    "location": location,
+                    "date": date,
+                    "temperature": random.randint(15, 30),
+                    "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
+                    "humidity": random.randint(40, 80),
+                    "description": f"{date} {location} 模拟天气数据",
+                    "source": "模拟数据"
+                }
+                return ToolResult(
+                    success=True,
+                    data=mock_data,
+                    metadata={"operation": "weather_by_date", "source": "mock"}
+                )
+
+            # 使用DateTimeWeatherService
+            service = DateTimeWeatherService(
+                api_key=self._api_key,
+                timeout=self._timeout
+            )
+
+            weather_data, status_msg, error_code = service.get_weather_by_date(location, date)
+
+            # 检查是否有错误（status_msg包含"错误"、"失败"等关键词）
+            if any(keyword in status_msg.lower() for keyword in ["错误", "失败", "error", "失败", "不可用", "超出范围"]):
+                return ToolResult(
+                    success=False,
+                    error=f"指定日期天气查询失败: {status_msg}",
+                    metadata={
+                        "operation": "weather_by_date",
+                        "error_code": error_code,
+                        "status_message": status_msg,
+                        "description": WeatherServiceErrorCode.get_description(error_code)
+                    }
+                )
+
+            return ToolResult(
+                success=True,
+                data=weather_data.to_dict(),
+                metadata={
+                    "operation": "weather_by_date",
+                    "source": "api",
+                    "error_code": error_code,
+                    "status_message": status_msg,
+                    "description": WeatherServiceErrorCode.get_description(error_code)
+                }
+            )
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"指定日期天气查询失败: {str(e)}"
+            )
+
+    async def _weather_by_datetime(self, location: str, datetime_str: str, **kwargs) -> ToolResult:
+        """获取指定日期时间段的天气"""
+        try:
+            # 导入日期时间天气服务
+            try:
+                from services.weather.datetime_weather_service import DateTimeWeatherService
+            except ImportError:
+                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
+                # 创建简单的模拟时间段天气数据
+                import random
+                mock_data = {
+                    "location": location,
+                    "datetime": datetime_str,
+                    "temperature_avg": random.randint(15, 30),
+                    "temperature_min": random.randint(10, 25),
+                    "temperature_max": random.randint(25, 35),
+                    "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
+                    "humidity_avg": random.randint(40, 80),
+                    "time_period": datetime_str.split(" ")[-1] if " " in datetime_str else "全天",
+                    "description": f"{datetime_str} {location} 模拟天气数据",
+                    "source": "模拟数据"
+                }
+                return ToolResult(
+                    success=True,
+                    data=mock_data,
+                    metadata={"operation": "weather_by_datetime", "source": "mock"}
+                )
+
+            # 使用DateTimeWeatherService
+            service = DateTimeWeatherService(
+                api_key=self._api_key,
+                timeout=self._timeout
+            )
+
+            weather_data, error_msg, error_code = service.get_weather_by_datetime(location, datetime_str)
+
+            if error_msg:
+                return ToolResult(
+                    success=False,
+                    error=f"指定时间段天气查询失败: {error_msg}",
+                    metadata={
+                        "operation": "weather_by_datetime",
+                        "error_code": error_code,
+                        "status_message": error_msg,
+                        "description": WeatherServiceErrorCode.get_description(error_code)
+                    }
+                )
+
+            return ToolResult(
+                success=True,
+                data=weather_data.to_dict(),
+                metadata={
+                    "operation": "weather_by_datetime",
+                    "source": "api",
+                    "error_code": error_code,
+                    "status_message": error_msg,
+                    "description": WeatherServiceErrorCode.get_description(error_code)
+                }
+            )
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"指定时间段天气查询失败: {str(e)}"
+            )
+
+    async def _hourly_forecast(self, location: str, hours: int = 24, **kwargs) -> ToolResult:
+        """获取小时级天气预报"""
+        try:
+            # 导入日期时间天气服务
+            try:
+                from services.weather.datetime_weather_service import DateTimeWeatherService
+            except ImportError:
+                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
+                # 创建简单的模拟小时预报数据
+                import random
+                from datetime import datetime, timedelta
+
+                forecast_data = []
+                for i in range(min(hours, 48)):  # 限制最多48小时
+                    hour_time = datetime.now() + timedelta(hours=i+1)
+                    forecast_data.append({
+                        "datetime": hour_time.isoformat(),
+                        "temperature": random.randint(15, 30),
+                        "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
+                        "humidity": random.randint(40, 80),
+                        "wind_speed": random.uniform(0, 20)
+                    })
+
+                mock_result = {
+                    "location": location,
+                    "forecast_hours": len(forecast_data),
+                    "hourly_data": forecast_data,
+                    "source": "模拟数据"
+                }
+                return ToolResult(
+                    success=True,
+                    data=mock_result,
+                    metadata={"operation": "hourly_forecast", "source": "mock"}
+                )
+
+            # 使用DateTimeWeatherService
+            service = DateTimeWeatherService(
+                api_key=self._api_key,
+                timeout=self._timeout
+            )
+
+            # 调用增强的方法，返回3个值：(forecast_data, status_message, error_code)
+            forecast_data, status_message, error_code = service.get_hourly_forecast(location, hours)
+
+            # 使用便利方法判断是否成功
+            if service.is_hourly_forecast_successful(error_code):
+                return ToolResult(
+                    success=True,
+                    data=forecast_data.to_dict() if forecast_data else None,
+                    metadata={
+                        "operation": "hourly_forecast",
+                        "source": forecast_data.source if forecast_data else "unknown",
+                        "error_code": error_code,
+                        "status_message": status_message,
+                        "description": HourlyForecastErrorCode.get_description(error_code)
+                    }
+                )
+            else:
+                return ToolResult(
+                    success=False,
+                    error=f"小时级预报查询失败: {status_message} (错误码: {error_code})",
+                    data=forecast_data.to_dict() if forecast_data else None,  # 即使失败也返回模拟数据
+                    metadata={
+                        "operation": "hourly_forecast",
+                        "source": forecast_data.source if forecast_data else "mock",
+                        "error_code": error_code,
+                        "status_message": status_message,
+                        "description": HourlyForecastErrorCode.get_description(error_code)
+                    }
+                )
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"小时级预报查询失败: {str(e)}"
+            )
+
+    async def _time_period_weather(self, location: str, date: str, time_period: str, **kwargs) -> ToolResult:
+        """获取指定时间段的天气"""
+        try:
+            # 组合日期和时间段
+            datetime_str = f"{date} {time_period}" if date else time_period
+            return await self._weather_by_datetime(location, datetime_str, **kwargs)
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"时间段天气查询失败: {str(e)}"
             )
 
     def _get_location_coordinates(self, location: str) -> Optional[Tuple[float, float]]:

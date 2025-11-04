@@ -288,6 +288,9 @@ weather_tool = WeatherTool(config)
 - `batch_weather` - 批量天气查询
 - `search_locations` - 位置搜索
 - `weather_forecast` - 天气预报
+- `weather_by_date` - 指定日期天气查询（带错误码）
+- `weather_by_datetime` - 时间段天气查询（带错误码）
+- `hourly_forecast` - 小时级天气预报（带错误码）
 
 **示例：**
 ```python
@@ -330,6 +333,30 @@ result = await weather_tool.execute(
 )
 for day in result.data['forecast']:
     print(f"第{day['day']}天: {day['condition']} {day['temperature']}°C")
+
+# 错误码系统使用
+result = await weather_tool.execute(
+    operation='weather_by_date',
+    location='北京',
+    date='2024-12-25'
+)
+
+if result.success:
+    print("✅ 请求成功")
+    if result.data:
+        print(f"温度: {result.data.get('temperature', 'N/A')}°C")
+else:
+    print(f"❌ 请求失败: {result.error}")
+
+    # 获取详细错误信息
+    if result.metadata:
+        error_code = result.metadata.get("error_code")
+        status_message = result.metadata.get("status_message")
+        description = result.metadata.get("description")
+
+        print(f"错误码: {error_code}")
+        print(f"状态: {status_message}")
+        print(f"描述: {description}")
 ```
 
 ### SearchTool 搜索工具
@@ -814,6 +841,56 @@ except Exception as e:
 3. **城市不存在**: 返回模拟数据并说明原因
 4. **API 响应异常**: 解析失败时使用备用数据
 
+#### 错误码系统
+
+WeatherTool 集成了完整的错误码系统，提供详细的请求状态反馈：
+
+```python
+from tools.weather_tool import WeatherTool
+
+weather_tool = WeatherTool()
+
+# 执行带错误码的查询
+result = await weather_tool.execute(
+    operation='hourly_forecast',
+    location='北京',
+    hours=24
+)
+
+# 检查结果和错误码
+if result.success:
+    print("✅ 请求成功")
+else:
+    print(f"❌ 请求失败: {result.error}")
+
+# 获取详细错误信息
+if result.metadata:
+    error_code = result.metadata.get("error_code")
+    status_message = result.metadata.get("status_message")
+    description = result.metadata.get("description")
+
+    print(f"错误码: {error_code}")
+    print(f"状态: {status_message}")
+    print(f"描述: {description}")
+
+    # 根据错误码采取不同策略
+    if error_code == 6:
+        print("💡 建议: 检查输入参数")
+    elif error_code == 7:
+        print("💡 建议: 检查日期格式")
+    elif error_code == 9:
+        print("💡 建议: 使用有效日期范围")
+```
+
+#### 错误码类型
+
+| 错误码 | 类型 | 描述 | 处理建议 |
+|--------|------|------|----------|
+| 0, 1 | 成功 | API成功或缓存命中 | 正常使用数据 |
+| 2, 4 | API问题 | API错误或网络超时 | 使用模拟数据 |
+| 3, 5, 9 | 数据问题 | 坐标未找到、解析失败、超出范围 | 使用模拟数据 |
+| 6, 7, 8 | 参数问题 | 参数错误、日期错误、时间段错误 | 检查输入参数 |
+
 ```python
 from weather_service import get_weather_info
 
@@ -821,6 +898,8 @@ from weather_service import get_weather_info
 weather_info = get_weather_info("不存在的城市")
 # 输出包含友好的错误提示和模拟数据
 ```
+
+**详细文档**: 参见 [天气服务错误码系统指南](WEATHER_ERROR_CODES_GUIDE.md)
 
 ## 使用示例
 

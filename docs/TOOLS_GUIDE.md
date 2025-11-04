@@ -397,6 +397,9 @@ asyncio.run(math_tool_examples())
 | `batch_weather` | `locations` (列表) | 批量查询 |
 | `search_locations` | `query`, `limit` | 位置搜索 |
 | `weather_forecast` | `location`, `days` | 天气预报 |
+| `weather_by_date` | `location`, `date` | 指定日期天气查询 |
+| `weather_by_datetime` | `location`, `datetime_str` | 时间段天气查询 |
+| `hourly_forecast` | `location`, `hours` | 小时级天气预报 |
 
 #### 详细示例
 
@@ -454,8 +457,95 @@ async def weather_tool_examples():
         for day in forecast_result.data['forecast']:
             print(f"  第{day['day']}天: {day['condition']} {day['temperature']}°C")
 
+    # 5. 错误码系统使用
+    result = await weather_tool.execute(
+        operation='weather_by_date',
+        location='北京',
+        date='2024-12-25'
+    )
+
+    if result.success:
+        print("✅ 请求成功")
+    else:
+        print(f"❌ 请求失败: {result.error}")
+
+        # 检查详细的错误码信息
+        if result.metadata:
+            error_code = result.metadata.get("error_code")
+            status_message = result.metadata.get("status_message")
+            description = result.metadata.get("description")
+
+            print(f"错误码: {error_code}")
+            print(f"状态: {status_message}")
+            print(f"描述: {description}")
+
+            # 根据错误码采取不同策略
+            if error_code == 6:
+                print("💡 建议: 检查输入参数")
+            elif error_code == 7:
+                print("💡 建议: 检查日期格式")
+            elif error_code == 9:
+                print("💡 建议: 使用有效日期范围")
+
 asyncio.run(weather_tool_examples())
 ```
+
+#### 错误码系统
+
+WeatherTool 集成了完整的错误码系统，提供详细的请求状态反馈：
+
+##### 错误码类型
+
+| 错误码 | 类型 | 描述 | 处理建议 |
+|--------|------|------|----------|
+| 0 | 成功 | API调用成功 | 正常使用数据 |
+| 1 | 成功 | 缓存命中 | 正常使用数据 |
+| 2 | API问题 | API错误 | 使用模拟数据 |
+| 3 | 数据问题 | 坐标未找到 | 使用模拟数据 |
+| 4 | API问题 | 网络超时 | 使用模拟数据 |
+| 5 | 数据问题 | 数据解析失败 | 使用模拟数据 |
+| 6 | 参数问题 | 参数错误 | 检查输入参数 |
+| 7 | 参数问题 | 日期解析错误 | 检查日期格式 |
+| 8 | 参数问题 | 时间段错误 | 检查时间表达式 |
+| 9 | 数据问题 | 数据超出范围 | 使用模拟数据 |
+
+##### 错误码使用示例
+
+```python
+# 检查请求结果
+result = await weather_tool.execute(
+    operation='hourly_forecast',
+    location='北京',
+    hours=24
+)
+
+# 基础成功检查
+if result.success:
+    print("✅ 请求成功")
+    forecast_data = result.data
+    print(f"预报小时数: {forecast_data['forecast_hours']}")
+else:
+    print(f"❌ 请求失败: {result.error}")
+
+    # 获取详细错误信息
+    if result.metadata:
+        error_code = result.metadata.get("error_code")
+        description = result.metadata.get("description")
+
+        print(f"错误码: {error_code} - {description}")
+
+        # 根据错误码类别处理
+        if error_code in [0, 1]:
+            print("这是成功情况")
+        elif error_code == 6:
+            print("参数错误，请检查输入")
+        elif error_code in [2, 4]:
+            print("API问题，已使用模拟数据")
+        elif error_code == 9:
+            print("日期范围问题，已使用模拟数据")
+```
+
+**详细文档**: 参见 [天气服务错误码系统指南](WEATHER_ERROR_CODES_GUIDE.md)
 
 ### SearchTool 搜索工具
 

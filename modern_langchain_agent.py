@@ -18,6 +18,12 @@ from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 
+# 导入增强的天气工具
+from tools.langchain_weather_tools import (
+    get_weather_tools,
+    create_weather_tool_system_prompt
+)
+
 # 使用最新的 @tool 装饰器定义工具
 @tool
 def get_current_time() -> str:
@@ -44,24 +50,6 @@ def calculate(expression: str) -> str:
     except Exception as e:
         return f"计算错误: {str(e)}"
 
-@tool
-def get_weather(city: str) -> str:
-    """
-    获取指定地区的天气信息（增强版本，支持全国所有行政区划）
-
-    Args:
-        city: 地区名称，支持省、市、县、乡各级行政区划，如 "北京"、"上海"、"天河区"等
-
-    Returns:
-        包含天气信息的字符串，包括温度、湿度、风速等详细信息
-        支持智能地名匹配，可以处理各种地名输入格式
-    """
-    from services.weather.enhanced_weather_service import get_enhanced_weather_info
-
-    try:
-        return get_enhanced_weather_info(city)
-    except Exception as e:
-        return f"获取天气信息时出错: {str(e)}"
 
 @tool
 def search_information(query: str) -> str:
@@ -99,7 +87,9 @@ class ModernLangChainAgent:
         """
         self.model_provider = model_provider
         self.model = self._initialize_model()
-        self.tools = [get_current_time, calculate, get_weather, search_information]
+        # 使用增强的天气工具集，包含钓鱼推荐功能
+        weather_tools = get_weather_tools()
+        self.tools = [get_current_time, calculate, search_information] + weather_tools
         self.agent = self._create_agent()
 
     def _initialize_model(self):
@@ -139,27 +129,49 @@ class ModernLangChainAgent:
 
     def _create_agent(self):
         """使用最新的 create_agent API 创建智能体"""
-        system_prompt = """你是一个智能助手，具备多种实用工具来帮助用户完成任务。
+        # 使用增强的天气工具系统提示词，包含钓鱼专业知识
+        weather_system_prompt = create_weather_tool_system_prompt()
 
-你的工具包括:
+        system_prompt = f"""你是一个智能助手，具备多种实用工具来帮助用户完成任务。
+
+你的基础工具包括:
 1. get_current_time - 获取当前时间和日期
 2. calculate - 计算数学表达式
-3. get_weather - 查询城市天气信息
-4. search_information - 搜索和获取信息
+3. search_information - 搜索和获取信息
+
+你的专业天气工具包括:
+4. query_current_weather - 查询当前天气
+5. query_weather_by_date - 查询指定日期天气
+6. query_weather_by_datetime - 查询指定时间段天气
+7. query_hourly_forecast - 查询小时级预报
+8. query_time_period_weather - 查询指定日期和时间段的天气
+9. query_fishing_recommendation - 钓鱼时间推荐和天气分析
 
 使用指南:
+- 你是路亚钓鱼专家，擅长根据天气、时间、地点等信息给出钓鱼建议
+- 当用户问钓鱼相关问题时(如"明天钓鱼合适吗"、"什么时候钓鱼好")，使用query_fishing_recommendation工具
+- 当用户问天气问题时，根据查询内容选择合适的天气工具
 - 根据用户问题选择最合适的工具
 - 可以组合使用多个工具来解决复杂问题
 - 用中文回答，保持友好和专业的语调
 - 如果工具无法解决问题，会告知用户并提供替代建议
 
+钓鱼专业知识:
+- 最佳钓鱼温度: 15-25°C
+- 理想天气条件: 多云、阴天或小雨天气
+- 最佳钓鱼时段: 早上(5-9点)和傍晚(18-21点)
+- 应避免的条件: 强风(>15km/h)、暴雨、极端温度
+
+{weather_system_prompt}
+
 示例交互:
 - 用户问时间 → 使用 get_current_time
 - 用户问计算 → 使用 calculate
-- 用户问天气 → 使用 get_weather
+- 用户问"明天钓鱼合适吗？" → 使用 query_fishing_recommendation
+- 用户问"明天上午天气" → 使用 query_weather_by_datetime
 - 用户问知识 → 使用 search_information"""
 
-        # 使用 LangChain 1.0+ 的 create_agent 函数
+    # 使用 LangChain 1.0+ 的 create_agent 函数
         agent = create_agent(
             model=self.model,
             tools=self.tools,
@@ -260,12 +272,12 @@ def demonstrate_agent_capabilities():
 
         # 测试用例
         test_cases = [
-            "现在几点了？",
-            "帮我计算 123 * 456 + 789",
-            "余杭区今天天气怎么样？",
-            "景德镇今天天气怎么样？",
-            "临安今天天气怎么样？",
-            # "给我介绍一下 LangChain",
+            # "现在几点了？",
+            # "帮我计算 123 * 456 + 789",
+            # "余杭区今天天气怎么样？",
+            # "景德镇今天天气怎么样？",
+            # "临安今天天气怎么样？",
+            "今天什么时候去余杭区钓鱼比较好？",
             # "今天是什么日子？"
         ]
 
@@ -277,12 +289,12 @@ def demonstrate_agent_capabilities():
             print(f"🤖 回复: {response}\n")
             print("-" * 40)
 
-        # 询问是否进入交互模式
-        choice = input("🎯 是否进入交互聊天模式? (y/n): ").strip().lower()
-        if choice in ['y', 'yes', '是', '']:
-            agent.interactive_chat()
-        else:
-            print("👋 演示完成!")
+        # # 询问是否进入交互模式
+        # choice = input("🎯 是否进入交互聊天模式? (y/n): ").strip().lower()
+        # if choice in ['y', 'yes', '是', '']:
+        #     agent.interactive_chat()
+        # else:
+        #     print("👋 演示完成!")
 
     except Exception as e:
         print(f"❌ 智能体创建或运行失败: {str(e)}")
