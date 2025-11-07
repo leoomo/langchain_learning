@@ -5,7 +5,7 @@
 """
 
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -23,6 +23,9 @@ from tools.langchain_weather_tools_sync import (
     get_weather_tools_sync,
     create_weather_tool_system_prompt
 )
+
+# 导入日志中间件
+from services.middleware import AgentLoggingMiddleware, MiddlewareConfig
 
 # 使用最新的 @tool 装饰器定义工具
 @tool
@@ -78,18 +81,34 @@ def search_information(query: str) -> str:
 class ModernLangChainAgent:
     """使用 LangChain 1.0+ 的现代智能体实现"""
 
-    def __init__(self, model_provider: str = "anthropic"):
+    def __init__(self, model_provider: str = "anthropic", enable_logging: bool = True,
+                 middleware_config: Optional[MiddlewareConfig] = None):
         """
         初始化智能体
 
         Args:
             model_provider: 模型提供商 ("anthropic" 或 "openai")
+            enable_logging: 是否启用日志中间件
+            middleware_config: 自定义中间件配置
         """
         self.model_provider = model_provider
+        self.enable_logging = enable_logging
+        self.middleware_config = middleware_config or MiddlewareConfig.from_env()
+
         self.model = self._initialize_model()
         # 使用同步版本的天气工具集，包含钓鱼推荐功能
         weather_tools = get_weather_tools_sync()
         self.tools = [get_current_time, calculate, search_information] + weather_tools
+
+        # 初始化日志中间件
+        self.logging_middleware = None
+        if self.enable_logging:
+            try:
+                self.logging_middleware = AgentLoggingMiddleware(config=self.middleware_config)
+            except Exception as e:
+                print(f"⚠️  日志中间件初始化失败，继续使用无日志模式: {e}")
+                self.enable_logging = False
+
         self.agent = self._create_agent()
 
     def _initialize_model(self):
@@ -171,12 +190,24 @@ class ModernLangChainAgent:
 - 用户问"明天上午天气" → 使用 query_weather_by_datetime
 - 用户问知识 → 使用 search_information"""
 
-    # 使用 LangChain 1.0+ 的 create_agent 函数
-        agent = create_agent(
-            model=self.model,
-            tools=self.tools,
-            system_prompt=system_prompt
-        )
+        # 准备中间件列表
+        middleware_list = []
+        if self.enable_logging and self.logging_middleware:
+            middleware_list.append(self.logging_middleware)
+            print(f"📝 已启用日志中间件 (session: {self.logging_middleware.session_id[:8]}...)")
+
+        # 使用 LangChain 1.0+ 的 create_agent 函数
+        create_kwargs = {
+            "model": self.model,
+            "tools": self.tools,
+            "system_prompt": system_prompt
+        }
+
+        # 只有当中间件列表不为空时才添加middleware参数
+        if middleware_list:
+            create_kwargs["middleware"] = middleware_list
+
+        agent = create_agent(**create_kwargs)
 
         return agent
 
@@ -213,13 +244,40 @@ class ModernLangChainAgent:
             return str(result)
 
         except Exception as e:
-            return f"智能体执行出错: {str(e)}"
+            error_msg = f"智能体执行出错: {str(e)}"
+            if self.logging_middleware:
+                self.logging_middleware.logger.error(f"💥 智能体执行异常: {error_msg}")
+            return error_msg
+
+    def get_execution_summary(self) -> Optional[Dict[str, Any]]:
+        """
+        获取当前会话的执行摘要
+
+        Returns:
+            包含执行统计、工具调用记录等信息的字典，如果未启用日志则返回None
+        """
+        if self.logging_middleware:
+            return self.logging_middleware.get_execution_summary()
+        return None
+
+    def reset_session_metrics(self):
+        """重置当前会话的指标统计"""
+        if self.logging_middleware:
+            self.logging_middleware.reset_metrics()
+            print(f"📊 会话指标已重置 (session: {self.logging_middleware.session_id[:8]}...)")
 
     def interactive_chat(self):
         """启动交互式聊天"""
         print("🤖 欢迎使用 LangChain 1.0+ 智能体!")
         print(f"📋 当前使用模型: {self.model_provider}")
         print("🛠️  可用工具: 时间查询、数学计算、天气查询、信息搜索")
+
+        if self.enable_logging and self.logging_middleware:
+            print(f"📝 日志记录: 已启用 (会话ID: {self.logging_middleware.session_id[:8]}...)")
+            print("📊 输入 'stats' 查看执行统计, 'reset' 重置指标")
+        else:
+            print("📝 日志记录: 未启用")
+
         print("💡 输入 'quit' 或 'exit' 退出程序\n")
 
         while True:
@@ -229,6 +287,27 @@ class ModernLangChainAgent:
                 if user_input.lower() in ['quit', 'exit', '退出', 'q']:
                     print("👋 感谢使用，再见!")
                     break
+
+                # 处理统计命令
+                if user_input.lower() == 'stats' and self.enable_logging:
+                    summary = self.get_execution_summary()
+                    if summary:
+                        print("\n📊 执行统计:")
+                        print(f"   会话ID: {summary['session_id'][:8]}...")
+                        print(f"   总耗时: {summary['metrics']['total_duration_ms']:.2f}ms")
+                        print(f"   模型调用次数: {summary['metrics']['model_calls_count']}")
+                        print(f"   工具调用次数: {summary['metrics']['tool_calls_count']}")
+                        print(f"   错误次数: {summary['metrics']['errors_count']}")
+                        print(f"   Token使用: {summary['metrics']['token_usage']}")
+                        print()
+                    else:
+                        print("❌ 无法获取执行统计\n")
+                    continue
+
+                # 处理重置命令
+                if user_input.lower() == 'reset' and self.enable_logging:
+                    self.reset_session_metrics()
+                    continue
 
                 if not user_input:
                     continue
@@ -277,7 +356,7 @@ def demonstrate_agent_capabilities():
             # "余杭区今天天气怎么样？",
             # "景德镇明天天气怎么样？",
             # "临安今天天气怎么样？",
-            "明天还是后天去富阳区钓鱼比较好？",
+            "明天什么时候去余杭区钓鱼比较好？",
             # "今天是什么日子？"
         ]
 

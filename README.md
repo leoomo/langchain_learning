@@ -39,6 +39,16 @@
 - 🎯 错误代码系统，提供详细的错误诊断
 - 🔄 智能重试机制，提高服务可靠性
 
+### 📝 智能日志中间件
+**全面的执行监控和日志记录**：
+- 🔍 **完整执行日志**: 记录用户输入、AI回复、工具调用全过程
+- ⚡ **性能监控**: 详细的响应时间、Token使用量、错误统计
+- 🛠️ **工具调用追踪**: 每个工具的参数、结果、耗时和成功状态
+- 🔐 **敏感数据保护**: 自动过滤API密钥、密码等敏感信息
+- 📊 **可配置输出**: 支持控制台、文件双重输出，灵活的日志级别
+- 🎯 **会话管理**: 唯一会话ID，完整的执行生命周期跟踪
+- 📈 **统计分析**: 实时性能指标和执行统计，支持重置和查看
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -85,6 +95,15 @@ OPENAI_API_KEY=your-openai-api-key-here
 
 # 调试日志开关 (推荐开发时开启)
 DEBUG_LOGGING=true
+
+# 智能体日志中间件配置 (可选)
+AGENT_LOG_LEVEL=INFO                    # 日志级别 (DEBUG, INFO, WARNING, ERROR)
+AGENT_LOG_CONSOLE=true                  # 控制台输出
+AGENT_LOG_FILE=false                    # 文件输出
+AGENT_LOG_FILE_PATH=logs/agent.log      # 日志文件路径
+AGENT_PERF_MONITOR=true                 # 性能监控
+AGENT_TOOL_TRACKING=true                # 工具调用追踪
+AGENT_SENSITIVE_FILTER=true             # 敏感信息过滤
 ```
 
 ### 获取API密钥
@@ -122,6 +141,49 @@ print(response)
 # 日期时间天气查询 - 支持相对和绝对日期
 response = agent.run("后天早上杭州天气如何？")
 print(response)
+```
+
+### 日志中间件使用示例
+
+```python
+from modern_langchain_agent import ModernLangChainAgent
+from services.middleware import MiddlewareConfig
+
+# 1. 基础日志功能 - 启用默认日志记录
+agent = ModernLangChainAgent(
+    model_provider="anthropic",
+    enable_logging=True  # 启用日志中间件
+)
+
+response = agent.run("北京今天天气如何？")
+print(response)
+
+# 获取执行统计
+summary = agent.get_execution_summary()
+print(f"模型调用次数: {summary['metrics']['model_calls_count']}")
+print(f"工具调用次数: {summary['metrics']['tool_calls_count']}")
+
+# 2. 自定义日志配置
+config = MiddlewareConfig(
+    log_level="DEBUG",                      # 详细日志级别
+    log_to_console=True,                    # 控制台输出
+    log_to_file=True,                       # 文件输出
+    log_file_path="logs/agent.log",         # 日志文件路径
+    enable_performance_monitoring=True,     # 启用性能监控
+    enable_tool_tracking=True,              # 启用工具追踪
+    max_log_length=1000                     # 日志最大长度
+)
+
+agent = ModernLangChainAgent(
+    model_provider="anthropic",
+    enable_logging=True,
+    middleware_config=config
+)
+
+# 3. 交互式聊天 - 实时查看日志
+agent.interactive_chat()
+# 在聊天中输入 "stats" 查看执行统计
+# 输入 "reset" 重置统计指标
 ```
 
 ### 同步工具直接调用示例
