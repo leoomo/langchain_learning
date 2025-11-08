@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2025-11-08
+
+### 📚 Documentation Restructuring
+
+### 🗂️ Changed
+- **Consolidated Documentation**
+  - Removed `docs/README.md` to eliminate documentation duplication
+  - Consolidated all project documentation into main `README.md`
+  - Enhanced main README.md with comprehensive project information from docs version
+  - Updated project structure section with detailed file organization
+  - Added new agent functionality sections with tool examples and usage patterns
+
+### ✨ Enhanced Content
+- **Improved Project Overview**
+  - Added comprehensive new architecture features section (v2.0.0-refactored-fixed)
+  - Enhanced LangChain 1.0+ integration details
+  - Added detailed tool module documentation with usage examples
+  - Expanded weather query functionality documentation
+  - Added code examples for tool integration patterns
+
+### 🔧 Technical Updates
+- **Project Structure Documentation**
+  - Consolidated duplicate project structure sections
+  - Enhanced file descriptions with emoji indicators
+  - Added comprehensive module organization documentation
+  - Updated import path references where needed
+
+### 📚 Documentation Quality
+- **Single Source of Truth**
+  - Eliminated confusion from having two README files
+  - Centralized all project documentation in main README.md
+  - Maintained comprehensive coverage of all project features
+  - Improved navigation and readability
+
 ## [2.1.0-sync-version] - 2025-11-05
 
 ### 🔄 Major Architecture Change
