@@ -222,6 +222,10 @@ class ModernLangChainAgent:
             智能体的回复
         """
         try:
+            # 开始请求追踪
+            if self.logging_middleware:
+                self.logging_middleware.start_request_tracking(user_input)
+
             # 使用 LangChain 1.0+ 的标准调用格式
             result = self.agent.invoke({
                 "messages": [
@@ -241,12 +245,19 @@ class ModernLangChainAgent:
                         return last_message["content"]
 
             # 备用处理
-            return str(result)
+            response = str(result)
+
+            # 结束请求追踪
+            if self.logging_middleware:
+                self.logging_middleware.end_request_tracking()
+
+            return response
 
         except Exception as e:
             error_msg = f"智能体执行出错: {str(e)}"
             if self.logging_middleware:
                 self.logging_middleware.logger.error(f"💥 智能体执行异常: {error_msg}")
+                self.logging_middleware.end_request_tracking()
             return error_msg
 
     def get_execution_summary(self) -> Optional[Dict[str, Any]]:

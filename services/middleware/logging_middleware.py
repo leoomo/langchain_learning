@@ -34,8 +34,50 @@ from .config import MiddlewareConfig, default_config
 
 
 @dataclass
+class PerformanceMetrics:
+    """性能指标 - 支持动态扩展"""
+    # 核心性能指标
+    request_duration_ms: float = 0.0      # 请求处理时间
+    inference_duration_ms: float = 0.0     # 模型推理时间
+    response_duration_ms: float = 0.0     # 响应生成时间
+    network_duration_ms: float = 0.0      # 网络传输时间
+
+    # 扩展性能指标
+    custom_metrics: Dict[str, Any] = None  # 自定义指标
+
+    def __post_init__(self):
+        if self.custom_metrics is None:
+            self.custom_metrics = {}
+
+    def add_metric(self, name: str, value: Any, metric_type: str = "custom", unit: str = ""):
+        """动态添加性能指标"""
+        self.custom_metrics[name] = {
+            "value": value,
+            "type": metric_type,
+            "unit": unit,
+            "timestamp": time.time()
+        }
+
+    def get_total_duration(self) -> float:
+        """获取总耗时"""
+        return max(self.request_duration_ms,
+                  self.inference_duration_ms + self.response_duration_ms)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """转换为字典格式"""
+        return {
+            "request_duration_ms": self.request_duration_ms,
+            "inference_duration_ms": self.inference_duration_ms,
+            "response_duration_ms": self.response_duration_ms,
+            "network_duration_ms": self.network_duration_ms,
+            "total_duration_ms": self.get_total_duration(),
+            "custom_metrics": self.custom_metrics
+        }
+
+
+@dataclass
 class ModelCallRecord:
-    """模型调用记录 - 增强版"""
+    """模型调用记录 - 增强版（支持性能扩展）"""
     call_id: int
     timestamp: str
     model_name: str
@@ -49,6 +91,10 @@ class ModelCallRecord:
     inference_method: str = "position_and_content_analysis"  # 推断方法
     error_message: Optional[str] = None
 
+    # 性能指标扩展字段
+    performance_metrics: PerformanceMetrics = None
+    resource_usage: Dict[str, Any] = None  # 资源使用情况
+
     def __post_init__(self):
         if self.key_points is None:
             self.key_points = []
@@ -56,11 +102,44 @@ class ModelCallRecord:
             self.timestamp = datetime.now().isoformat()
         if not self.token_usage:
             self.token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        if self.performance_metrics is None:
+            self.performance_metrics = PerformanceMetrics()
+        if self.resource_usage is None:
+            self.resource_usage = {}
+
+    def get_detailed_performance(self) -> Dict[str, Any]:
+        """获取详细的性能信息"""
+        return {
+            "call_id": self.call_id,
+            "model_name": self.model_name,
+            "success": self.success,
+            "basic_duration_ms": self.duration_ms,
+            "performance_metrics": self.performance_metrics.to_dict(),
+            "token_efficiency": {
+                "tokens_per_second": self._calculate_tokens_per_second(),
+                "ms_per_token": self._calculate_ms_per_token()
+            },
+            "resource_usage": self.resource_usage
+        }
+
+    def _calculate_tokens_per_second(self) -> float:
+        """计算每秒生成的token数"""
+        total_tokens = self.token_usage.get("total_tokens", 0)
+        if total_tokens > 0 and self.duration_ms > 0:
+            return (total_tokens / self.duration_ms) * 1000
+        return 0.0
+
+    def _calculate_ms_per_token(self) -> float:
+        """计算每个token的耗时"""
+        total_tokens = self.token_usage.get("total_tokens", 0)
+        if total_tokens > 0:
+            return self.duration_ms / total_tokens
+        return 0.0
 
 
 @dataclass
 class ToolCallRecord:
-    """工具调用记录"""
+    """工具调用记录 - 增强版（支持性能扩展）"""
     tool_name: str
     tool_args: Dict[str, Any]
     result: Any
@@ -69,9 +148,39 @@ class ToolCallRecord:
     error_message: Optional[str] = None
     timestamp: str = ""
 
+    # 性能指标扩展字段
+    performance_metrics: PerformanceMetrics = None
+    operation_phases: Dict[str, float] = None  # 各操作阶段耗时
+    cache_hit: bool = False  # 缓存命中状态
+    retry_count: int = 0  # 重试次数
+    resource_usage: Dict[str, Any] = None  # 资源使用情况
+
     def __post_init__(self):
         if not self.timestamp:
             self.timestamp = datetime.now().isoformat()
+        if self.performance_metrics is None:
+            self.performance_metrics = PerformanceMetrics()
+        if self.operation_phases is None:
+            self.operation_phases = {}
+        if self.resource_usage is None:
+            self.resource_usage = {}
+
+    def add_phase_duration(self, phase_name: str, duration_ms: float):
+        """添加操作阶段耗时"""
+        self.operation_phases[phase_name] = duration_ms
+
+    def get_detailed_performance(self) -> Dict[str, Any]:
+        """获取详细的性能信息"""
+        return {
+            "tool_name": self.tool_name,
+            "success": self.success,
+            "basic_duration_ms": self.duration_ms,
+            "performance_metrics": self.performance_metrics.to_dict(),
+            "operation_phases": self.operation_phases,
+            "cache_hit": self.cache_hit,
+            "retry_count": self.retry_count,
+            "resource_usage": self.resource_usage
+        }
 
 
 @dataclass
@@ -130,6 +239,119 @@ class AgentExecutionMetrics:
             "average_duration_ms": total_duration / len(self.model_calls) if self.model_calls else 0,
             "total_model_duration_ms": total_duration
         }
+
+
+class PerformanceTracker:
+    """性能追踪器 - 用于跟踪各种操作的耗时和指标"""
+
+    def __init__(self):
+        self.active_timings: Dict[str, Dict[str, Any]] = {}
+        self.completed_operations: List[Dict[str, Any]] = []
+        self.counters: Dict[str, int] = {}
+        self.gauges: Dict[str, Any] = {}
+
+    def start_timing(self, operation_id: str, operation_type: str, metadata: Dict[str, Any] = None):
+        """开始计时"""
+        self.active_timings[operation_id] = {
+            "start_time": time.time(),
+            "type": operation_type,
+            "metadata": metadata or {}
+        }
+
+    def end_timing(self, operation_id: str) -> Optional[float]:
+        """结束计时并返回耗时"""
+        if operation_id in self.active_timings:
+            timing_info = self.active_timings.pop(operation_id)
+            duration = (time.time() - timing_info["start_time"]) * 1000
+
+            # 记录完成的操作
+            self.completed_operations.append({
+                "operation_id": operation_id,
+                "type": timing_info["type"],
+                "duration_ms": duration,
+                "metadata": timing_info["metadata"],
+                "timestamp": time.time()
+            })
+
+            return duration
+        return None
+
+    def increment_counter(self, name: str, value: int = 1):
+        """增加计数器"""
+        self.counters[name] = self.counters.get(name, 0) + value
+
+    def set_gauge(self, name: str, value: Any):
+        """设置仪表值"""
+        self.gauges[name] = value
+
+    def get_metrics_summary(self) -> Dict[str, Any]:
+        """获取指标摘要"""
+        # 按类型统计操作耗时
+        type_stats = {}
+        for op in self.completed_operations[-100:]:  # 最近100个操作
+            op_type = op["type"]
+            if op_type not in type_stats:
+                type_stats[op_type] = {
+                    "count": 0,
+                    "total_duration": 0.0,
+                    "avg_duration": 0.0,
+                    "min_duration": float('inf'),
+                    "max_duration": 0.0
+                }
+
+            stats = type_stats[op_type]
+            stats["count"] += 1
+            stats["total_duration"] += op["duration_ms"]
+            stats["min_duration"] = min(stats["min_duration"], op["duration_ms"])
+            stats["max_duration"] = max(stats["max_duration"], op["duration_ms"])
+
+        # 计算平均值
+        for stats in type_stats.values():
+            if stats["count"] > 0:
+                stats["avg_duration"] = stats["total_duration"] / stats["count"]
+
+        return {
+            "counters": self.counters,
+            "gauges": self.gauges,
+            "operation_stats": type_stats,
+            "active_operations": len(self.active_timings),
+            "completed_operations": len(self.completed_operations)
+        }
+
+
+class MetricRegistry:
+    """指标注册表 - 管理所有性能指标的规范"""
+
+    def __init__(self):
+        self.metrics: Dict[str, Dict[str, Any]] = {}
+
+    def register_metric(self, name: str, metric_type: str, description: str = "", unit: str = ""):
+        """注册指标"""
+        self.metrics[name] = {
+            "type": metric_type,  # timing, count, gauge, rate
+            "description": description,
+            "unit": unit,
+            "registered_at": time.time()
+        }
+
+    def get_metric_info(self, name: str) -> Optional[Dict[str, Any]]:
+        """获取指标信息"""
+        return self.metrics.get(name)
+
+    def list_metrics(self) -> List[str]:
+        """列出所有已注册的指标"""
+        return list(self.metrics.keys())
+
+
+# 全局指标注册表
+metric_registry = MetricRegistry()
+
+# 注册核心指标
+metric_registry.register_metric("model_call_duration", "timing", "模型调用总耗时", "ms")
+metric_registry.register_metric("model_inference_duration", "timing", "模型推理耗时", "ms")
+metric_registry.register_metric("model_token_usage", "count", "Token使用量", "tokens")
+metric_registry.register_metric("tool_call_duration", "timing", "工具调用耗时", "ms")
+metric_registry.register_metric("tool_cache_hit_rate", "rate", "工具缓存命中率", "%")
 
 
 class CallPurposeAnalyzer:
@@ -392,6 +614,11 @@ class AgentLoggingMiddleware(AgentMiddleware):
         self.session_id = self._generate_session_id()
         self.execution_start_time = None
 
+        # 模型调用追踪
+        self.current_request_model_calls = 0  # 当前请求的模型调用次数
+        self.total_model_calls = 0  # 会话总模型调用次数
+        self.request_start_time = None  # 当前请求开始时间
+
         # 执行统计
         self.metrics = AgentExecutionMetrics(
             session_id=self.session_id,
@@ -414,13 +641,18 @@ class AgentLoggingMiddleware(AgentMiddleware):
         if self.config.enable_call_purpose_analysis:
             self._compile_intent_patterns()
 
-        self.logger.info(f"🔧 AgentLoggingMiddleware 初始化完成 (增强版)", extra={
+        # 性能追踪器
+        self.performance_tracker = PerformanceTracker()
+
+        self.logger.info(f"🔧 AgentLoggingMiddleware 初始化完成 (性能增强版)", extra={
             'session_id': self.session_id,
             'config': self.config.to_dict(),
             'enhanced_features': {
                 'call_purpose_analysis': self.config.enable_call_purpose_analysis,
                 'enhanced_console_output': self.config.show_enhanced_console_output,
-                'model_call_detail_level': self.config.model_call_detail_level
+                'model_call_detail_level': self.config.model_call_detail_level,
+                'performance_tracking': True,
+                'extended_metrics': True
             }
         })
 
@@ -439,6 +671,50 @@ class AgentLoggingMiddleware(AgentMiddleware):
         # 预编译活动词识别列表
         activity_words = ["钓鱼", "天气", "查询", "计算", "搜索"]
         self._compiled_patterns['activity_words'] = activity_words
+
+    def start_request_tracking(self, user_input: str = ""):
+        """开始新的请求追踪"""
+        import time
+
+        self.request_start_time = time.time()
+        self.current_request_model_calls = 0
+
+        if self.config.show_enhanced_console_output and self.config.log_to_console:
+            # 显示请求开始信息
+            preview = user_input[:50] + "..." if len(user_input) > 50 else user_input
+            print(f"\n🚀 新请求开始 [#{self.total_model_calls + 1}]")
+            print(f"📝 用户输入: {preview}")
+            print(f"⏱️  开始时间: {time.strftime('%H:%M:%S')}")
+            print(f"🎯 历史总调用: {self.total_model_calls} 次")
+            print("─" * 80)
+
+    def end_request_tracking(self):
+        """结束请求追踪并显示统计"""
+        import time
+
+        if self.request_start_time and self.config.show_enhanced_console_output and self.config.log_to_console:
+            request_duration = (time.time() - self.request_start_time) * 1000
+
+            print("─" * 80)
+            print(f"✅ 请求完成 | 本次调用: {self.current_request_model_calls} 次 | 累计: {self.total_model_calls} 次")
+
+            if self.current_request_model_calls > 0:
+                avg_duration = request_duration / self.current_request_model_calls
+                print(f"⏱️  总耗时: {request_duration:.1f}ms | 平均: {avg_duration:.1f}ms/次")
+
+                # 显示调用效率评级
+                if self.current_request_model_calls == 1:
+                    efficiency = "🟢 优秀 (单次调用)"
+                elif self.current_request_model_calls <= 2:
+                    efficiency = "🟡 良好 (多次调用)"
+                else:
+                    efficiency = "🔴 需优化 (多次调用)"
+                print(f"📊 效率评级: {efficiency}")
+
+            print(f"🕐 完成时间: {time.strftime('%H:%M:%S')}\n")
+
+        self.request_start_time = None
+        self.current_request_model_calls = 0
 
     def _get_purpose_analysis_cache_key(self, messages_str: str, call_position: int, has_tool_calls: bool) -> str:
         """生成目的分析缓存键"""
@@ -573,8 +849,17 @@ class AgentLoggingMiddleware(AgentMiddleware):
         return None
 
     def wrap_model_call(self, request: ModelRequest, handler: Callable) -> ModelResponse:
-        """包装模型调用，记录详细信息和调用目的分析"""
-        start_time = time.time()
+        """包装模型调用，记录详细信息和调用目的分析（性能增强版）"""
+        # 生成操作ID用于性能追踪
+        operation_id = f"model_call_{self.metrics.model_calls_count + 1}_{int(time.time() * 1000)}"
+
+        # 开始性能追踪
+        request_start_time = time.time()
+        self.performance_tracker.start_timing(operation_id, "model_call", {
+            "model_name": self._extract_model_name(request),
+            "call_position": self.metrics.model_calls_count + 1
+        })
+
         self.metrics.model_name = self._extract_model_name(request)
 
         # 获取调用信息用于目的分析
@@ -582,18 +867,82 @@ class AgentLoggingMiddleware(AgentMiddleware):
         call_position = self.metrics.model_calls_count + 1  # 调用位置（从1开始）
 
         try:
+            # 开始推理阶段计时
+            inference_start_time = time.time()
+
             # 执行模型调用
             response = handler(request)
 
-            # 计算耗时
-            duration_ms = (time.time() - start_time) * 1000
-            self.metrics.total_duration_ms += duration_ms
+            # 结束推理阶段计时
+            inference_duration_ms = (time.time() - inference_start_time) * 1000
 
-            # 提取token使用信息
+            # 计算总耗时
+            total_duration_ms = (time.time() - request_start_time) * 1000
+            self.metrics.total_duration_ms += total_duration_ms
+
+            # 提取token使用信息 (增强兼容性)
             token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+            # 尝试多种方式获取Token使用量
+            token_extracted = False
+
+            # 方法1: usage_metadata (标准LangChain)
             if hasattr(response, 'usage_metadata') and response.usage_metadata:
                 token_usage.update(response.usage_metadata)
+                token_extracted = True
                 self.metrics.token_usage.update(response.usage_metadata)
+
+            # 方法2: response.usage (某些模型提供商)
+            elif hasattr(response, 'usage') and response.usage:
+                if hasattr(response.usage, 'prompt_tokens'):
+                    token_usage["prompt_tokens"] = response.usage.prompt_tokens
+                if hasattr(response.usage, 'completion_tokens'):
+                    token_usage["completion_tokens"] = response.usage.completion_tokens
+                if hasattr(response.usage, 'total_tokens'):
+                    token_usage["total_tokens"] = response.usage.total_tokens
+                token_extracted = True
+                self.metrics.token_usage.update(token_usage)
+
+            # 方法3: 从response对象中直接查找 (兼容更多提供商)
+            else:
+                # 尝试从response.response_metadata中查找
+                if hasattr(response, 'response_metadata') and response.response_metadata:
+                    if 'token_usage' in response.response_metadata:
+                        token_usage.update(response.response_metadata['token_usage'])
+                        token_extracted = True
+                        self.metrics.token_usage.update(token_usage)
+                    elif 'usage' in response.response_metadata:
+                        token_usage.update(response.response_metadata['usage'])
+                        token_extracted = True
+                        self.metrics.token_usage.update(token_usage)
+
+            # 方法4: 估算Token数量 (基于文本长度)
+            if not token_extracted:
+                # 如果无法获取Token，进行简单估算
+                messages = getattr(request, 'messages', [])
+                if messages:
+                    # 估算输入Token (中文约1.5字符=1Token, 英文约4字符=1Token)
+                    input_text = ""
+                    for msg in messages:
+                        if hasattr(msg, 'content'):
+                            input_text += str(msg.content) + " "
+
+                    # 简单估算：中文字符 / 1.5 + 英文单词 / 1
+                    chinese_chars = len([c for c in input_text if '\u4e00' <= c <= '\u9fff'])
+                    other_chars = len(input_text) - chinese_chars
+
+                    estimated_input_tokens = int(chinese_chars / 1.5 + other_chars / 4)
+
+                    # 估算输出Token (假设输出长度与输入相似)
+                    estimated_output_tokens = estimated_input_tokens // 3
+
+                    token_usage = {
+                        "prompt_tokens": estimated_input_tokens,
+                        "completion_tokens": estimated_output_tokens,
+                        "total_tokens": estimated_input_tokens + estimated_output_tokens,
+                        "estimated": True  # 标记这是估算值
+                    }
+                    self.metrics.token_usage.update(token_usage)
 
             # 检查是否包含工具调用
             has_tool_calls = False
@@ -621,20 +970,47 @@ class AgentLoggingMiddleware(AgentMiddleware):
                     )
                     self._cache_purpose_analysis(cache_key, purpose_analysis)
 
+            # 创建增强的性能指标
+            performance_metrics = PerformanceMetrics(
+                request_duration_ms=total_duration_ms,
+                inference_duration_ms=inference_duration_ms,
+                response_duration_ms=total_duration_ms - inference_duration_ms
+            )
+
+            # 添加详细性能指标
+            performance_metrics.add_metric("messages_count", len(messages), "count")
+            performance_metrics.add_metric("tokens_per_second",
+                                          (total_duration_ms > 0) and (token_usage.get("total_tokens", 0) / total_duration_ms * 1000) or 0,
+                                          "rate", "tokens/sec")
+            performance_metrics.add_metric("response_size", len(str(response)), "count", "chars")
+
+            # 记录资源使用情况
+            resource_usage = {
+                "memory_usage_mb": 0,  # 可以集成实际的内存监控
+                "cpu_usage_percent": 0,  # 可以集成实际的CPU监控
+                "network_io_bytes": len(str(request)) + len(str(response))  # 简单的网络IO估算
+            }
+
             # 创建增强的模型调用记录
             call_record = ModelCallRecord(
                 call_id=call_position,
                 timestamp=datetime.now().isoformat(),
                 model_name=self.metrics.model_name,
-                duration_ms=duration_ms,
+                duration_ms=total_duration_ms,  # 保持向后兼容
                 token_usage=token_usage.copy(),
                 success=True,
                 call_purpose=purpose_analysis.get("call_purpose", "unknown"),
                 intent_category=purpose_analysis.get("intent_category", ""),
                 call_context_summary=purpose_analysis.get("context_summary", ""),
                 key_points=purpose_analysis.get("key_points", []),
-                inference_method=purpose_analysis.get("inference_method", "position_and_content_analysis")
+                inference_method=purpose_analysis.get("inference_method", "position_and_content_analysis"),
+                performance_metrics=performance_metrics,
+                resource_usage=resource_usage
             )
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(operation_id)
+            self.performance_tracker.increment_counter("model_calls_success")
 
             # 添加到指标中
             self.metrics.add_model_call(call_record)
@@ -650,7 +1026,10 @@ class AgentLoggingMiddleware(AgentMiddleware):
         except Exception as e:
             self.metrics.errors_count += 1
             self.metrics.success = False
-            duration_ms = (time.time() - start_time) * 1000
+            error_duration_ms = (time.time() - request_start_time) * 1000
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(operation_id)
 
             # 即使失败也创建调用记录
             purpose_analysis = {}
@@ -663,11 +1042,19 @@ class AgentLoggingMiddleware(AgentMiddleware):
                     compiled_patterns=self._compiled_patterns
                 )
 
+            # 创建失败记录的性能指标
+            error_performance_metrics = PerformanceMetrics(
+                request_duration_ms=error_duration_ms,
+                inference_duration_ms=error_duration_ms  # 整个过程都算推理时间
+            )
+            error_performance_metrics.add_metric("error_type", type(e).__name__, "custom")
+            error_performance_metrics.add_metric("error_recovery", False, "boolean")
+
             error_call_record = ModelCallRecord(
                 call_id=call_position,
                 timestamp=datetime.now().isoformat(),
                 model_name=self.metrics.model_name,
-                duration_ms=duration_ms,
+                duration_ms=error_duration_ms,
                 token_usage=self.metrics.token_usage.copy(),
                 success=False,
                 call_purpose=purpose_analysis.get("call_purpose", "error_handling"),
@@ -675,14 +1062,15 @@ class AgentLoggingMiddleware(AgentMiddleware):
                 call_context_summary=purpose_analysis.get("context_summary", "模型调用失败"),
                 key_points=purpose_analysis.get("key_points", []),
                 inference_method=purpose_analysis.get("inference_method", "position_and_content_analysis"),
-                error_message=str(e)
+                error_message=str(e),
+                performance_metrics=error_performance_metrics
             )
 
             self.metrics.add_model_call(error_call_record)
 
             # 记录错误信息
             self._log_with_context('ERROR', f"❌ 模型调用失败: {str(e)}", {
-                'duration_ms': round(duration_ms, 2),
+                'duration_ms': round(error_duration_ms, 2),
                 'error_type': type(e).__name__,
                 'error_details': str(e),
                 'call_purpose': error_call_record.call_purpose,
@@ -733,9 +1121,18 @@ class AgentLoggingMiddleware(AgentMiddleware):
         # 构建易读的控制台输出（如果启用增强输出）
         if self.config.show_enhanced_console_output:
             purpose_desc = CallPurposeAnalyzer.CALL_PURPOSES.get(call_record.call_purpose, call_record.call_purpose)
-            duration_str = f"{call_record.duration_ms:.1f}ms"
+
+            # 获取详细性能信息
+            perf_metrics = call_record.performance_metrics
+            total_duration = perf_metrics.get_total_duration()
+            inference_duration = perf_metrics.inference_duration_ms
+            tokens_per_sec = call_record._calculate_tokens_per_second()
 
             if self.config.log_to_console:
+                # 更新调用计数
+                self.current_request_model_calls += 1
+                self.total_model_calls += 1
+
                 # 选择合适的emoji
                 if call_record.call_purpose == "tool_selection":
                     emoji = "🎯"
@@ -746,30 +1143,55 @@ class AgentLoggingMiddleware(AgentMiddleware):
                 else:
                     emoji = "⚡"
 
-                print(f"{emoji} 处理完成: {duration_str} | Tokens: {call_record.token_usage.get('total_tokens', 0)}")
+                # 显示调用次数和性能信息
+                call_info = f"第{self.total_model_calls}次"
+                if self.current_request_model_calls > 1:
+                    call_info += f" (本次第{self.current_request_model_calls}次)"
+
+                # 检查Token是否为估算值
+                total_tokens = call_record.token_usage.get('total_tokens', 0)
+                is_estimated = call_record.token_usage.get('estimated', False)
+                token_display = f"{total_tokens}{' (估算)' if is_estimated else ''}"
+
+                print(f"{emoji} 模型调用[{call_info}]: {total_duration:.1f}ms | Tokens: {token_display} | 速率: {tokens_per_sec:.1f} t/s")
+
+                # 显示详细性能分解
+                if total_duration > 100:  # 只为较慢的调用显示详细信息
+                    print(f"├── 推理: {inference_duration:.1f}ms | 响应: {perf_metrics.response_duration_ms:.1f}ms")
+                    if perf_metrics.custom_metrics.get("tokens_per_second"):
+                        print(f"├── 效率: {tokens_per_sec:.1f} tokens/sec | {call_record._calculate_ms_per_token():.2f} ms/token")
+
+                    if call_record.resource_usage.get("network_io_bytes", 0) > 0:
+                        network_kb = call_record.resource_usage["network_io_bytes"] / 1024
+                        print(f"├── 网络: {network_kb:.1f}KB")
+
                 if call_record.key_points:
                     print(f"└── 摘要: {call_record.call_context_summary[:80]}...")
 
-        # 记录完整的响应信息
+        # 记录完整的响应信息（包含详细性能指标）
         self._log_with_context('INFO', "📥 模型响应详情", {
             'call_id': call_record.call_id,
             'call_purpose': call_record.call_purpose,
             'purpose_desc': purpose_desc,
-            'duration_ms': round(call_record.duration_ms, 2),
+            'basic_duration_ms': round(call_record.duration_ms, 2),
+            'detailed_performance': call_record.performance_metrics.to_dict(),
             'token_usage': call_record.token_usage,
+            'token_efficiency': {
+                'tokens_per_second': call_record._calculate_tokens_per_second(),
+                'ms_per_token': call_record._calculate_ms_per_token()
+            },
             'intent_category': call_record.intent_category,
             'key_points': call_record.key_points,
             'context_summary': call_record.call_context_summary,
+            'resource_usage': call_record.resource_usage,
             'success': call_record.success,
             'response_preview': str(response)[:200] + "..." if len(str(response)) > 200 else str(response)
         })
 
     def wrap_tool_call(self, request, handler) -> Any:
-        """包装工具调用，记录工具执行详情"""
+        """包装工具调用，记录工具执行详情（性能增强版）"""
         if not self.config.enable_tool_tracking:
             return handler(request)
-
-        start_time = time.time()
 
         # 提取工具信息
         tool_name = "unknown"
@@ -783,9 +1205,22 @@ class AgentLoggingMiddleware(AgentMiddleware):
             tool_name = request.name
             tool_args = getattr(request, 'args', {})
 
+        # 生成操作ID用于性能追踪
+        tool_operation_id = f"tool_{tool_name}_{int(time.time() * 1000)}"
+
+        # 开始性能追踪
+        self.performance_tracker.start_timing(tool_operation_id, "tool_call", {
+            "tool_name": tool_name,
+            "args_count": len(tool_args) if isinstance(tool_args, dict) else 0
+        })
+
+        # 开始各阶段计时
+        tool_start_time = time.time()
+
         self.metrics.tool_calls_count += 1
 
         try:
+            # 记录工具调用开始
             self._log_with_context('INFO', f"🔧 开始工具调用: {tool_name}", {
                 'tool_name': tool_name,
                 'tool_args': tool_args,
@@ -795,22 +1230,62 @@ class AgentLoggingMiddleware(AgentMiddleware):
             # 执行工具调用
             result = handler(request)
 
-            # 计算耗时
-            duration_ms = (time.time() - start_time) * 1000
+            # 计算总耗时
+            total_duration_ms = (time.time() - tool_start_time) * 1000
+
+            # 创建工具性能指标
+            tool_performance_metrics = PerformanceMetrics(
+                request_duration_ms=total_duration_ms,
+                inference_duration_ms=total_duration_ms,  # 工具执行时间作为主要耗时
+                response_duration_ms=0  # 工具通常没有独立的响应生成阶段
+            )
+
+            # 添加工具特定的性能指标
+            tool_performance_metrics.add_metric("execution_duration_ms", total_duration_ms, "timing", "ms")
+            tool_performance_metrics.add_metric("args_count", len(tool_args) if isinstance(tool_args, dict) else 0, "count")
+            tool_performance_metrics.add_metric("result_size", len(str(result)), "count", "chars")
+
+            # 记录缓存命中状态（如果可以检测）
+            cache_hit = self._detect_cache_hit(tool_name, tool_args, result)
+            if cache_hit is not None:
+                tool_performance_metrics.add_metric("cache_hit", cache_hit, "boolean")
+
+            # 记录资源使用情况
+            resource_usage = {
+                "input_size_bytes": len(str(tool_args)),
+                "output_size_bytes": len(str(result)),
+                "total_io_bytes": len(str(tool_args)) + len(str(result))
+            }
 
             # 记录工具调用成功
             tool_record = ToolCallRecord(
                 tool_name=tool_name,
                 tool_args=tool_args,
                 result=result,
-                duration_ms=duration_ms,
-                success=True
+                duration_ms=total_duration_ms,
+                success=True,
+                performance_metrics=tool_performance_metrics,
+                operation_phases={
+                    "execution": total_duration_ms,
+                    "total": total_duration_ms
+                },
+                cache_hit=cache_hit or False,
+                resource_usage=resource_usage
             )
             self.tool_calls.append(tool_record)
 
+            # 结束性能追踪
+            self.performance_tracker.end_timing(tool_operation_id)
+            self.performance_tracker.increment_counter("tool_calls_success")
+            if cache_hit:
+                self.performance_tracker.increment_counter("tool_cache_hits")
+
+            # 记录详细性能信息
             self._log_with_context('INFO', f"✅ 工具调用完成: {tool_name}", {
                 'tool_name': tool_name,
-                'duration_ms': round(duration_ms, 2),
+                'duration_ms': round(total_duration_ms, 2),
+                'performance_breakdown': tool_record.get_detailed_performance(),
+                'cache_hit': cache_hit,
                 'result_preview': str(result)[:200] + "..." if len(str(result)) > 200 else str(result)
             })
 
@@ -839,6 +1314,101 @@ class AgentLoggingMiddleware(AgentMiddleware):
             })
 
             raise
+
+    def _detect_cache_hit(self, tool_name: str, tool_args: Dict[str, Any], result: Any) -> Optional[bool]:
+        """
+        检测工具调用是否命中缓存
+
+        这是一个简单的启发式实现，可以根据实际需求进行扩展
+        """
+        try:
+            # 对于天气查询工具，检查结果是否包含缓存标识
+            if tool_name in ['query_current_weather', 'query_weather_by_date', 'query_fishing_recommendation']:
+                result_str = str(result).lower()
+                # 简单的缓存检测逻辑
+                cache_indicators = ['cache', 'cached', 'from cache', '缓存']
+                return any(indicator in result_str for indicator in cache_indicators)
+
+            # 对于坐标查询工具，检查是否快速返回（通常表示缓存命中）
+            elif tool_name in ['get_coordinate']:
+                total_duration_ms = (time.time() - time.time())  # 这会在后面重置
+                # 如果耗时非常短，可能是缓存命中
+                return False  # 需要实际的缓存机制来支持
+
+            return None
+        except Exception:
+            return None
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """
+        获取性能统计摘要
+
+        Returns:
+            包含详细性能统计的字典
+        """
+        # 基础统计
+        basic_summary = {
+            "session_id": self.session_id,
+            "total_model_calls": self.metrics.model_calls_count,
+            "total_tool_calls": self.metrics.tool_calls_count,
+            "total_duration_ms": self.metrics.total_duration_ms,
+            "total_errors": self.metrics.errors_count,
+            "success_rate": (self.metrics.model_calls_count - self.metrics.errors_count) / max(self.metrics.model_calls_count, 1)
+        }
+
+        # 模型调用性能统计
+        model_calls_summary = self.metrics.get_model_calls_summary()
+
+        # 性能追踪器统计
+        tracker_summary = self.performance_tracker.get_metrics_summary()
+
+        # 工具调用性能统计
+        tool_performance = {}
+        total_tool_duration = 0
+        cache_hits = 0
+        if self.tool_calls:
+            for tool_call in self.tool_calls:
+                tool_name = tool_call.tool_name
+                if tool_name not in tool_performance:
+                    tool_performance[tool_name] = {
+                        "count": 0,
+                        "total_duration_ms": 0,
+                        "avg_duration_ms": 0,
+                        "cache_hits": 0,
+                        "success_rate": 0
+                    }
+
+                stats = tool_performance[tool_name]
+                stats["count"] += 1
+                stats["total_duration_ms"] += tool_call.duration_ms
+                if tool_call.cache_hit:
+                    stats["cache_hits"] += 1
+                if tool_call.success:
+                    stats["success_rate"] += 1
+
+        # 计算总和
+        total_tool_duration = sum(tc.duration_ms for tc in self.tool_calls)
+        cache_hits = sum(1 for tc in self.tool_calls if tc.cache_hit)
+
+        # 计算平均值和成功率
+        for stats in tool_performance.values():
+            if stats["count"] > 0:
+                stats["avg_duration_ms"] = stats["total_duration_ms"] / stats["count"]
+                stats["success_rate"] = (stats["success_rate"] / stats["count"]) * 100
+
+        # 整合摘要
+        return {
+            **basic_summary,
+            "model_performance": model_calls_summary,
+            "tool_performance": tool_performance,
+            "tracker_performance": tracker_summary,
+            "performance_metrics": {
+                "avg_model_call_duration": model_calls_summary.get("average_duration_ms", 0),
+                "total_tool_duration_ms": total_tool_duration,
+                "cache_hit_rate": (cache_hits / max(len(self.tool_calls), 1)) * 100 if self.tool_calls else 0,
+                "error_rate": (self.metrics.errors_count / max(self.metrics.model_calls_count + self.metrics.tool_calls_count, 1)) * 100
+            }
+        }
 
     def after_model(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
         """模型调用后的处理"""

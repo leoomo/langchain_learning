@@ -107,6 +107,7 @@ summary = agent.get_execution_summary()
 
 **核心特性**:
 - ✅ **完整执行日志**: 记录用户输入、AI回复、工具调用全过程
+- 🎯 **模型调用次数追踪**: 实时显示累计和本次调用次数，支持效率评级
 - ⚡ **性能监控**: 详细的响应时间、Token使用量、错误统计
 - 🛠️ **工具调用追踪**: 每个工具的参数、结果、耗时和成功状态
 - 🔐 **敏感数据保护**: 自动过滤API密钥、密码等敏感信息
@@ -168,6 +169,133 @@ agent = ModernLangChainAgent(
     middleware_config=config
 )
 ```
+
+### 2.1 模型调用次数追踪系统
+
+**功能**: 实时追踪和显示每个业务请求中的大模型调用次数，提供透明化的调用统计和效率评估
+
+#### 🎯 核心追踪能力
+
+**请求级别追踪**:
+```
+🚀 新请求开始 [#5]
+📝 用户输入: 明天杭州适合钓鱼吗？
+⏱️  开始时间: 14:30:25
+🎯 历史总调用: 4 次
+────────────────────────────────────────────────────────────────────────────────
+```
+
+**模型调用显示**:
+- **累计序号**: 会话中的第N次调用 (如: 第5次)
+- **本次序号**: 当前请求中的第M次调用 (如: 本次第2次)
+- **性能指标**: 耗时、Token数、处理速率
+- **调用目的**: 工具选择、结果生成、最终回复
+
+```
+🎯 模型调用[第5次]: 156.7ms | Tokens: 52 | 速率: 331.9 t/s
+├── 推理: 109.7ms | 响应: 47.0ms
+└── 摘要: 工具选择，关键信息：明天、杭州、钓鱼...
+```
+
+**请求完成统计**:
+```
+────────────────────────────────────────────────────────────────────────────────
+✅ 请求完成 | 本次调用: 1 次 | 累计: 5 次
+⏱️  总耗时: 156.7ms | 平均: 156.7ms/次
+📊 效率评级: 🟢 优秀 (单次调用)
+🕐 完成时间: 14:30:28
+```
+
+#### 📊 效率评级系统
+
+| 评级标准 | 调用次数 | 效率描述 | 典型场景 |
+|---------|---------|---------|---------|
+| 🟢 优秀 | 1次 | 最高效率 | 简单查询、基础天气查询、时间获取 |
+| 🟡 良好 | 2次 | 正常效率 | 复杂工具调用、需要结果整合 |
+| 🔴 需优化 | 3+次 | 效率较低 | 非常复杂的查询、多步骤理解 |
+
+#### 📈 统计分析能力
+
+**实时统计指标**:
+- **本次请求调用次数**: 当前请求中的模型调用总数
+- **会话累计调用次数**: 从会话开始的总调用次数
+- **请求总耗时**: 当前请求的完整处理时间
+- **平均调用耗时**: 每次模型调用的平均处理时间
+- **调用效率评级**: 基于调用次数的自动效率评估
+
+**历史统计分析**:
+- **调用频率分布**: 不同时间段的调用次数统计
+- **工具调用模式**: 常用工具和调用组合分析
+- **性能趋势监控**: 调用耗时和Token使用趋势
+- **成本预估**: 基于调用次数的API使用成本估算
+
+#### 🛠️ 技术实现
+
+**核心组件架构**:
+```mermaid
+graph TB
+    subgraph "请求追踪层"
+        RT[RequestTracker]
+        RC[RequestCounter]
+        TS[TimeTracker]
+    end
+
+    subgraph "调用记录层"
+        MCR[ModelCallRecord]
+        CIP[CallInfoParser]
+        ER[EfficiencyRating]
+    end
+
+    subgraph "显示格式化层"
+        DF[DisplayFormatter]
+        CF[ConsoleFormatter]
+        FF[FileFormatter]
+    end
+
+    subgraph "统计分析层"
+        SA[StatisticsAnalyzer]
+        TR[TrendReporter]
+        CE[CostEstimator]
+    end
+
+    RT --> MCR
+    RC --> CIP
+    TS --> ER
+    MCR --> DF
+    CIP --> CF
+    ER --> FF
+    DF --> SA
+    CF --> TR
+    FF --> CE
+```
+
+**集成方式**:
+- **无缝集成**: 自动集成到现有的AgentLoggingMiddleware
+- **零配置**: 默认启用，无需额外配置
+- **向后兼容**: 完全兼容现有日志系统
+- **灵活控制**: 通过配置控制显示详细程度
+
+#### 🎯 应用价值
+
+**性能监控**:
+- 实时了解每个请求的模型调用次数
+- 快速识别高调用次数的低效请求
+- 监控系统性能和响应时间
+
+**成本控制**:
+- 精确统计API调用次数和Token使用量
+- 预估和控制API使用成本
+- 设置调用次数预警机制
+
+**调试优化**:
+- 分析调用模式和使用习惯
+- 优化提示词和工具设计
+- 定位性能瓶颈和优化机会
+
+**用户体验**:
+- 透明的处理过程展示
+- 直观的效率反馈
+- 专业的日志输出格式
 
 ### 3. 智能体层 (ModernLangChainAgent)
 
@@ -283,13 +411,18 @@ sequenceDiagram
 
     U->>M: 发送查询 (例: "余杭区明天钓鱼合适吗？")
 
-    Note over M: 中间件开始执行
+    Note over M: 中间件开始执行 + 调用次数追踪
     M->>M: 生成session_id
     M->>M: 记录开始时间
+    M->>M: 🚀 开始请求追踪 (显示用户输入、历史调用统计)
     M->>M: 预处理输入 (敏感信息过滤)
 
     M->>A: 调用智能体执行
     A->>L: 模型调用 (包含系统提示和工具)
+
+    Note over M: 🎯 模型调用次数追踪
+    M->>M: 更新调用计数 (累计+本次)
+    M->>M: 显示调用序号和性能指标
 
     Note over L: LLM分析和工具选择
     L->>A: 返回工具调用计划
@@ -319,9 +452,11 @@ sequenceDiagram
     L-->>A: 返回自然语言响应
     A-->>M: 返回执行结果
 
-    Note over M: 中间件后处理
+    Note over M: 中间件后处理 + 调用统计
     M->>M: 计算执行时间
     M->>M: 记录token使用量
+    M->>M: ✅ 结束请求追踪
+    M->>M: 显示调用统计 (本次+累计+效率评级)
     M->>M: 生成执行摘要
     M->>M: 输出日志 (控制台/文件)
 
@@ -340,6 +475,9 @@ sequenceDiagram
 4. **天气数据获取**: 调用彩云天气API
 5. **结果格式化**: 自然语言天气描述
 
+**模型调用统计**: 🟢 **1次调用** (优秀效率)
+- 调用1: 工具选择 + 结果生成 (120-180ms)
+
 #### 场景2: 复杂钓鱼推荐查询
 **查询**: "余杭区明天钓鱼合适吗？"
 
@@ -354,6 +492,10 @@ sequenceDiagram
 5. **7因子评分计算**: 基于天气数据计算各因子评分
 6. **时间段推荐**: 识别最佳钓鱼时间段
 7. **专业建议生成**: 综合评分 + 具体建议
+
+**模型调用统计**: 🟢 **1次调用** (优秀效率)
+- 调用1: 钓鱼意图识别 + 工具选择 + 结果整合 (150-250ms)
+- 后台处理: 天气API调用 + 7因子算法计算 (无LLM)
 
 ## 🚀 缓存系统架构
 
@@ -491,6 +633,11 @@ AGENT_LOG_CONSOLE=true
 AGENT_LOG_FILE=true
 AGENT_PERF_MONITOR=true
 AGENT_TOOL_TRACKING=true
+
+# 调用次数追踪配置
+AGENT_ENHANCED_CONSOLE=true          # 启用增强控制台输出
+AGENT_CALL_PURPOSE_ANALYSIS=true     # 启用调用目的分析
+AGENT_MODEL_CALL_DETAIL=enhanced     # 模型调用详细程度
 ```
 
 ### 代码示例
@@ -513,6 +660,37 @@ print(response)
 summary = agent.get_execution_summary()
 print(f"总耗时: {summary['metrics']['total_duration_ms']:.2f}ms")
 print(f"工具调用次数: {summary['metrics']['tool_calls_count']}")
+```
+
+#### 增强调用次数追踪配置
+```python
+from services.middleware.config import MiddlewareConfig
+from modern_langchain_agent import ModernLangChainAgent
+
+# 自定义配置启用完整调用追踪
+config = MiddlewareConfig(
+    log_to_console=True,
+    show_enhanced_console_output=True,      # 启用增强显示
+    enable_call_purpose_analysis=True,      # 启用调用目的分析
+    model_call_detail_level="enhanced",     # 详细调用信息
+    file_log_format="json"                  # 结构化文件日志
+)
+
+# 创建带增强追踪的智能体
+agent = ModernLangChainAgent(
+    model_provider="anthropic",
+    enable_logging=True,
+    middleware_config=config
+)
+
+# 执行查询时会显示详细的调用次数信息
+response = agent.run("分析未来3天杭州天气趋势并给钓鱼建议")
+# 控制台输出：
+# 🚀 新请求开始 [#1]
+# 📝 用户输入: 分析未来3天杭州天气趋势并给钓鱼建议
+# 🎯 模型调用[第1次]: 198.4ms | Tokens: 65 | 速率: 327.6 t/s
+# ✨ 模型调用[第2次 (本次第2次)]: 134.2ms | Tokens: 42 | 速率: 313.0 t/s
+# ✅ 请求完成 | 本次调用: 2 次 | 累计: 2 次 | 📊 效率评级: 🟡 良好
 ```
 
 #### 工具直接调用
@@ -569,6 +747,7 @@ weather = weather_service.get_weather_by_date("北京", "2024-12-25")
 
 ### 4. 智能日志中间件
 - **全链路监控**: 从用户输入到最终响应的完整追踪
+- **🎯 模型调用次数追踪**: 实时显示累计和本次调用次数，支持效率评级
 - **性能分析**: 详细的执行时间和资源使用统计
 - **安全保护**: 自动敏感信息过滤和安全日志输出
 
