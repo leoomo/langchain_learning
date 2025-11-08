@@ -46,6 +46,26 @@ class MiddlewareConfig:
     # 会话ID生成方式
     session_id_generator: str = field(default_factory=lambda: os.getenv("AGENT_SESSION_ID_GEN", "uuid"))
 
+    # 模型调用详细程度配置
+    model_call_detail_level: str = field(
+        default_factory=lambda: os.getenv("AGENT_MODEL_CALL_DETAIL", "enhanced")
+    )
+
+    # 是否启用调用目的分析
+    enable_call_purpose_analysis: bool = field(
+        default_factory=lambda: os.getenv("AGENT_CALL_PURPOSE_ANALYSIS", "true").lower() == "true"
+    )
+
+    # 是否在控制台显示增强信息
+    show_enhanced_console_output: bool = field(
+        default_factory=lambda: os.getenv("AGENT_ENHANCED_CONSOLE", "true").lower() == "true"
+    )
+
+    # 文件日志格式（json/structured/text）
+    file_log_format: str = field(
+        default_factory=lambda: os.getenv("AGENT_FILE_LOG_FORMAT", "json")
+    )
+
     @classmethod
     def from_env(cls) -> 'MiddlewareConfig':
         """从环境变量创建配置"""
@@ -63,7 +83,11 @@ class MiddlewareConfig:
             'enable_sensitive_filter': self.enable_sensitive_filter,
             'log_format': self.log_format,
             'max_log_length': self.max_log_length,
-            'session_id_generator': self.session_id_generator
+            'session_id_generator': self.session_id_generator,
+            'model_call_detail_level': self.model_call_detail_level,
+            'enable_call_purpose_analysis': self.enable_call_purpose_analysis,
+            'show_enhanced_console_output': self.show_enhanced_console_output,
+            'file_log_format': self.file_log_format
         }
 
     def validate(self) -> bool:
@@ -74,6 +98,16 @@ class MiddlewareConfig:
 
         if self.max_log_length <= 0:
             raise ValueError("max_log_length must be positive")
+
+        # 验证模型调用详细程度
+        valid_detail_levels = ['basic', 'enhanced', 'detailed']
+        if self.model_call_detail_level not in valid_detail_levels:
+            raise ValueError(f"Invalid model_call_detail_level: {self.model_call_detail_level}. Must be one of {valid_detail_levels}")
+
+        # 验证文件日志格式
+        valid_file_formats = ['json', 'structured', 'text']
+        if self.file_log_format not in valid_file_formats:
+            raise ValueError(f"Invalid file_log_format: {self.file_log_format}. Must be one of {valid_file_formats}")
 
         return True
 
