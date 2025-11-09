@@ -66,6 +66,11 @@ class MiddlewareConfig:
         default_factory=lambda: os.getenv("AGENT_FILE_LOG_FORMAT", "json")
     )
 
+    # 是否启用日志记录
+    enable_logging: bool = field(
+        default_factory=lambda: os.getenv("AGENT_ENABLE_LOGGING", "true").lower() == "true"
+    )
+
     @classmethod
     def from_env(cls) -> 'MiddlewareConfig':
         """从环境变量创建配置"""
@@ -87,7 +92,8 @@ class MiddlewareConfig:
             'model_call_detail_level': self.model_call_detail_level,
             'enable_call_purpose_analysis': self.enable_call_purpose_analysis,
             'show_enhanced_console_output': self.show_enhanced_console_output,
-            'file_log_format': self.file_log_format
+            'file_log_format': self.file_log_format,
+            'enable_logging': self.enable_logging
         }
 
     def validate(self) -> bool:

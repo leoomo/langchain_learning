@@ -373,6 +373,10 @@ class CallPurposeAnalyzer:
     INTENT_CATEGORIES = {
         "weather_query": "天气查询",
         "weather_fishing_query": "钓鱼天气查询",
+        "fishing_advice_generation": "钓鱼建议生成",
+        "fishing_data_processing": "钓鱼数据处理",
+        "advice_generation": "建议生成",
+        "data_processing": "数据处理",
         "location_query": "地点查询",
         "time_query": "时间查询",
         "calculation": "计算请求",
@@ -395,9 +399,10 @@ class CallPurposeAnalyzer:
     @classmethod
     def analyze_call_purpose(cls, messages: List[Any], call_position: int,
                             has_tool_calls: bool, response: Any = None,
-                            compiled_patterns: Optional[Dict] = None) -> Dict[str, str]:
+                            compiled_patterns: Optional[Dict] = None,
+                            execution_context: str = "unknown") -> Dict[str, str]:
         """
-        分析模型调用的目的 - 增强版，支持预编译模式
+        分析模型调用的目的 - 增强版，支持预编译模式和执行阶段感知
 
         Args:
             messages: 消息列表
@@ -405,6 +410,7 @@ class CallPurposeAnalyzer:
             has_tool_calls: 是否包含工具调用
             response: 模型响应（可选）
             compiled_patterns: 预编译的正则表达式模式（可选）
+            execution_context: 执行上下文（tool_selection, result_generation, tool_execution）
 
         Returns:
             包含调用目的分析的字典
@@ -412,8 +418,12 @@ class CallPurposeAnalyzer:
         # 基于调用位置的基础推断
         purpose = cls._infer_purpose_by_position(call_position, has_tool_calls)
 
-        # 基于消息内容的意图分析
-        intent_category = cls._analyze_intent_from_messages(messages)
+        # 如果没有明确提供执行上下文，基于purpose推断
+        if execution_context == "unknown":
+            execution_context = purpose
+
+        # 基于消息内容和执行上下文的意图分析
+        intent_category = cls._analyze_intent_from_messages(messages, call_position, has_tool_calls, execution_context)
 
         # 提取关键信息点（使用预编译模式）
         key_points = cls._extract_key_points(messages, response, compiled_patterns)
@@ -426,7 +436,8 @@ class CallPurposeAnalyzer:
             "intent_category": intent_category,
             "key_points": key_points,
             "context_summary": context_summary,
-            "inference_method": "position_and_content_analysis"
+            "execution_context": execution_context,
+            "inference_method": "enhanced_position_content_analysis"
         }
 
     @classmethod
@@ -443,8 +454,9 @@ class CallPurposeAnalyzer:
             return "result_generation"
 
     @classmethod
-    def _analyze_intent_from_messages(cls, messages: List[Any]) -> str:
-        """从消息中分析用户意图"""
+    def _analyze_intent_from_messages(cls, messages: List[Any], call_position: int = 1,
+                                    has_tool_calls: bool = False, execution_context: str = "unknown") -> str:
+        """从消息中分析用户意图 - 增强版，支持执行阶段感知"""
         if not messages:
             return "unknown"
 
@@ -463,14 +475,38 @@ class CallPurposeAnalyzer:
 
         content = str(user_message.content).lower()
 
-        # 基于关键词匹配意图
+        # 基于执行阶段和上下文的精细化意图分析
+        if execution_context == "tool_selection":
+            # 工具选择阶段：更注重查询类意图
+            if "钓鱼" in content and any(keyword in content for keyword in ["天气", "时间", "什么时候", "明天", "后天"]):
+                return "weather_fishing_query"
+            elif any(keyword in content for keyword in ["天气", "气温", "下雨", "晴天"]):
+                return "weather_query"
+        elif execution_context == "result_generation":
+            # 结果生成阶段：更注重分析和建议类意图
+            if "钓鱼" in content:
+                return "fishing_advice_generation"
+            elif any(keyword in content for keyword in ["建议", "推荐", "分析"]):
+                return "advice_generation"
+        elif execution_context == "tool_execution":
+            # 工具执行阶段：数据处理类意图
+            if "钓鱼" in content:
+                return "fishing_data_processing"
+            else:
+                return "data_processing"
+
+        # 基于关键词匹配意图（保持向后兼容）
         for intent, keywords in cls.INTENT_KEYWORDS.items():
             if any(keyword in content for keyword in keywords):
                 return intent
 
-        # 特殊检查：钓鱼相关查询
+        # 特殊检查：钓鱼相关查询（只在其他检查都未匹配时使用）
         if "钓鱼" in content:
-            return "weather_fishing_query"
+            # 默认根据执行上下文决定钓鱼意图
+            if execution_context == "result_generation":
+                return "fishing_advice_generation"
+            else:
+                return "weather_fishing_query"
 
         return "general_conversation"
 
@@ -716,11 +752,49 @@ class AgentLoggingMiddleware(AgentMiddleware):
         self.request_start_time = None
         self.current_request_model_calls = 0
 
-    def _get_purpose_analysis_cache_key(self, messages_str: str, call_position: int, has_tool_calls: bool) -> str:
-        """生成目的分析缓存键"""
+    def _get_purpose_analysis_cache_key(self, messages_str: str, call_position: int,
+                                   has_tool_calls: bool, execution_context: str = "unknown") -> str:
+        """生成目的分析缓存键 - 增强版，包含执行上下文和消息类型"""
         import hashlib
-        content = f"{messages_str}_{call_position}_{has_tool_calls}"
-        return hashlib.md5(content.encode()).hexdigest()[:16]
+
+        # 获取更详细的上下文信息用于缓存键
+        try:
+            # 提取消息类型分布
+            message_types = []
+            msg_count = 0
+
+            # 简单的消息解析来获取类型信息
+            if messages_str:
+                # 检查是否包含AI回复、工具调用等标识
+                if 'AIMessage' in messages_str or 'ai' in messages_str.lower():
+                    message_types.append('ai')
+                if 'HumanMessage' in messages_str or 'human' in messages_str.lower():
+                    message_types.append('human')
+                if 'ToolMessage' in messages_str or 'tool' in messages_str.lower():
+                    message_types.append('tool')
+
+                # 计算消息数量（简化版）
+                msg_count = messages_str.count('content') or 1
+
+            # 构建更精确的缓存键
+            context_info = {
+                'content_hash': hashlib.md5(messages_str.encode()).hexdigest()[:8],
+                'position': call_position,
+                'has_tools': has_tool_calls,
+                'context': execution_context,
+                'msg_types': sorted(message_types),
+                'msg_count': msg_count
+            }
+
+            # 生成缓存键
+            cache_content = f"{context_info['content_hash']}_{context_info['position']}_{context_info['has_tools']}_{context_info['context']}_{context_info['msg_count']}_{'_'.join(context_info['msg_types'])}"
+
+            return hashlib.md5(cache_content.encode()).hexdigest()[:16]
+
+        except Exception as e:
+            # 如果出错，回退到简单版本
+            content = f"{messages_str}_{call_position}_{has_tool_calls}_{execution_context}"
+            return hashlib.md5(content.encode()).hexdigest()[:16]
 
     def _cache_purpose_analysis(self, cache_key: str, analysis: Dict[str, Any]):
         """缓存目的分析结果"""
@@ -952,23 +1026,36 @@ class AgentLoggingMiddleware(AgentMiddleware):
             # 分析调用目的（如果启用）
             purpose_analysis = {}
             if self.config.enable_call_purpose_analysis:
-                # 尝试从缓存获取分析结果
-                messages_str = str([str(getattr(msg, 'content', '')) for msg in messages[-3:]])  # 只使用最近3条消息生成缓存键
-                cache_key = self._get_purpose_analysis_cache_key(messages_str, call_position, has_tool_calls)
+                # 首先检查是否已经有意图分析结果（来自意图中间件）
+                existing_intent_analysis = None
+                if hasattr(request, 'metadata') and request.metadata:
+                    existing_intent_analysis = request.metadata.get('intent_analysis')
 
-                cached_analysis = self._get_cached_purpose_analysis(cache_key)
-                if cached_analysis:
-                    purpose_analysis = cached_analysis
+                if existing_intent_analysis:
+                    # 使用已有的意图分析结果，避免重复分析
+                    purpose_analysis = existing_intent_analysis
                 else:
-                    # 执行分析并缓存结果
-                    purpose_analysis = CallPurposeAnalyzer.analyze_call_purpose(
-                        messages=messages,
-                        call_position=call_position,
-                        has_tool_calls=has_tool_calls,
-                        response=response,
-                        compiled_patterns=self._compiled_patterns
-                    )
-                    self._cache_purpose_analysis(cache_key, purpose_analysis)
+                    # 推断执行上下文
+                    execution_context = CallPurposeAnalyzer._infer_purpose_by_position(call_position, has_tool_calls)
+
+                    # 尝试从缓存获取分析结果
+                    messages_str = str([str(getattr(msg, 'content', '')) for msg in messages[-3:]])  # 只使用最近3条消息生成缓存键
+                    cache_key = self._get_purpose_analysis_cache_key(messages_str, call_position, has_tool_calls, execution_context)
+
+                    cached_analysis = self._get_cached_purpose_analysis(cache_key)
+                    if cached_analysis:
+                        purpose_analysis = cached_analysis
+                    else:
+                        # 执行分析并缓存结果
+                        purpose_analysis = CallPurposeAnalyzer.analyze_call_purpose(
+                            messages=messages,
+                            call_position=call_position,
+                            has_tool_calls=has_tool_calls,
+                            response=response,
+                            compiled_patterns=self._compiled_patterns,
+                            execution_context=execution_context
+                        )
+                        self._cache_purpose_analysis(cache_key, purpose_analysis)
 
             # 创建增强的性能指标
             performance_metrics = PerformanceMetrics(

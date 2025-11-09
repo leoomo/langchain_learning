@@ -26,6 +26,7 @@ from tools.langchain_weather_tools_sync import (
 
 # 导入日志中间件
 from services.middleware import AgentLoggingMiddleware, MiddlewareConfig
+from services.middleware.integrated_middleware import IntegratedMiddlewareManager
 
 # 使用最新的 @tool 装饰器定义工具
 @tool
@@ -79,9 +80,10 @@ def search_information(query: str) -> str:
     return f"关于 '{query}' 的信息: 这是一个模拟搜索功能。在实际应用中，您可以集成真实的搜索引擎 API 来获取更全面的信息。"
 
 class ModernLangChainAgent:
-    """使用 LangChain 1.0+ 的现代智能体实现"""
+    """使用 LangChain 1.0+ 的现代智能体实现（集成增强版）"""
 
     def __init__(self, model_provider: str = "anthropic", enable_logging: bool = True,
+                 enable_intent_enhancement: bool = True,
                  middleware_config: Optional[MiddlewareConfig] = None):
         """
         初始化智能体
@@ -89,10 +91,12 @@ class ModernLangChainAgent:
         Args:
             model_provider: 模型提供商 ("anthropic" 或 "openai")
             enable_logging: 是否启用日志中间件
+            enable_intent_enhancement: 是否启用意图增强功能
             middleware_config: 自定义中间件配置
         """
         self.model_provider = model_provider
         self.enable_logging = enable_logging
+        self.enable_intent_enhancement = enable_intent_enhancement
         self.middleware_config = middleware_config or MiddlewareConfig.from_env()
 
         self.model = self._initialize_model()
@@ -100,14 +104,26 @@ class ModernLangChainAgent:
         weather_tools = get_weather_tools_sync()
         self.tools = [get_current_time, calculate, search_information] + weather_tools
 
-        # 初始化日志中间件
+        # 初始化集成中间件管理器
+        self.integrated_middleware = None
         self.logging_middleware = None
+
         if self.enable_logging:
             try:
-                self.logging_middleware = AgentLoggingMiddleware(config=self.middleware_config)
+                self.integrated_middleware = IntegratedMiddlewareManager(
+                    config=self.middleware_config,
+                    enable_intent_enhancement=self.enable_intent_enhancement
+                )
+                self.logging_middleware = self.integrated_middleware.logging_middleware
+
+                print(f"📝 已启用集成中间件管理器")
+                print(f"   日志记录: {self.enable_logging}")
+                print(f"   意图增强: {self.enable_intent_enhancement}")
+
             except Exception as e:
-                print(f"⚠️  日志中间件初始化失败，继续使用无日志模式: {e}")
+                print(f"⚠️  集成中间件初始化失败，使用基础模式: {e}")
                 self.enable_logging = False
+                self.enable_intent_enhancement = False
 
         self.agent = self._create_agent()
 
@@ -192,9 +208,17 @@ class ModernLangChainAgent:
 
         # 准备中间件列表
         middleware_list = []
-        if self.enable_logging and self.logging_middleware:
+        if self.integrated_middleware:
+            # 使用集成中间件管理器获取所有中间件
+            middleware_list = self.integrated_middleware.get_middleware_list()
+            if middleware_list:
+                print(f"📝 已启用集成中间件 (共 {len(middleware_list)} 个)")
+                if self.logging_middleware:
+                    print(f"   日志中间件会话: {self.logging_middleware.session_id[:8]}...")
+        elif self.enable_logging and self.logging_middleware:
+            # 兼容旧版本
             middleware_list.append(self.logging_middleware)
-            print(f"📝 已启用日志中间件 (session: {self.logging_middleware.session_id[:8]}...)")
+            print(f"📝 已启用传统日志中间件 (session: {self.logging_middleware.session_id[:8]}...)")
 
         # 使用 LangChain 1.0+ 的 create_agent 函数
         create_kwargs = {
@@ -262,20 +286,67 @@ class ModernLangChainAgent:
 
     def get_execution_summary(self) -> Optional[Dict[str, Any]]:
         """
-        获取当前会话的执行摘要
+        获取当前会话的执行摘要（增强版）
 
         Returns:
-            包含执行统计、工具调用记录等信息的字典，如果未启用日志则返回None
+            包含执行统计、工具调用记录、意图分析等信息的字典，如果未启用日志则返回None
         """
-        if self.logging_middleware:
+        if self.integrated_middleware:
+            # 使用集成中间件管理器获取综合统计
+            summary = self.integrated_middleware.get_execution_summary()
+            return summary
+        elif self.logging_middleware:
+            # 兼容传统日志中间件
             return self.logging_middleware.get_execution_summary()
         return None
 
     def reset_session_metrics(self):
         """重置当前会话的指标统计"""
-        if self.logging_middleware:
+        if self.integrated_middleware:
+            self.integrated_middleware.reset_all_stats()
+            if self.logging_middleware:
+                print(f"📊 所有中间件指标已重置 (session: {self.logging_middleware.session_id[:8]}...)")
+            else:
+                print("📊 所有中间件指标已重置")
+        elif self.logging_middleware:
             self.logging_middleware.reset_metrics()
             print(f"📊 会话指标已重置 (session: {self.logging_middleware.session_id[:8]}...)")
+
+    def get_intent_stats(self) -> Optional[Dict[str, Any]]:
+        """
+        获取意图分析统计信息
+
+        Returns:
+            意图统计信息，如果未启用意图增强则返回None
+        """
+        if self.integrated_middleware and self.integrated_middleware.intent_middleware:
+            return self.integrated_middleware.intent_middleware.get_intent_stats()
+        return None
+
+    def configure_middleware(self, enable_intent_enhancement: Optional[bool] = None,
+                           enable_logging: Optional[bool] = None,
+                           log_level: Optional[str] = None):
+        """
+        动态配置中间件
+
+        Args:
+            enable_intent_enhancement: 是否启用意图增强
+            enable_logging: 是否启用日志记录
+            log_level: 日志级别
+        """
+        if enable_intent_enhancement is not None:
+            self.enable_intent_enhancement = enable_intent_enhancement
+
+        if enable_logging is not None:
+            self.enable_logging = enable_logging
+
+        if log_level is not None and self.integrated_middleware:
+            self.integrated_middleware.set_log_level(log_level)
+
+        # 重新初始化agent以应用新配置
+        print("🔄 正在重新配置智能体...")
+        self.agent = self._create_agent()
+        print("✅ 智能体配置更新完成")
 
     def interactive_chat(self):
         """启动交互式聊天"""
@@ -283,9 +354,15 @@ class ModernLangChainAgent:
         print(f"📋 当前使用模型: {self.model_provider}")
         print("🛠️  可用工具: 时间查询、数学计算、天气查询、信息搜索")
 
-        if self.enable_logging and self.logging_middleware:
-            print(f"📝 日志记录: 已启用 (会话ID: {self.logging_middleware.session_id[:8]}...)")
+        if self.enable_logging:
+            print(f"📝 日志记录: 已启用")
+            if self.logging_middleware:
+                print(f"   会话ID: {self.logging_middleware.session_id[:8]}...")
+            if self.enable_intent_enhancement:
+                print("   意图增强: 已启用")
             print("📊 输入 'stats' 查看执行统计, 'reset' 重置指标")
+            if self.enable_intent_enhancement:
+                print("🧠 输入 'intent' 查看意图统计")
         else:
             print("📝 日志记录: 未启用")
 
@@ -304,15 +381,46 @@ class ModernLangChainAgent:
                     summary = self.get_execution_summary()
                     if summary:
                         print("\n📊 执行统计:")
-                        print(f"   会话ID: {summary['session_id'][:8]}...")
-                        print(f"   总耗时: {summary['metrics']['total_duration_ms']:.2f}ms")
-                        print(f"   模型调用次数: {summary['metrics']['model_calls_count']}")
-                        print(f"   工具调用次数: {summary['metrics']['tool_calls_count']}")
-                        print(f"   错误次数: {summary['metrics']['errors_count']}")
-                        print(f"   Token使用: {summary['metrics']['token_usage']}")
+                        if 'session_id' in summary:
+                            print(f"   会话ID: {summary['session_id'][:8]}...")
+                        if 'metrics' in summary:
+                            metrics = summary['metrics']
+                            print(f"   总耗时: {metrics.get('total_duration_ms', 0):.2f}ms")
+                            print(f"   模型调用次数: {metrics.get('model_calls_count', 0)}")
+                            print(f"   工具调用次数: {metrics.get('tool_calls_count', 0)}")
+                            print(f"   错误次数: {metrics.get('errors_count', 0)}")
+                            print(f"   Token使用: {metrics.get('token_usage', 'N/A')}")
+                        if 'intent_stats' in summary:
+                            intent_stats = summary['intent_stats']
+                            print(f"   意图增强次数: {intent_stats.get('tool_selection_enhancements', 0)}")
+                            most_common = intent_stats.get('most_common_intent')
+                            if most_common:
+                                print(f"   最常见意图: {most_common}")
                         print()
                     else:
                         print("❌ 无法获取执行统计\n")
+                    continue
+
+                # 处理意图统计命令
+                if user_input.lower() == 'intent' and self.enable_intent_enhancement:
+                    intent_stats = self.get_intent_stats()
+                    if intent_stats:
+                        print("\n🧠 意图分析统计:")
+                        print(f"   总调用次数: {intent_stats.get('total_calls', 0)}")
+                        print(f"   工具选择增强次数: {intent_stats.get('tool_selection_enhancements', 0)}")
+
+                        intent_distribution = intent_stats.get('intent_distribution', {})
+                        if intent_distribution:
+                            print("   意图分布:")
+                            for intent, count in sorted(intent_distribution.items(), key=lambda x: x[1], reverse=True):
+                                print(f"     {intent}: {count}次")
+
+                        most_common = intent_stats.get('most_common_intent')
+                        if most_common:
+                            print(f"   最常见意图: {most_common}")
+                        print()
+                    else:
+                        print("❌ 意图增强未启用或无统计数据\n")
                     continue
 
                 # 处理重置命令

@@ -5,6 +5,74 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-11-09
+
+### 🎯 Smart Intent Analysis System - Major Enhancement
+
+### ✨ Added
+- **Intelligent Intent Analysis Middleware System**
+  - LangChain 1.0+ integrated middleware for execution stage-aware intent classification
+  - 13 distinct intent categories with stage-aware differentiation
+  - Automatic tool selection optimization based on user intent
+  - Dynamic system prompt enhancement for specific scenarios
+
+- **Execution Stage Perception**
+  - Tool Selection Stage → `weather_fishing_query`
+  - Tool Execution Stage → `fishing_data_processing`
+  - Result Generation Stage → `fishing_advice_generation`
+  - Smart inference based on message history and tool execution state
+
+- **Enhanced Middleware Architecture**
+  - Unified intent analysis logic to prevent duplicate processing
+  - Intelligent caching mechanism with context-aware cache keys
+  - Middleware collaboration avoiding redundant analysis
+  - Real-time intent distribution and performance monitoring
+
+- **Advanced Configuration System**
+  - Dynamic middleware configuration without restart
+  - Comprehensive intent statistics and execution summaries
+  - Configurable logging levels and performance monitoring
+  - Hot-reload capability for middleware features
+
+### 🔧 Improved
+- **Enhanced Context Inference Algorithm**
+  - Message history analysis for accurate execution stage detection
+  - Tool call state tracking for precise intent classification
+  - Optimized cache key generation with multi-factor analysis
+  - Reduced false positives in intent classification
+
+- **Performance Optimizations**
+  - Eliminated duplicate intent analysis between middleware
+  - Improved cache hit rates with context-aware caching
+  - Reduced LLM call overhead through intelligent result sharing
+  - Enhanced memory efficiency in middleware processing
+
+### 🛠️ Fixed
+- **Intent Classification Consistency**
+  - Resolved duplicate intent classifications across execution stages
+  - Fixed execution context inference accuracy
+  - Eliminated middleware processing conflicts
+  - Improved reliability of intent-based tool selection
+
+- **Middleware Integration Issues**
+  - Fixed metadata sharing between middleware components
+  - Resolved cache key collision problems
+  - Improved error handling in middleware processing
+  - Enhanced compatibility with LangChain 1.0+ middleware system
+
+### 📊 Enhanced Monitoring
+- **Comprehensive Intent Analytics**
+  - Real-time intent distribution tracking
+  - Tool selection enhancement monitoring
+  - Execution stage performance metrics
+  - Detailed middleware execution summaries
+
+### 📚 Documentation Updates
+- Updated project documentation with intent analysis system details
+- Enhanced usage examples with middleware configuration
+- Added comprehensive middleware system documentation
+- Updated project structure with new middleware components
+
 ## [2.1.1] - 2025-11-08
 
 ### 📚 Documentation Restructuring
