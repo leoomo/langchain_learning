@@ -13,17 +13,17 @@ import time
 import uuid
 import os
 import logging
-from typing import Any, Dict, Optional, List, Callable
+from typing import Any, Dict, Optional, List, Callable, TYPE_CHECKING
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
 # LangChain imports
-try:
+if TYPE_CHECKING:
     from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
     from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
     from langgraph.runtime import Runtime
     from langchain.agents import AgentState
-except ImportError:
+else:
     # 如果没有安装完整的LangChain，提供基础类型
     AgentMiddleware = object
     ModelRequest = object
@@ -43,7 +43,7 @@ class PerformanceMetrics:
     network_duration_ms: float = 0.0      # 网络传输时间
 
     # 扩展性能指标
-    custom_metrics: Dict[str, Any] = None  # 自定义指标
+    custom_metrics: Optional[Dict[str, Any]] = None  # 自定义指标
 
     def __post_init__(self):
         if self.custom_metrics is None:
@@ -87,13 +87,13 @@ class ModelCallRecord:
     call_purpose: str = "unknown"  # 调用目的
     intent_category: str = ""  # 意图分类
     call_context_summary: str = ""  # 调用上下文摘要
-    key_points: List[str] = None  # 关键信息点
+    key_points: Optional[List[str]] = None  # 关键信息点
     inference_method: str = "position_and_content_analysis"  # 推断方法
     error_message: Optional[str] = None
 
     # 性能指标扩展字段
-    performance_metrics: PerformanceMetrics = None
-    resource_usage: Dict[str, Any] = None  # 资源使用情况
+    performance_metrics: Optional[PerformanceMetrics] = None
+    resource_usage: Optional[Dict[str, Any]] = None  # 资源使用情况
 
     def __post_init__(self):
         if self.key_points is None:
@@ -149,11 +149,11 @@ class ToolCallRecord:
     timestamp: str = ""
 
     # 性能指标扩展字段
-    performance_metrics: PerformanceMetrics = None
-    operation_phases: Dict[str, float] = None  # 各操作阶段耗时
+    performance_metrics: Optional[PerformanceMetrics] = None
+    operation_phases: Optional[Dict[str, float]] = None  # 各操作阶段耗时
     cache_hit: bool = False  # 缓存命中状态
     retry_count: int = 0  # 重试次数
-    resource_usage: Dict[str, Any] = None  # 资源使用情况
+    resource_usage: Optional[Dict[str, Any]] = None  # 资源使用情况
 
     def __post_init__(self):
         if not self.timestamp:
@@ -192,12 +192,12 @@ class AgentExecutionMetrics:
     total_duration_ms: float = 0.0
     model_calls_count: int = 0
     tool_calls_count: int = 0
-    token_usage: Dict[str, int] = None
+    token_usage: Optional[Dict[str, int]] = None
     errors_count: int = 0
     success: bool = True
     model_name: str = ""
-    model_calls: List[ModelCallRecord] = None  # 增强的模型调用记录
-    tool_calls: List[ToolCallRecord] = None    # 工具调用记录
+    model_calls: Optional[List[ModelCallRecord]] = None  # 增强的模型调用记录
+    tool_calls: Optional[List[ToolCallRecord]] = None    # 工具调用记录
 
     def __post_init__(self):
         if self.token_usage is None:
@@ -1380,7 +1380,7 @@ class AgentLoggingMiddleware(AgentMiddleware):
 
         except Exception as e:
             self.metrics.errors_count += 1
-            duration_ms = (time.time() - start_time) * 1000
+            duration_ms = (time.time() - tool_start_time) * 1000
 
             # 记录工具调用失败
             tool_record = ToolCallRecord(

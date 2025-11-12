@@ -10,7 +10,7 @@ import re
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple, Set, Any
 from difflib import SequenceMatcher
 import unicodedata
 
@@ -23,8 +23,8 @@ class EnhancedPlaceMatcher:
 
     def __init__(self, db_path: str = "data/admin_divisions.db"):
         self.db_path = db_path
-        self.conn = None
-        self.cursor = None
+        self.conn: Optional[sqlite3.Connection] = None
+        self.cursor: Optional[sqlite3.Cursor] = None
 
         # 地区类型映射
         self.level_names = {
@@ -104,6 +104,12 @@ class EnhancedPlaceMatcher:
         self.cursor = self.conn.cursor()
         logger.info(f"已连接到数据库: {self.db_path}")
 
+    def _ensure_connection(self) -> sqlite3.Cursor:
+        """确保数据库连接可用"""
+        if self.cursor is None:
+            self.connect()
+        return self.cursor  # type: ignore
+
     def close(self):
         """关闭数据库连接"""
         if self.conn:
@@ -143,14 +149,15 @@ class EnhancedPlaceMatcher:
         normalized_name = self.normalize_text(name)
 
         # 直接匹配
-        self.cursor.execute("""
+        cursor = self._ensure_connection()
+        cursor.execute("""
             SELECT code, name, level, province, city, district, street, longitude, latitude
             FROM regions
             WHERE name = ? OR pinyin = ?
             LIMIT 1
         """, (name, normalized_name.lower()))
 
-        result = self.cursor.fetchone()
+        result = cursor.fetchone()
         if result:
             return self._format_result(result)
 
@@ -166,14 +173,15 @@ class EnhancedPlaceMatcher:
             return self.exact_match(alias_name)
 
         # 检查数据库中的别名
-        self.cursor.execute("""
+        cursor = self._ensure_connection()
+        cursor.execute("""
             SELECT code, name, level, province, city, district, street, longitude, latitude
             FROM regions
             WHERE aliases LIKE ?
             LIMIT 1
         """, (f'%{name}%',))
 
-        result = self.cursor.fetchone()
+        result = cursor.fetchone()
         if result:
             return self._format_result(result)
 
@@ -187,7 +195,8 @@ class EnhancedPlaceMatcher:
             return None
 
         # 获取所有候选地区
-        self.cursor.execute("""
+        cursor = self._ensure_connection()
+        cursor.execute("""
             SELECT code, name, level, province, city, district, street, longitude, latitude
             FROM regions
             WHERE LENGTH(name) >= ?
@@ -195,7 +204,7 @@ class EnhancedPlaceMatcher:
             LIMIT 100
         """, (len(normalized_name),))
 
-        candidates = self.cursor.fetchall()
+        candidates = cursor.fetchall()
         best_match = None
         best_score = 0
 
@@ -251,7 +260,8 @@ class EnhancedPlaceMatcher:
 
             where_clause = " AND ".join(conditions) if conditions else "1=1"
 
-            self.cursor.execute(f"""
+            cursor = self._ensure_connection()
+            cursor.execute(f"""
                 SELECT code, name, level, province, city, district, street, longitude, latitude
                 FROM regions
                 WHERE (name LIKE ? OR pinyin LIKE ?) AND {where_clause}
@@ -259,7 +269,7 @@ class EnhancedPlaceMatcher:
                 LIMIT 1
             """, [f'%{normalized_name}%', f'%{normalized_name.lower()}%'] + params)
 
-            result = self.cursor.fetchone()
+            result = cursor.fetchone()
             if result:
                 return self._format_result(result)
 
@@ -272,7 +282,8 @@ class EnhancedPlaceMatcher:
         if len(normalized_name) < 2:
             return None
 
-        self.cursor.execute("""
+        cursor = self._ensure_connection()
+        cursor.execute("""
             SELECT code, name, level, province, city, district, street, longitude, latitude
             FROM regions
             WHERE name LIKE ? OR pinyin LIKE ?
@@ -280,7 +291,7 @@ class EnhancedPlaceMatcher:
             LIMIT 10
         """, (f'%{normalized_name}%', f'%{normalized_name.lower()}%'))
 
-        results = self.cursor.fetchall()
+        results = cursor.fetchall()
 
         # 选择最匹配的结果
         for result in results:
@@ -305,8 +316,8 @@ class EnhancedPlaceMatcher:
             'city': result[4],
             'district': result[5],
             'street': result[6],
-            'longitude': result[7],
-            'latitude': result[8],
+            'longitude': float(result[7]) if result[7] is not None else None,
+            'latitude': float(result[8]) if result[8] is not None else None,
             'full_address': self._build_full_address(result)
         }
 
@@ -388,16 +399,19 @@ class EnhancedPlaceMatcher:
         stats = {}
 
         # 总数统计
-        self.cursor.execute("SELECT COUNT(*) FROM regions")
-        stats['total_regions'] = self.cursor.fetchone()[0]
+        cursor = self._ensure_connection()
+        cursor.execute("SELECT COUNT(*) FROM regions")
+        stats['total_regions'] = cursor.fetchone()[0]
 
         # 按级别统计
-        self.cursor.execute("SELECT level, COUNT(*) FROM regions GROUP BY level ORDER BY level")
-        stats['by_level'] = dict(self.cursor.fetchall())
+        cursor = self._ensure_connection()
+        cursor.execute("SELECT level, COUNT(*) FROM regions GROUP BY level ORDER BY level")
+        stats['by_level'] = dict(cursor.fetchall())
 
         # 有坐标统计
-        self.cursor.execute("SELECT COUNT(*) FROM regions WHERE longitude IS NOT NULL AND latitude IS NOT NULL")
-        stats['with_coordinates'] = self.cursor.fetchone()[0]
+        cursor = self._ensure_connection()
+        cursor.execute("SELECT COUNT(*) FROM regions WHERE longitude IS NOT NULL AND latitude IS NOT NULL")
+        stats['with_coordinates'] = cursor.fetchone()[0]
 
         # 别名统计
         stats['alias_count'] = len(self.alias_map)

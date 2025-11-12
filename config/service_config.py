@@ -64,30 +64,40 @@ class ServiceConfig:
         config = cls()
 
         # 坐标服务配置
-        if os.getenv('COORDINATE_SERVICE_ENABLED'):
-            config.coordinate_service.enabled = os.getenv('COORDINATE_SERVICE_ENABLED').lower() == 'true'
-        if os.getenv('COORDINATE_DB_PATH'):
-            config.coordinate_service.database.path = os.getenv('COORDINATE_DB_PATH')
-        if os.getenv('COORDINATE_CACHE_TTL'):
-            config.coordinate_service.database.cache_ttl = int(os.getenv('COORDINATE_CACHE_TTL'))
-        if os.getenv('COORDINATE_HEALTH_CHECK_INTERVAL'):
-            config.coordinate_service.health_check_interval = int(os.getenv('COORDINATE_HEALTH_CHECK_INTERVAL'))
+        coordinate_service_enabled = os.getenv('COORDINATE_SERVICE_ENABLED')
+        if coordinate_service_enabled:
+            config.coordinate_service.enabled = coordinate_service_enabled.lower() == 'true'
+        coordinate_db_path = os.getenv('COORDINATE_DB_PATH')
+        if coordinate_db_path:
+            config.coordinate_service.database.path = coordinate_db_path
+        coordinate_cache_ttl = os.getenv('COORDINATE_CACHE_TTL')
+        if coordinate_cache_ttl:
+            config.coordinate_service.database.cache_ttl = int(coordinate_cache_ttl)
+        coordinate_health_check_interval = os.getenv('COORDINATE_HEALTH_CHECK_INTERVAL')
+        if coordinate_health_check_interval:
+            config.coordinate_service.health_check_interval = int(coordinate_health_check_interval)
 
         # 天气服务配置
-        if os.getenv('WEATHER_SERVICE_ENABLED'):
-            config.weather_service.enabled = os.getenv('WEATHER_SERVICE_ENABLED').lower() == 'true'
-        if os.getenv('CAIYUN_API_KEY'):
-            config.weather_service.api_key = os.getenv('CAIYUN_API_KEY')
-        if os.getenv('WEATHER_CACHE_TTL'):
-            config.weather_service.cache_ttl = int(os.getenv('WEATHER_CACHE_TTL'))
+        weather_service_enabled = os.getenv('WEATHER_SERVICE_ENABLED')
+        if weather_service_enabled:
+            config.weather_service.enabled = weather_service_enabled.lower() == 'true'
+        caiyun_api_key = os.getenv('CAIYUN_API_KEY')
+        if caiyun_api_key:
+            config.weather_service.api_key = caiyun_api_key
+        weather_cache_ttl = os.getenv('WEATHER_CACHE_TTL')
+        if weather_cache_ttl:
+            config.weather_service.cache_ttl = int(weather_cache_ttl)
 
         # 日志配置
-        if os.getenv('DEBUG_LOGGING'):
-            config.logging.debug_logging = os.getenv('DEBUG_LOGGING').lower() == 'true'
-        if os.getenv('LOG_LEVEL'):
-            config.logging.level = os.getenv('LOG_LEVEL').upper()
-        if os.getenv('LOG_FILE_PATH'):
-            config.logging.log_file_path = os.getenv('LOG_FILE_PATH')
+        debug_logging = os.getenv('DEBUG_LOGGING')
+        if debug_logging:
+            config.logging.debug_logging = debug_logging.lower() == 'true'
+        log_level = os.getenv('LOG_LEVEL')
+        if log_level:
+            config.logging.level = log_level.upper()
+        log_file_path = os.getenv('LOG_FILE_PATH')
+        if log_file_path:
+            config.logging.log_file_path = log_file_path
 
         return config
 

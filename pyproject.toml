@@ -22,3 +22,8 @@ dependencies = [
     "pandas>=2.3.3",
     "pytz>=2025.2",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+]

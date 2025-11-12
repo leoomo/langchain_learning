@@ -269,7 +269,7 @@ class WeatherCache:
         for key in expired_keys:
             del self.file_cache[key]
 
-    def _generate_key(self, place_name: str, extra_params: Dict[str, Any] = None) -> str:
+    def _generate_key(self, place_name: str, extra_params: Optional[Dict[str, Any]] = None) -> str:
         """生成缓存键"""
         key_data = {"place": place_name}
         if extra_params:
@@ -278,7 +278,7 @@ class WeatherCache:
         key_str = json.dumps(key_data, sort_keys=True)
         return hashlib.md5(key_str.encode()).hexdigest()[:16]
 
-    def get(self, place_name: str, extra_params: Dict[str, Any] = None) -> Optional[Any]:
+    def get(self, place_name: str, extra_params: Optional[Dict[str, Any]] = None) -> Optional[Any]:
         """
         获取缓存数据
 
@@ -314,8 +314,8 @@ class WeatherCache:
     def set(self,
             place_name: str,
             value: Any,
-            ttl: int = None,
-            extra_params: Dict[str, Any] = None):
+            ttl: Optional[int] = None,
+            extra_params: Optional[Dict[str, Any]] = None):
         """
         设置缓存数据
 
@@ -348,7 +348,7 @@ class WeatherCache:
         if len(self.file_cache) % 10 == 0:  # 每10次修改保存一次
             self._save_file_cache()
 
-    def delete(self, place_name: str, extra_params: Dict[str, Any] = None) -> bool:
+    def delete(self, place_name: str, extra_params: Optional[Dict[str, Any]] = None) -> bool:
         """删除缓存条目"""
         key = self._generate_key(place_name, extra_params)
 

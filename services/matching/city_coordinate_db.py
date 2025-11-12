@@ -7,7 +7,7 @@
 import sqlite3
 import json
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,9 +37,9 @@ class CityCoordinateDB:
             db_path: 数据库文件路径
         """
         self.db_path = Path(db_path)
-        self.connection = None
+        self.connection: Optional[sqlite3.Connection] = None
         self._init_connection()
-        self._cache = {}  # 简单的内存缓存
+        self._cache: Dict[str, Any] = {}  # 简单的内存缓存
 
     def _init_connection(self) -> None:
         """初始化数据库连接"""
@@ -57,6 +57,12 @@ class CityCoordinateDB:
 
         except Exception as e:
             raise Exception(f"数据库连接失败: {e}")
+
+    def _ensure_connection(self) -> sqlite3.Connection:
+        """确保数据库连接可用"""
+        if self.connection is None:
+            raise RuntimeError("数据库连接未初始化")
+        return self.connection
 
     def get_coordinates(self, place_name: str) -> Optional[Tuple[float, float]]:
         """
@@ -109,7 +115,8 @@ class CityCoordinateDB:
             LIMIT 1
         """
         try:
-            cursor = self.connection.execute(query, (place_name, place_name.lower()))
+            conn = self._ensure_connection()
+            cursor = conn.execute(query, (place_name, place_name.lower()))
             result = cursor.fetchone()
             if result and result['longitude'] and result['latitude']:
                 return (result['longitude'], result['latitude'])
@@ -129,7 +136,8 @@ class CityCoordinateDB:
             LIMIT 1
         """
         try:
-            cursor = self.connection.execute(query, (f'%{clean_name}%', f'%{clean_name}%'))
+            conn = self._ensure_connection()
+            cursor = conn.execute(query, (f'%{clean_name}%', f'%{clean_name}%'))
             result = cursor.fetchone()
             if result and result['longitude'] and result['latitude']:
                 return (result['longitude'], result['latitude'])
@@ -146,7 +154,8 @@ class CityCoordinateDB:
             LIMIT 1
         """
         try:
-            cursor = self.connection.execute(query, (place_name,))
+            conn = self._ensure_connection()
+            cursor = conn.execute(query, (place_name,))
             result = cursor.fetchone()
             if result and result['longitude'] and result['latitude']:
                 return (result['longitude'], result['latitude'])
@@ -207,7 +216,8 @@ class CityCoordinateDB:
             LIMIT ?
         """
         try:
-            cursor = self.connection.execute(query, (place_name, place_name.lower(), limit))
+            conn = self._ensure_connection()
+            cursor = conn.execute(query, (place_name, place_name.lower(), limit))
             return [self._row_to_place_info(row) for row in cursor.fetchall()]
         except Exception:
             return []
@@ -222,8 +232,9 @@ class CityCoordinateDB:
             LIMIT ?
         """
         try:
+            conn = self._ensure_connection()
             pattern = f'%{place_name}%'
-            cursor = self.connection.execute(query, (pattern, pattern, pattern, limit))
+            cursor = conn.execute(query, (pattern, pattern, pattern, limit))
             return [self._row_to_place_info(row) for row in cursor.fetchall()]
         except Exception:
             return []
@@ -270,7 +281,8 @@ class CityCoordinateDB:
                 path_parts.append(current.name)
                 if current.parent_code:
                     parent_query = "SELECT * FROM regions WHERE code = ?"
-                    cursor = self.connection.execute(parent_query, (current.parent_code,))
+                    conn = self._ensure_connection()
+                    cursor = conn.execute(parent_query, (current.parent_code,))
                     parent_row = cursor.fetchone()
                     if parent_row:
                         current = self._row_to_place_info(parent_row)
@@ -323,7 +335,8 @@ class CityCoordinateDB:
                 WHERE parent_code = ?
                 ORDER BY name
             """
-            cursor = self.connection.execute(query, (parent_code,))
+            conn = self._ensure_connection()
+            cursor = conn.execute(query, (parent_code,))
             return [self._row_to_place_info(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"获取下级行政区划时出错: {e}")
@@ -333,14 +346,15 @@ class CityCoordinateDB:
         """获取数据库统计信息"""
         try:
             stats = {}
-            cursor = self.connection.execute("SELECT level, COUNT(*) as count FROM regions GROUP BY level ORDER BY level")
+            conn = self._ensure_connection()
+            cursor = conn.execute("SELECT level, COUNT(*) as count FROM regions GROUP BY level ORDER BY level")
 
             for row in cursor.fetchall():
                 level_name = {1: "省级", 2: "地级", 3: "县级"}.get(row['level'], f"级别{row['level']}")
                 stats[level_name] = row['count']
 
             # 总计
-            cursor = self.connection.execute("SELECT COUNT(*) as total FROM regions")
+            cursor = conn.execute("SELECT COUNT(*) as total FROM regions")
             stats["总计"] = cursor.fetchone()['total']
 
             return stats
