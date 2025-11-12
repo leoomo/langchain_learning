@@ -13,6 +13,7 @@ import time
 import uuid
 import os
 import logging
+import asyncio
 from typing import Any, Dict, Optional, List, Callable, TYPE_CHECKING
 from datetime import datetime
 from dataclasses import dataclass, asdict
@@ -29,6 +30,8 @@ else:
     ModelRequest = object
     ModelResponse = object
     BaseMessage = object
+    AgentState = Dict[str, Any]  # Runtime fallback
+    Runtime = Any  # Runtime fallback
 
 from .config import MiddlewareConfig, default_config
 
@@ -646,6 +649,12 @@ class AgentLoggingMiddleware(AgentMiddleware):
         # 设置logger
         self.logger = logger or self._setup_logger()
 
+        # 中间件名称
+        self.name = "AgentLoggingMiddleware"
+
+        # 状态架构（LangChain中间件接口要求）
+        self.state_schema = dict  # 使用内置的dict类作为状态架构
+
         # 会话管理
         self.session_id = self._generate_session_id()
         self.execution_start_time = None
@@ -903,6 +912,68 @@ class AgentLoggingMiddleware(AgentMiddleware):
             elif isinstance(request.model, str):
                 return request.model
         return "unknown"
+
+    def before_agent(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """智能体执行前的处理"""
+        if not self.execution_start_time:
+            self.execution_start_time = time.time()
+
+        # 记录智能体开始执行
+        self._log_with_context('INFO', "🚀 智能体开始执行", {
+            'session_id': self.session_id,
+            'execution_id': self.metrics.execution_id
+        })
+
+        return None
+
+    def after_agent(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """智能体执行后的处理"""
+        if self.execution_start_time:
+            total_duration = (time.time() - self.execution_start_time) * 1000
+            self.metrics.total_duration_ms = total_duration
+            self.metrics.success = True
+
+        # 记录智能体执行完成
+        self._log_with_context('INFO', "✅ 智能体执行完成", {
+            'session_id': self.session_id,
+            'execution_id': self.metrics.execution_id,
+            'total_duration_ms': self.metrics.total_duration_ms,
+            'model_calls': self.metrics.model_calls_count,
+            'tool_calls': self.metrics.tool_calls_count
+        })
+
+        return None
+
+    async def abefore_agent(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """异步智能体执行前的处理"""
+        if not self.execution_start_time:
+            self.execution_start_time = time.time()
+
+        # 记录智能体开始执行
+        self._log_with_context('INFO', "🚀 智能体开始执行 (异步)", {
+            'session_id': self.session_id,
+            'execution_id': self.metrics.execution_id
+        })
+
+        return None
+
+    async def aafter_agent(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """异步智能体执行后的处理"""
+        if self.execution_start_time:
+            total_duration = (time.time() - self.execution_start_time) * 1000
+            self.metrics.total_duration_ms = total_duration
+            self.metrics.success = True
+
+        # 记录智能体执行完成
+        self._log_with_context('INFO', "✅ 智能体执行完成 (异步)", {
+            'session_id': self.session_id,
+            'execution_id': self.metrics.execution_id,
+            'total_duration_ms': self.metrics.total_duration_ms,
+            'model_calls': self.metrics.model_calls_count,
+            'tool_calls': self.metrics.tool_calls_count
+        })
+
+        return None
 
     def before_model(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
         """模型调用前的处理"""
@@ -1402,6 +1473,219 @@ class AgentLoggingMiddleware(AgentMiddleware):
 
             raise
 
+    async def awrap_tool_call(self, request, handler) -> Any:
+        """异步包装工具调用，记录工具执行详情（性能增强版）"""
+        if not self.config.enable_tool_tracking:
+            return await handler(request)
+
+        # 提取工具信息
+        tool_name = "unknown"
+        tool_args = {}
+
+        if hasattr(request, 'tool_call'):
+            tool_call = request.tool_call
+            tool_name = tool_call.get('name', 'unknown')
+            tool_args = tool_call.get('args', {})
+        elif hasattr(request, 'name'):
+            tool_name = request.name
+            tool_args = getattr(request, 'args', {})
+
+        # 生成操作ID用于性能追踪
+        tool_operation_id = f"tool_{tool_name}_{int(time.time() * 1000)}"
+
+        # 开始性能追踪
+        self.performance_tracker.start_timing(tool_operation_id, "tool_call", {
+            "tool_name": tool_name,
+            "args_count": len(tool_args) if isinstance(tool_args, dict) else 0
+        })
+
+        # 开始各阶段计时
+        tool_start_time = time.time()
+
+        self.metrics.tool_calls_count += 1
+
+        try:
+            # 检查缓存（如果可用）
+            cache_hit = False
+            if hasattr(self, '_tool_cache'):
+                cache_key = f"{tool_name}:{hash(str(sorted(tool_args.items())))}"
+                cached_result = self._tool_cache.get(cache_key)
+                if cached_result is not None:
+                    cache_hit = True
+                    result = cached_result
+                    total_duration_ms = (time.time() - tool_start_time) * 1000
+
+                    # 记录缓存命中的工具调用
+                    tool_record = ToolCallRecord(
+                        tool_name=tool_name,
+                        tool_args=tool_args,
+                        result=result,
+                        success=True,
+                        total_duration_ms=total_duration_ms,
+                        cache_hit=cache_hit,
+                        timestamp=datetime.now().isoformat()
+                    )
+                    self.tool_calls.append(tool_record)
+
+                    # 结束性能追踪
+                    self.performance_tracker.end_timing(tool_operation_id)
+                    self.performance_tracker.increment_counter("tool_cache_hits")
+
+                    return result
+
+            # 实际调用处理程序（异步）
+            if asyncio.iscoroutinefunction(handler):
+                result = await handler(request)
+            else:
+                result = handler(request)
+
+            # 计算总耗时
+            total_duration_ms = (time.time() - tool_start_time) * 1000
+
+            # 检测缓存命中（启发式）
+            if not cache_hit:
+                cache_hit = self._detect_cache_hit(tool_name, tool_args, result) or False
+
+            # 创建增强的工具调用记录
+            tool_record = ToolCallRecord(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result=result,
+                success=True,
+                total_duration_ms=total_duration_ms,
+                cache_hit=cache_hit,
+                timestamp=datetime.now().isoformat()
+            )
+            self.tool_calls.append(tool_record)
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(tool_operation_id)
+            self.performance_tracker.increment_counter("tool_calls_success")
+            if cache_hit:
+                self.performance_tracker.increment_counter("tool_cache_hits")
+
+            # 记录详细性能信息
+            self._log_with_context('INFO', f"✅ 工具调用完成: {tool_name}", {
+                'tool_name': tool_name,
+                'duration_ms': round(total_duration_ms, 2),
+                'performance_breakdown': tool_record.get_detailed_performance(),
+                'cache_hit': cache_hit,
+                'result_preview': str(result)[:200] + "..." if len(str(result)) > 200 else str(result)
+            })
+
+            return result
+
+        except Exception as e:
+            self.metrics.errors_count += 1
+            duration_ms = (time.time() - tool_start_time) * 1000
+
+            # 记录工具调用失败
+            tool_record = ToolCallRecord(
+                tool_name=tool_name,
+                tool_args=tool_args,
+                result=None,
+                success=False,
+                total_duration_ms=duration_ms,
+                error_message=str(e),
+                timestamp=datetime.now().isoformat()
+            )
+            self.tool_calls.append(tool_record)
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(tool_operation_id)
+            self.performance_tracker.increment_counter("tool_calls_error")
+
+            # 记录错误信息
+            self._log_with_context('ERROR', f"❌ 工具调用失败: {tool_name}", {
+                'tool_name': tool_name,
+                'duration_ms': round(duration_ms, 2),
+                'error_type': type(e).__name__,
+                'error_message': str(e)
+            })
+
+            raise
+
+    async def awrap_model_call(self, request, handler) -> Any:
+        """异步包装模型调用，记录模型调用详情（性能增强版）"""
+        if not self.config.enable_model_logging:
+            return await handler(request)
+
+        # 开始请求追踪
+        self.start_request_tracking()
+
+        # 生成操作ID用于性能追踪
+        operation_id = f"model_call_{self.metrics.model_calls_count + 1}_{int(time.time() * 1000)}"
+
+        # 开始性能追踪
+        request_start_time = time.time()
+        self.performance_tracker.start_timing(operation_id, "model_call", {
+            "model_name": self._extract_model_name(request),
+            "call_position": self.metrics.model_calls_count + 1
+        })
+
+        try:
+            # 实际调用处理程序（异步）
+            if asyncio.iscoroutinefunction(handler):
+                response = await handler(request)
+            else:
+                response = handler(request)
+
+            # 计算总耗时
+            request_duration = (time.time() - request_start_time) * 1000
+
+            # 记录模型调用成功
+            model_call_record = ModelCallRecord(
+                model_name=self._extract_model_name(request),
+                request=request,
+                response=response,
+                success=True,
+                total_duration_ms=request_duration,
+                timestamp=datetime.now().isoformat()
+            )
+            self.model_calls.append(model_call_record)
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(operation_id)
+            self.performance_tracker.increment_counter("model_calls_success")
+
+            # 记录详细信息
+            self._log_with_context('INFO', f"✅ 模型调用完成: {model_call_record.model_name}", {
+                'model_name': model_call_record.model_name,
+                'duration_ms': round(request_duration, 2),
+                'call_position': self.metrics.model_calls_count
+            })
+
+            return response
+
+        except Exception as e:
+            request_duration = (time.time() - request_start_time) * 1000
+
+            # 记录模型调用失败
+            model_call_record = ModelCallRecord(
+                model_name=self._extract_model_name(request),
+                request=request,
+                response=None,
+                success=False,
+                total_duration_ms=request_duration,
+                error_message=str(e),
+                timestamp=datetime.now().isoformat()
+            )
+            self.model_calls.append(model_call_record)
+
+            # 结束性能追踪
+            self.performance_tracker.end_timing(operation_id)
+            self.performance_tracker.increment_counter("model_calls_error")
+
+            # 记录错误信息
+            self._log_with_context('ERROR', f"❌ 模型调用失败: {model_call_record.model_name}", {
+                'model_name': model_call_record.model_name,
+                'duration_ms': round(request_duration, 2),
+                'error_type': type(e).__name__,
+                'error_message': str(e)
+            })
+
+            raise
+
     def _detect_cache_hit(self, tool_name: str, tool_args: Dict[str, Any], result: Any) -> Optional[bool]:
         """
         检测工具调用是否命中缓存
@@ -1496,6 +1780,53 @@ class AgentLoggingMiddleware(AgentMiddleware):
                 "error_rate": (self.metrics.errors_count / max(self.metrics.model_calls_count + self.metrics.tool_calls_count, 1)) * 100
             }
         }
+
+    async def abefore_model(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """异步模型调用前的处理"""
+        if not self.execution_start_time:
+            self.execution_start_time = time.time()
+
+        self.metrics.model_calls_count += 1
+
+        # 记录输入信息
+        messages = state.get('messages', [])
+
+        # 使用意图分析器分析模型调用目的
+        purpose_analysis = CallPurposeAnalyzer.analyze_call_purpose(
+            messages=messages,
+            call_position=self.metrics.model_calls_count,
+            has_tool_calls=False,  # 此时还没有工具调用
+            execution_context="pre_model"
+        )
+
+        # 记录模型调用开始
+        model_name = "unknown"
+        if hasattr(runtime, 'model'):
+            model_name = runtime.model
+        elif hasattr(state, 'model'):
+            model_name = state.model
+
+        self._log_with_context('INFO', f"🧠 模型调用开始: {model_name}", {
+            'model_name': model_name,
+            'call_position': self.metrics.model_calls_count,
+            'purpose_analysis': purpose_analysis
+        })
+
+        return None
+
+    async def aafter_model(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
+        """异步模型调用后的处理"""
+        # 更新最终指标
+        if self.execution_start_time:
+            self.metrics.total_duration_ms = (time.time() - self.execution_start_time) * 1000
+
+        # 记录执行完成
+        self._log_with_context('INFO', "🏁 模型调用完成 (异步)", {
+            'final_metrics': asdict(self.metrics),
+            'total_model_calls': self.metrics.model_calls_count
+        })
+
+        return None
 
     def after_model(self, state: AgentState, runtime: Runtime) -> Optional[Dict[str, Any]]:
         """模型调用后的处理"""
