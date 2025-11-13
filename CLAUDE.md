@@ -43,6 +43,16 @@ This is a comprehensive LangChain learning project focused on exploring and impl
 - ✅ Comprehensive Chinese region support (3,142+ administrative divisions)
 - ✅ Robust error handling with detailed logging
 - ✅ BusinessLogger class with DEBUG_LOGGING environment control
+- ⚠️ **Known Issue**: Coordinate inconsistency for district names (e.g., "朝阳区" returns Changchun coordinates instead of Beijing)
+
+### 🌤️ Weather Tool System
+**Comprehensive weather data ecosystem**:
+- ✅ Real-time weather API integration with 彩云天气
+- ✅ Multi-tier fallback system (API → Local cache → Mock data)
+- ✅ Enhanced weather service with date/time queries
+- ✅ Professional fishing condition analysis
+- ✅ Detailed function logging and error tracking
+- ⚠️ **Coordinate Dependency**: Weather accuracy depends on coordinate service quality
 
 ## Package Management
 
@@ -155,6 +165,37 @@ All API keys are configured in the `.env` file in the project root directory:
 - ⚠️ Agent creation succeeds but LLM calls fail due to API key problems
 
 **Note**: All sensitive API credentials are stored in `.env` file and are not committed to version control.
+
+## 🔧 Technical Issues & Solutions
+
+### Weather Tool Coordinate Inconsistency (Identified 2025-11-13)
+
+**Problem Analysis**:
+- **Issue**: `朝阳区` query returns Changchun coordinates (125.288168, 43.833845) instead of Beijing (116.4436, 39.9214)
+- **Root Cause**: Amap API returns multiple matches for district names; service selects first result without metropolitan prioritization
+- **Impact**: Incorrect weather data (5.77°C vs expected 16.26°C for Beijing Chaoyang)
+
+**Function Flow**:
+```
+User: "朝阳区天气"
+→ WeatherTool._current_weather()
+→ WeatherTool._get_location_coordinates()
+→ [Hardcoded check fails]
+→ EnhancedAmapCoordinateService.get_coordinate()
+→ Amap API returns 2+ matches
+→ Selects first (wrong) match
+→ Wrong coordinates → Wrong weather
+```
+
+**Affected Files**:
+- `tools/weather_tool.py:627-669` - Coordinate lookup logic
+- `services/coordinate/enhanced_amap_coordinate_service.py:361-498` - API selection logic
+
+**Proposed Solutions**:
+1. **Priority Scoring**: Add population/administrative level weighting for major cities
+2. **Context Enhancement**: Include city/province context when querying districts
+3. **Match Ranking**: Select most populous match when multiple results exist
+4. **Cache Coordination**: Better integration between hardcoded and API coordinates
 
 ### 🎯 Smart Fishing Recommendation System
 **Successfully implemented and functional**:

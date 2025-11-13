@@ -21,6 +21,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pandas>=2.3.3",
     "pytz>=2025.2",
+    "dashscope>=1.25.1",
 ]
 
 [dependency-groups]

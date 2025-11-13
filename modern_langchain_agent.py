@@ -16,6 +16,7 @@ from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
+from langchain_community.chat_models import ChatTongyi
 from langchain_core.tools import tool
 
 # 导入同步版本的天气工具
@@ -158,7 +159,20 @@ class ModernLangChainAgent:
                 base_url="https://open.bigmodel.cn/api/paas/v4/",
                 api_key= api_key,
             )
-
+        elif self.model_provider == "qwen":
+            api_key = os.getenv("DASHSCOPE_API_KEY")
+            
+            return ChatTongyi(
+                model="qwen-plus",
+                api_key=api_key,
+            )
+        elif self.model_provider == "doubao":
+            api_key = os.getenv("ARK_API_KEY")
+            return ChatOpenAI(
+                # model="gpt-4o-mini",
+                base_url="https://ark.cn-beijing.volces.com/api/v3",
+                api_key=api_key,
+            )
         else:
             raise ValueError(f"不支持的模型提供商: {self.model_provider}")
 
@@ -463,7 +477,9 @@ def demonstrate_agent_capabilities():
     # else:
     #     model_provider = "openai"
     #     print("✅ 使用 OpenAI GPT 模型")
-    model_provider = "zhipu"
+    # model_provider = "zhipu"
+    model_provider = "qwen"
+    # model_provider = "doubao"
     try:
         # 创建智能体
         agent = ModernLangChainAgent(model_provider=model_provider)
@@ -475,7 +491,7 @@ def demonstrate_agent_capabilities():
             # "余杭区今天天气怎么样？",
             # "景德镇明天天气怎么样？",
             # "临安今天天气怎么样？",
-            "今天什么时段去余杭区钓鱼比较好？",
+            "今天什么时段去杭州市余杭区钓鱼比较好？",
             # "今天是什么日子？"
         ]
 
