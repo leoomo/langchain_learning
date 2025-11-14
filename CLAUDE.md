@@ -46,13 +46,26 @@ This is a comprehensive LangChain learning project focused on exploring and impl
 - ⚠️ **Known Issue**: Coordinate inconsistency for district names (e.g., "朝阳区" returns Changchun coordinates instead of Beijing)
 
 ### 🌤️ Weather Tool System
-**Comprehensive weather data ecosystem**:
+**Comprehensive weather data ecosystem with hierarchical logging**:
 - ✅ Real-time weather API integration with 彩云天气
 - ✅ Multi-tier fallback system (API → Local cache → Mock data)
 - ✅ Enhanced weather service with date/time queries
 - ✅ Professional fishing condition analysis
-- ✅ Detailed function logging and error tracking
+- ✅ **Hierarchical logging system** with Normal/Debug/Error modes
+- ✅ **Performance monitoring** and cache statistics
+- ✅ **Template-based configuration** (production/development/debugging/minimal)
 - ⚠️ **Coordinate Dependency**: Weather accuracy depends on coordinate service quality
+
+### 📊 Hierarchical Logging System
+**Advanced logging configuration with mode-based output control**:
+- ✅ **Three logging modes**: Normal (简洁), Debug (详细), Error (异常)
+- ✅ **Four preset templates**: Production, Development, Debugging, Minimal
+- ✅ **Environment variable control**: `LOG_MODE` and `LOG_TEMPLATE`
+- ✅ **Layer-based configuration**: Agent/Tool/Service independent settings
+- ✅ **Dynamic mode switching**: Runtime configuration adjustment
+- ✅ **Performance metrics**: Execution time, cache hit rates, API response times
+- ✅ **Backward compatibility**: Supports existing `DEBUG_LOGGING` configuration
+- 📖 **Configuration guide**: See `LOGGING_CONFIGURATION.md` for detailed usage
 
 ## Package Management
 
@@ -139,6 +152,12 @@ A comprehensive LangChain learning project with organized structure:
 - `tests/README.md` - Comprehensive testing documentation
 - `test_national_coverage.py` - Comprehensive national coverage testing script
 - `verify_national_integration.py` - Integration verification for enhanced features
+
+### Logging System (`services/logging/`)
+- `services/logging/hierarchical_logger_config.py` - Hierarchical logging configuration manager
+- `services/logging/hierarchical_logger.py` - Enhanced logging recorder with mode-based output
+- `services/logging/log_templates.py` - Preset template configurations (production/development/debugging/minimal)
+- `LOGGING_CONFIGURATION.md` - Comprehensive logging configuration guide
 
 ### Development Workflow
 - `openspec/` - OpenSpec specification-driven development workflow

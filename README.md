@@ -112,6 +112,16 @@ project_evolution_plan/phase1/
 - 🎯 **会话管理**: 唯一会话ID，完整的执行生命周期跟踪
 - 📈 **统计分析**: 实时性能指标和执行统计，支持重置和查看
 
+### 📊 分层日志系统 ⭐ **重大更新**
+**模式化的日志输出控制**：
+- 🎯 **三种日志模式**: Normal(简洁)、Debug(详细)、Error(异常)
+- 🎨 **四种预设模板**: Production、Development、Debugging、Minimal
+- ⚙️ **环境变量控制**: `LOG_MODE` 和 `LOG_TEMPLATE` 灵活配置
+- 🏗️ **分层架构**: Agent/Tool/Service三层独立配置
+- 🔄 **动态切换**: 运行时模式调整，无需重启
+- 📈 **性能监控**: 执行时间、缓存命中率、API响应时间
+- 📖 **配置指南**: 详见 `LOGGING_CONFIGURATION.md` 详细使用说明
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -158,6 +168,10 @@ OPENAI_API_KEY=your-openai-api-key-here
 
 # 调试日志开关 (推荐开发时开启)
 DEBUG_LOGGING=true
+
+# 分层日志系统配置 (推荐)
+LOG_MODE=normal                          # 日志模式: normal/debug/error
+LOG_TEMPLATE=production                  # 日志模板: production/development/debugging/minimal
 
 # 智能体日志中间件配置 (可选)
 AGENT_LOG_LEVEL=INFO                    # 日志级别 (DEBUG, INFO, WARNING, ERROR)
@@ -643,8 +657,12 @@ langchain_learning/
 │   │   ├── langchain_intent_middleware.py # LangChain意图增强中间件
 │   │   ├── integrated_middleware.py   # 集成中间件管理器
 │   │   └── config.py                  # 中间件配置管理
-│   ├── logging/                       # 日志系统
-│   │   └── business_logger.py
+│   ├── logging/                       # 📊 分层日志系统 ⭐
+│   │   ├── hierarchical_logger_config.py  # 分层日志配置管理器
+│   │   ├── hierarchical_logger.py         # 增强日志记录器
+│   │   ├── log_templates.py              # 预设模板配置
+│   │   └── business_logger.py             # 业务日志基类
+│   ├── data/                         # 数据管理
 │   └── data/                         # 数据管理
 ├── 🛠️ tools/                          # 工具模块
 │   ├── langchain_weather_tools.py     # 异步LangChain天气工具

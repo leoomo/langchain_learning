@@ -1,0 +1,182 @@
+{
+  "4e45be0ce5dccc10": {
+    "key": "4e45be0ce5dccc10",
+    "value": [
+      116.4074,
+      39.9042
+    ],
+    "timestamp": 1763128655.4351249,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1763128655.4351249
+  },
+  "7f001eb4a64464a7": {
+    "key": "7f001eb4a64464a7",
+    "value": {
+      "data": {
+        "temperature": 6.76,
+        "apparent_temperature": 5.3,
+        "humidity": 0.63,
+        "pressure": 100678.39,
+        "wind_speed": 1.63,
+        "wind_direction": 332.57,
+        "condition": "晴夜",
+        "description": "晴夜，6.76°C"
+      },
+      "source": "实时数据（彩云天气 API）",
+      "coordinates": [
+        116.4074,
+        39.9042
+      ],
+      "timestamp": 1763128655.572205
+    },
+    "timestamp": 1763128655.572226,
+    "ttl": 1800,
+    "access_count": 2,
+    "last_access": 1763130384.119788
+  },
+  "8e4a3f95e5d8aaf0": {
+    "key": "8e4a3f95e5d8aaf0",
+    "value": [
+      120.8644,
+      32.0116
+    ],
+    "timestamp": 1763128655.572664,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1763128655.572665
+  },
+  "74ca4f8df02ba677": {
+    "key": "74ca4f8df02ba677",
+    "value": {
+      "data": {
+        "temperature": 12.15,
+        "apparent_temperature": 10.3,
+        "humidity": 0.76,
+        "pressure": 102410.39,
+        "wind_speed": 9.87,
+        "wind_direction": 90.79,
+        "condition": "晴夜",
+        "description": "晴夜，12.15°C"
+      },
+      "source": "实时数据（彩云天气 API）",
+      "coordinates": [
+        120.8644,
+        32.0116
+      ],
+      "timestamp": 1763128655.6841862
+    },
+    "timestamp": 1763128655.684211,
+    "ttl": 1800,
+    "access_count": 2,
+    "last_access": 1763130384.12324
+  },
+  "8fbc0892194eac4b": {
+    "key": "8fbc0892194eac4b",
+    "value": [
+      116.4436,
+      39.9217
+    ],
+    "timestamp": 1763128655.68473,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1763128655.68473
+  },
+  "47522ce47293b4a4": {
+    "key": "47522ce47293b4a4",
+    "value": {
+      "data": {
+        "temperature": 6.76,
+        "apparent_temperature": 5.3,
+        "humidity": 0.63,
+        "pressure": 100678.39,
+        "wind_speed": 1.63,
+        "wind_direction": 332.57,
+        "condition": "晴夜",
+        "description": "晴夜，6.76°C"
+      },
+      "source": "实时数据（彩云天气 API）",
+      "coordinates": [
+        116.4436,
+        39.9217
+      ],
+      "timestamp": 1763128655.797882
+    },
+    "timestamp": 1763128655.7979488,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1763128655.79795
+  },
+  "aed08410f68cf129": {
+    "key": "aed08410f68cf129",
+    "value": [
+      116.4436,
+      39.9217
+    ],
+    "timestamp": 1763130384.131885,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1763130384.131885
+  },
+  "8891595dfead09cf": {
+    "key": "8891595dfead09cf",
+    "value": {
+      "data": {
+        "temperature": 6.86,
+        "apparent_temperature": 5.0,
+        "humidity": 0.63,
+        "pressure": 100725.0,
+        "wind_speed": 3.66,
+        "wind_direction": 6.1,
+        "condition": "晴夜",
+        "description": "晴夜，6.86°C"
+      },
+      "source": "实时数据（彩云天气 API）",
+      "coordinates": [
+        116.4436,
+        39.9217
+      ],
+      "timestamp": 1763130384.218247
+    },
+    "timestamp": 1763130384.218278,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1763130384.218279
+  },
+  "79117eeeed45bc16": {
+    "key": "79117eeeed45bc16",
+    "value": [
+      114.0579,
+      22.5431
+    ],
+    "timestamp": 1763130384.225048,
+    "ttl": 3600,
+    "access_count": 1,
+    "last_access": 1763130384.225049
+  },
+  "01581da9ff52dcd4": {
+    "key": "01581da9ff52dcd4",
+    "value": {
+      "data": {
+        "temperature": 21.36,
+        "apparent_temperature": 22.2,
+        "humidity": 0.71,
+        "pressure": 101146.0,
+        "wind_speed": 5.29,
+        "wind_direction": 78.22,
+        "condition": "晴夜",
+        "description": "晴夜，21.36°C"
+      },
+      "source": "实时数据（彩云天气 API）",
+      "coordinates": [
+        114.0579,
+        22.5431
+      ],
+      "timestamp": 1763130384.304517
+    },
+    "timestamp": 1763130384.304529,
+    "ttl": 1800,
+    "access_count": 1,
+    "last_access": 1763130384.304529
+  }
+}

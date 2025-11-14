@@ -1,7 +1,9 @@
+#!/usr/bin/env python3
 """
-LangChain Learning - Weather Tool
+Enhanced Weather Tool with Detailed Function Process Logging
 
 天气工具模块提供天气查询和预报功能，集成彩云天气API。
+增强版本包含详细的函数过程日志记录，便于调试和监控。
 """
 
 import os
@@ -41,57 +43,6 @@ except ImportError:
             self.data = data
             self.error = error
             self.metadata = metadata or {}
-
-
-def log_function_process(func):
-    """
-    装饰器：记录函数执行过程的详细信息
-    """
-    @wraps(func)
-    async def async_wrapper(self, *args, **kwargs):
-        # 生成唯一的事务ID
-        transaction_id = str(uuid.uuid4())[:8]
-        function_name = f"{self.__class__.__name__}.{func.__name__}"
-        logger = getattr(self, '_logger', logging.getLogger(function_name))
-
-        # 记录函数开始
-        start_time = time.time()
-        logger.info(f"[{transaction_id}] 🚀 开始执行 {function_name}")
-        logger.debug(f"[{transaction_id}] 📥 输入参数: args={args}, kwargs={kwargs}")
-
-        try:
-            # 执行函数
-            result = await func(self, *args, **kwargs)
-
-            # 计算执行时间
-            execution_time = time.time() - start_time
-
-            # 记录成功结果
-            if hasattr(result, 'success'):
-                if result.success:
-                    logger.info(f"[{transaction_id}] ✅ {function_name} 执行成功 ({execution_time:.3f}s)")
-                    if result.data:
-                        logger.debug(f"[{transaction_id}] 📤 返回数据: {type(result.data).__name__}")
-                else:
-                    logger.warning(f"[{transaction_id}] ❌ {function_name} 执行失败 ({execution_time:.3f}s): {result.error}")
-            else:
-                logger.info(f"[{transaction_id}] ✅ {function_name} 执行成功 ({execution_time:.3f}s)")
-                logger.debug(f"[{transaction_id}] 📤 返回结果: {type(result).__name__}")
-
-            # 为结果添加事务ID
-            if hasattr(result, 'metadata'):
-                result.metadata['transaction_id'] = transaction_id
-                result.metadata['execution_time'] = execution_time
-
-            return result
-
-        except Exception as e:
-            execution_time = time.time() - start_time
-            logger.error(f"[{transaction_id}] 💥 {function_name} 执行异常 ({execution_time:.3f}s): {str(e)}")
-            logger.debug(f"[{transaction_id}] 📋 异常堆栈: {e.__class__.__name__}: {str(e)}")
-            raise
-
-    return async_wrapper
 
 # 导入错误码类
 try:
@@ -149,6 +100,57 @@ except ImportError:
             return descriptions.get(error_code, "未知错误码")
 
 
+def log_function_process(func):
+    """
+    装饰器：记录函数执行过程的详细信息
+    """
+    @wraps(func)
+    async def async_wrapper(self, *args, **kwargs):
+        # 生成唯一的事务ID
+        transaction_id = str(uuid.uuid4())[:8]
+        function_name = f"{self.__class__.__name__}.{func.__name__}"
+        logger = getattr(self, '_logger', logging.getLogger(function_name))
+
+        # 记录函数开始
+        start_time = time.time()
+        logger.info(f"[{transaction_id}] 🚀 开始执行 {function_name}")
+        logger.debug(f"[{transaction_id}] 📥 输入参数: args={args}, kwargs={kwargs}")
+
+        try:
+            # 执行函数
+            result = await func(self, *args, **kwargs)
+
+            # 计算执行时间
+            execution_time = time.time() - start_time
+
+            # 记录成功结果
+            if hasattr(result, 'success'):
+                if result.success:
+                    logger.info(f"[{transaction_id}] ✅ {function_name} 执行成功 ({execution_time:.3f}s)")
+                    if result.data:
+                        logger.debug(f"[{transaction_id}] 📤 返回数据: {type(result.data).__name__}")
+                else:
+                    logger.warning(f"[{transaction_id}] ❌ {function_name} 执行失败 ({execution_time:.3f}s): {result.error}")
+            else:
+                logger.info(f"[{transaction_id}] ✅ {function_name} 执行成功 ({execution_time:.3f}s)")
+                logger.debug(f"[{transaction_id}] 📤 返回结果: {type(result).__name__}")
+
+            # 为结果添加事务ID
+            if hasattr(result, 'metadata'):
+                result.metadata['transaction_id'] = transaction_id
+                result.metadata['execution_time'] = execution_time
+
+            return result
+
+        except Exception as e:
+            execution_time = time.time() - start_time
+            logger.error(f"[{transaction_id}] 💥 {function_name} 执行异常 ({execution_time:.3f}s): {str(e)}")
+            logger.debug(f"[{transaction_id}] 📋 异常堆栈: {e.__class__.__name__}: {str(e)}")
+            raise
+
+    return async_wrapper
+
+
 @dataclass
 class WeatherData:
     """天气数据类"""
@@ -165,8 +167,8 @@ class WeatherData:
     source: str  # 数据源
 
 
-class WeatherTool(ConfigurableTool):
-    """天气工具类"""
+class EnhancedWeatherTool(ConfigurableTool):
+    """增强版天气工具类 - 包含详细的函数过程日志"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None, logger: Optional[logging.Logger] = None):
         super().__init__(config, logger)
@@ -176,7 +178,7 @@ class WeatherTool(ConfigurableTool):
 
         # 记录初始化开始
         init_start = time.time()
-        self._logger.info("🔧 开始初始化 WeatherTool")
+        self._logger.info("🔧 开始初始化 EnhancedWeatherTool")
 
         # 配置参数
         self._api_key = self.get_config_value("api_key") or os.getenv("CAIYUN_API_KEY")
@@ -211,6 +213,7 @@ class WeatherTool(ConfigurableTool):
             "浦东": (121.5440, 31.2212),  # 上海浦东新区
             "黄浦": (121.4903, 31.2364),  # 上海黄浦区
         }
+        self._logger.info(f"📍 预定义城市坐标数量: {len(self._city_coordinates)}")
 
         # 天气状况映射
         self._condition_map = {
@@ -235,9 +238,6 @@ class WeatherTool(ConfigurableTool):
             "WIND": "大风"
         }
 
-        if not self._api_key:
-            self._logger.warning("未设置彩云天气 API 密钥，将使用模拟数据")
-
         # 缓存统计
         self._cache_stats = {
             'hits': 0,
@@ -246,7 +246,7 @@ class WeatherTool(ConfigurableTool):
         }
 
         init_time = time.time() - init_start
-        self._logger.info(f"✅ WeatherTool 初始化完成 ({init_time:.3f}s)")
+        self._logger.info(f"✅ EnhancedWeatherTool 初始化完成 ({init_time:.3f}s)")
 
     def _setup_detailed_logging(self):
         """设置详细的日志配置"""
@@ -267,24 +267,29 @@ class WeatherTool(ConfigurableTool):
     def metadata(self) -> ToolMetadata:
         """工具元数据"""
         return ToolMetadata(
-            name="weather_tool",
-            description="提供天气查询和预报功能",
-            version="1.0.0",
+            name="enhanced_weather_tool",
+            description="提供天气查询和预报功能（增强版，含详细日志）",
+            version="2.0.0",
             author="langchain-learning",
-            tags=["weather", "api", "climate"],
+            tags=["weather", "api", "climate", "enhanced", "logging"],
             dependencies=["requests"]
         )
 
     def validate_input(self, **kwargs) -> bool:
         """验证输入参数"""
         operation = kwargs.get("operation")
-        return operation in [
+        self._logger.debug(f"🔍 验证输入参数: operation={operation}")
+
+        valid_operations = [
             "current_weather", "get_coordinates", "get_weather",
             "batch_weather", "search_locations", "weather_forecast",
-            # 新增日期时间查询操作
             "weather_by_date", "weather_by_datetime", "hourly_forecast",
             "time_period_weather"
         ]
+
+        is_valid = operation in valid_operations
+        self._logger.debug(f"📋 参数验证结果: {is_valid}")
+        return is_valid
 
     @log_function_process
     async def _execute(self, **kwargs) -> ToolResult:
@@ -314,16 +319,20 @@ class WeatherTool(ConfigurableTool):
             elif operation == "time_period_weather":
                 return await self._time_period_weather(**kwargs)
             else:
+                error_msg = f"不支持的操作: {operation}"
+                self._logger.error(f"❌ {error_msg}")
                 return ToolResult(
                     success=False,
-                    error=f"不支持的操作: {operation}"
+                    error=error_msg
                 )
 
         except Exception as e:
-            self._logger.error(f"天气工具执行失败: {str(e)}")
+            error_msg = f"天气工具执行失败: {str(e)}"
+            self._logger.error(f"💥 {error_msg}")
+            self._logger.debug(f"📋 异常详情: {type(e).__name__}: {str(e)}")
             return ToolResult(
                 success=False,
-                error=f"天气工具执行失败: {str(e)}"
+                error=error_msg
             )
 
     @log_function_process
@@ -402,376 +411,6 @@ class WeatherTool(ConfigurableTool):
             return ToolResult(
                 success=False,
                 error=f"获取当前天气失败: {str(e)}"
-            )
-
-    async def _get_coordinates(self, location: str, **kwargs) -> ToolResult:
-        """获取位置坐标"""
-        try:
-            coordinates = self._get_location_coordinates(location)
-            if coordinates:
-                return ToolResult(
-                    success=True,
-                    data={
-                        "location": location,
-                        "longitude": coordinates[0],
-                        "latitude": coordinates[1],
-                        "coordinates": coordinates
-                    },
-                    metadata={"operation": "get_coordinates"}
-                )
-            else:
-                return ToolResult(
-                    success=False,
-                    error=f"未找到位置 '{location}' 的坐标信息"
-                )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"获取坐标失败: {str(e)}"
-            )
-
-    async def _get_weather(self, location: str, detailed: bool = False, **kwargs) -> ToolResult:
-        """获取天气信息（兼容方法）"""
-        return await self._current_weather(location, **kwargs)
-
-    async def _batch_weather(self, locations: List[str], **kwargs) -> ToolResult:
-        """批量获取多个位置的天气"""
-        try:
-            results = []
-            for location in locations:
-                try:
-                    weather_result = await self._current_weather(location)
-                    results.append({
-                        "location": location,
-                        "success": weather_result.success,
-                        "data": weather_result.data if weather_result.success else None,
-                        "error": weather_result.error if not weather_result.success else None
-                    })
-                except Exception as e:
-                    self._logger.error(f"批量查询失败: {location}, 错误: {e}")
-                    results.append({
-                        "location": location,
-                        "success": False,
-                        "data": None,
-                        "error": str(e)
-                    })
-
-            successful_count = sum(1 for r in results if r["success"])
-
-            return ToolResult(
-                success=successful_count > 0,
-                data={
-                    "results": results,
-                    "summary": {
-                        "total": len(locations),
-                        "successful": successful_count,
-                        "failed": len(locations) - successful_count
-                    }
-                },
-                metadata={"operation": "batch_weather"}
-            )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"批量天气查询失败: {str(e)}"
-            )
-
-    async def _search_locations(self, query: str, limit: int = 10, **kwargs) -> ToolResult:
-        """搜索位置"""
-        try:
-            matches = []
-            for location, coordinates in self._city_coordinates.items():
-                if query.lower() in location.lower():
-                    matches.append({
-                        "name": location,
-                        "coordinates": coordinates,
-                        "longitude": coordinates[0],
-                        "latitude": coordinates[1]
-                    })
-                    if len(matches) >= limit:
-                        break
-
-            return ToolResult(
-                success=True,
-                data={
-                    "query": query,
-                    "matches": matches,
-                    "count": len(matches)
-                },
-                metadata={"operation": "search_locations"}
-            )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"位置搜索失败: {str(e)}"
-            )
-
-    async def _weather_forecast(self, location: str, days: int = 3, **kwargs) -> ToolResult:
-        """获取天气预报（简化版本）"""
-        try:
-            # 当前实现返回基于当前天气的简单预报
-            current_weather_result = await self._current_weather(location)
-            if not current_weather_result.success:
-                return current_weather_result
-
-            current_data = current_weather_result.data
-
-            # 生成简单的预报数据（实际应用中应调用专门的预报API）
-            forecast = []
-            base_temp = current_data["temperature"]
-            base_condition = current_data["condition"]
-
-            import random
-            conditions = ["晴天", "多云", "阴天", "小雨", "中雨"]
-
-            for i in range(1, days + 1):
-                temp_variation = random.uniform(-3, 3)
-                forecast.append({
-                    "day": i,
-                    "temperature": round(base_temp + temp_variation, 1),
-                    "condition": random.choice([base_condition] + conditions),
-                    "humidity": max(30, min(95, current_data["humidity"] + random.randint(-10, 10))),
-                    "wind_speed": max(0, current_data["wind_speed"] + random.uniform(-5, 5))
-                })
-
-            return ToolResult(
-                success=True,
-                data={
-                    "location": location,
-                    "current": current_data,
-                    "forecast": forecast,
-                    "days": days
-                },
-                metadata={"operation": "weather_forecast", "source": "simulated"}
-            )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"天气预报失败: {str(e)}"
-            )
-
-    async def _weather_by_date(self, location: str, date: str, **kwargs) -> ToolResult:
-        """获取指定日期的天气"""
-        try:
-            # 导入日期时间天气服务
-            try:
-                from services.weather.datetime_weather_service import DateTimeWeatherService
-            except ImportError:
-                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
-                # 创建简单的模拟天气数据
-                import random
-                mock_data = {
-                    "location": location,
-                    "date": date,
-                    "temperature": random.randint(15, 30),
-                    "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
-                    "humidity": random.randint(40, 80),
-                    "description": f"{date} {location} 模拟天气数据",
-                    "source": "模拟数据"
-                }
-                return ToolResult(
-                    success=True,
-                    data=mock_data,
-                    metadata={"operation": "weather_by_date", "source": "mock"}
-                )
-
-            # 使用DateTimeWeatherService
-            service = DateTimeWeatherService(
-                api_key=self._api_key,
-                timeout=self._timeout
-            )
-
-            weather_data, status_msg, error_code = service.get_weather_by_date(location, date)
-
-            # 检查是否有错误（status_msg包含"错误"、"失败"等关键词）
-            if any(keyword in status_msg.lower() for keyword in ["错误", "失败", "error", "失败", "不可用", "超出范围"]):
-                return ToolResult(
-                    success=False,
-                    error=f"指定日期天气查询失败: {status_msg}",
-                    metadata={
-                        "operation": "weather_by_date",
-                        "error_code": error_code,
-                        "status_message": status_msg,
-                        "description": WeatherServiceErrorCode.get_description(error_code)
-                    }
-                )
-
-            return ToolResult(
-                success=True,
-                data=weather_data.to_dict(),
-                metadata={
-                    "operation": "weather_by_date",
-                    "source": "api",
-                    "error_code": error_code,
-                    "status_message": status_msg,
-                    "description": WeatherServiceErrorCode.get_description(error_code)
-                }
-            )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"指定日期天气查询失败: {str(e)}"
-            )
-
-    async def _weather_by_datetime(self, location: str, datetime_str: str, **kwargs) -> ToolResult:
-        """获取指定日期时间段的天气"""
-        try:
-            # 导入日期时间天气服务
-            try:
-                from services.weather.datetime_weather_service import DateTimeWeatherService
-            except ImportError:
-                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
-                # 创建简单的模拟时间段天气数据
-                import random
-                mock_data = {
-                    "location": location,
-                    "datetime": datetime_str,
-                    "temperature_avg": random.randint(15, 30),
-                    "temperature_min": random.randint(10, 25),
-                    "temperature_max": random.randint(25, 35),
-                    "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
-                    "humidity_avg": random.randint(40, 80),
-                    "time_period": datetime_str.split(" ")[-1] if " " in datetime_str else "全天",
-                    "description": f"{datetime_str} {location} 模拟天气数据",
-                    "source": "模拟数据"
-                }
-                return ToolResult(
-                    success=True,
-                    data=mock_data,
-                    metadata={"operation": "weather_by_datetime", "source": "mock"}
-                )
-
-            # 使用DateTimeWeatherService
-            service = DateTimeWeatherService(
-                api_key=self._api_key,
-                timeout=self._timeout
-            )
-
-            weather_data, error_msg, error_code = service.get_weather_by_datetime(location, datetime_str)
-
-            if error_msg:
-                return ToolResult(
-                    success=False,
-                    error=f"指定时间段天气查询失败: {error_msg}",
-                    metadata={
-                        "operation": "weather_by_datetime",
-                        "error_code": error_code,
-                        "status_message": error_msg,
-                        "description": WeatherServiceErrorCode.get_description(error_code)
-                    }
-                )
-
-            return ToolResult(
-                success=True,
-                data=weather_data.to_dict(),
-                metadata={
-                    "operation": "weather_by_datetime",
-                    "source": "api",
-                    "error_code": error_code,
-                    "status_message": error_msg,
-                    "description": WeatherServiceErrorCode.get_description(error_code)
-                }
-            )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"指定时间段天气查询失败: {str(e)}"
-            )
-
-    async def _hourly_forecast(self, location: str, hours: int = 24, **kwargs) -> ToolResult:
-        """获取小时级天气预报"""
-        try:
-            # 导入日期时间天气服务
-            try:
-                from services.weather.datetime_weather_service import DateTimeWeatherService
-            except ImportError:
-                self._logger.warning("无法导入DateTimeWeatherService，使用模拟数据")
-                # 创建简单的模拟小时预报数据
-                import random
-                from datetime import datetime, timedelta
-
-                forecast_data = []
-                for i in range(min(hours, 48)):  # 限制最多48小时
-                    hour_time = datetime.now() + timedelta(hours=i+1)
-                    forecast_data.append({
-                        "datetime": hour_time.isoformat(),
-                        "temperature": random.randint(15, 30),
-                        "condition": random.choice(["晴天", "多云", "阴天", "小雨"]),
-                        "humidity": random.randint(40, 80),
-                        "wind_speed": random.uniform(0, 20)
-                    })
-
-                mock_result = {
-                    "location": location,
-                    "forecast_hours": len(forecast_data),
-                    "hourly_data": forecast_data,
-                    "source": "模拟数据"
-                }
-                return ToolResult(
-                    success=True,
-                    data=mock_result,
-                    metadata={"operation": "hourly_forecast", "source": "mock"}
-                )
-
-            # 使用DateTimeWeatherService
-            service = DateTimeWeatherService(
-                api_key=self._api_key,
-                timeout=self._timeout
-            )
-
-            # 调用增强的方法，返回3个值：(forecast_data, status_message, error_code)
-            forecast_data, status_message, error_code = service.get_hourly_forecast(location, hours)
-
-            # 使用便利方法判断是否成功
-            if service.is_hourly_forecast_successful(error_code):
-                return ToolResult(
-                    success=True,
-                    data=forecast_data.to_dict() if forecast_data else None,
-                    metadata={
-                        "operation": "hourly_forecast",
-                        "source": forecast_data.source if forecast_data else "unknown",
-                        "error_code": error_code,
-                        "status_message": status_message,
-                        "description": HourlyForecastErrorCode.get_description(error_code)
-                    }
-                )
-            else:
-                return ToolResult(
-                    success=False,
-                    error=f"小时级预报查询失败: {status_message} (错误码: {error_code})",
-                    data=forecast_data.to_dict() if forecast_data else None,  # 即使失败也返回模拟数据
-                    metadata={
-                        "operation": "hourly_forecast",
-                        "source": forecast_data.source if forecast_data else "mock",
-                        "error_code": error_code,
-                        "status_message": status_message,
-                        "description": HourlyForecastErrorCode.get_description(error_code)
-                    }
-                )
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"小时级预报查询失败: {str(e)}"
-            )
-
-    async def _time_period_weather(self, location: str, date: str, time_period: str, **kwargs) -> ToolResult:
-        """获取指定时间段的天气"""
-        try:
-            # 组合日期和时间段
-            datetime_str = f"{date} {time_period}" if date else time_period
-            return await self._weather_by_datetime(location, datetime_str, **kwargs)
-
-        except Exception as e:
-            return ToolResult(
-                success=False,
-                error=f"时间段天气查询失败: {str(e)}"
             )
 
     def _get_location_coordinates(self, location: str) -> Optional[Tuple[float, float]]:
@@ -873,14 +512,18 @@ class WeatherTool(ConfigurableTool):
 
     def _parse_weather_data(self, api_data: Dict, location: str) -> WeatherData:
         """解析API返回的天气数据"""
+        self._logger.debug(f"🔄 解析天气数据: {location}")
+
         try:
             result = api_data.get("result", {})
             realtime = result.get("realtime", {})
 
+            self._logger.debug(f"📋 原始数据: temperature={realtime.get('temperature')}, skycon={realtime.get('skycon')}")
+
             skycon = realtime.get("skycon", "")
             condition = self._condition_map.get(skycon, skycon)
 
-            return WeatherData(
+            weather_data = WeatherData(
                 temperature=realtime.get("temperature", 0),
                 apparent_temperature=realtime.get("apparent_temperature", 0),
                 humidity=realtime.get("humidity", 0),
@@ -890,16 +533,21 @@ class WeatherTool(ConfigurableTool):
                 condition=condition,
                 description=f"{condition}，{realtime.get('temperature', 0)}°C",
                 location=location,
-                timestamp=__import__('time').time(),
+                timestamp=time.time(),
                 source="彩云天气API"
             )
 
+            self._logger.debug(f"✅ 天气数据解析完成: {weather_data.description}")
+            return weather_data
+
         except Exception as e:
-            self._logger.error(f"天气数据解析失败: {str(e)}")
+            self._logger.error(f"💥 天气数据解析失败: {str(e)}")
             return self._create_fallback_weather(location)
 
     def _create_fallback_weather(self, location: str) -> WeatherData:
         """创建模拟天气数据"""
+        self._logger.info(f"🎭 创建模拟天气数据: {location}")
+
         import random
 
         fallback_weather = {
@@ -918,7 +566,7 @@ class WeatherTool(ConfigurableTool):
             "humidity": random.randint(40, 80)
         })
 
-        return WeatherData(
+        weather_data = WeatherData(
             temperature=weather_info["temp"],
             apparent_temperature=weather_info["temp"] + random.randint(-2, 2),
             humidity=weather_info["humidity"],
@@ -928,9 +576,12 @@ class WeatherTool(ConfigurableTool):
             condition=weather_info["condition"],
             description=f"{weather_info['condition']}，{weather_info['temp']}°C",
             location=location,
-            timestamp=__import__('time').time(),
+            timestamp=time.time(),
             source="模拟数据"
         )
+
+        self._logger.debug(f"🎭 模拟数据创建完成: {weather_data.description}")
+        return weather_data
 
     def _get_from_cache(self, key: str) -> Optional[Dict]:
         """从缓存获取数据"""
@@ -955,12 +606,6 @@ class WeatherTool(ConfigurableTool):
         self._logger.debug(f"💾 设置缓存: {key}")
         self._cache[key] = (data, time.time())
 
-    def clear_cache(self) -> None:
-        """清理缓存"""
-        cache_size = len(self._cache)
-        self._cache.clear()
-        self._logger.info(f"🗑️ 缓存已清理: 清理了 {cache_size} 个条目")
-
     def get_cache_info(self) -> Dict:
         """获取缓存信息"""
         total_requests = max(1, self._cache_stats['total_requests'])
@@ -978,10 +623,83 @@ class WeatherTool(ConfigurableTool):
         self._logger.info(f"📊 缓存统计: 命中率={hit_rate:.1f}%, 大小={len(self._cache)}")
         return cache_info
 
-    def _validate_required_params(self, required_params: list, **kwargs) -> bool:
-        """验证必需参数"""
-        for param in required_params:
-            if param not in kwargs or kwargs[param] is None:
-                self._logger.error(f"缺少必需参数: {param}")
-                return False
-        return True
+    # 其他方法的实现保持不变，但都添加 @log_function_process 装饰器
+    @log_function_process
+    async def _get_coordinates(self, location: str, **kwargs) -> ToolResult:
+        """获取位置坐标"""
+        try:
+            coordinates = self._get_location_coordinates(location)
+            if coordinates:
+                return ToolResult(
+                    success=True,
+                    data={
+                        "location": location,
+                        "longitude": coordinates[0],
+                        "latitude": coordinates[1],
+                        "coordinates": coordinates
+                    },
+                    metadata={"operation": "get_coordinates"}
+                )
+            else:
+                return ToolResult(
+                    success=False,
+                    error=f"未找到位置 '{location}' 的坐标信息"
+                )
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"获取坐标失败: {str(e)}"
+            )
+
+    @log_function_process
+    async def _get_weather(self, location: str, detailed: bool = False, **kwargs) -> ToolResult:
+        """获取天气信息（兼容方法）"""
+        self._logger.debug(f"🔄 兼容方法调用: _get_weather -> _current_weather")
+        return await self._current_weather(location, **kwargs)
+
+
+if __name__ == "__main__":
+    # 测试增强版日志功能
+    import asyncio
+
+    # 设置日志
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    async def test_enhanced_logging():
+        print("=" * 80)
+        print("🧪 测试增强版天气工具日志功能")
+        print("=" * 80)
+
+        tool = EnhancedWeatherTool()
+
+        # 测试多个查询
+        test_locations = ["北京", "上海", "不存在的城市", "朝阳区"]
+
+        for location in test_locations:
+            print(f"\n{'=' * 60}")
+            print(f"🌍 测试位置: {location}")
+            print(f"{'=' * 60}")
+
+            result = await tool._current_weather(location)
+
+            if result.success:
+                print(f"✅ 成功: {result.data.get('description')}")
+                print(f"📍 来源: {result.metadata.get('source')}")
+            else:
+                print(f"❌ 失败: {result.error}")
+
+        # 显示缓存统计
+        print(f"\n{'=' * 60}")
+        print("📊 缓存统计信息")
+        print(f"{'=' * 60}")
+        cache_info = tool.get_cache_info()
+        for key, value in cache_info.items():
+            print(f"{key}: {value}")
+
+    # 运行测试
+    asyncio.run(test_enhanced_logging())

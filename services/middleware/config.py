@@ -71,6 +71,10 @@ class MiddlewareConfig:
         default_factory=lambda: os.getenv("AGENT_ENABLE_LOGGING", "true").lower() == "true"
     )
 
+    # 分层日志配置
+    log_mode: str = field(default_factory=lambda: os.getenv("LOG_MODE", "normal"))  # normal/debug/error
+    log_template: str = field(default_factory=lambda: os.getenv("LOG_TEMPLATE", "production"))  # production/development/debugging/minimal
+
     @classmethod
     def from_env(cls) -> 'MiddlewareConfig':
         """从环境变量创建配置"""
@@ -93,7 +97,9 @@ class MiddlewareConfig:
             'enable_call_purpose_analysis': self.enable_call_purpose_analysis,
             'show_enhanced_console_output': self.show_enhanced_console_output,
             'file_log_format': self.file_log_format,
-            'enable_logging': self.enable_logging
+            'enable_logging': self.enable_logging,
+            'log_mode': self.log_mode,
+            'log_template': self.log_template
         }
 
     def validate(self) -> bool:
@@ -114,6 +120,16 @@ class MiddlewareConfig:
         valid_file_formats = ['json', 'structured', 'text']
         if self.file_log_format not in valid_file_formats:
             raise ValueError(f"Invalid file_log_format: {self.file_log_format}. Must be one of {valid_file_formats}")
+
+        # 验证分层日志模式
+        valid_log_modes = ['normal', 'debug', 'error']
+        if self.log_mode not in valid_log_modes:
+            raise ValueError(f"Invalid log_mode: {self.log_mode}. Must be one of {valid_log_modes}")
+
+        # 验证日志模板
+        valid_templates = ['production', 'development', 'debugging', 'minimal']
+        if self.log_template not in valid_templates:
+            raise ValueError(f"Invalid log_template: {self.log_template}. Must be one of {valid_templates}")
 
         return True
 

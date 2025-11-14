@@ -2,22 +2,36 @@
 LangChain Learning - Weather Tool (同步版本)
 
 天气工具模块提供天气查询和预报功能，集成彩云天气API。
+使用分层日志系统，支持Normal/Debug/Error三种模式。
 """
 
 import os
 import requests
 import json
+import time
 from typing import Optional, Any, Dict, Union, List, Tuple
 import logging
 from dataclasses import dataclass, asdict
+from datetime import datetime
+from functools import wraps
 
 # 导入服务
 from services.weather.enhanced_weather_service import EnhancedCaiyunWeatherService
 from services.weather.datetime_weather_service import DateTimeWeatherService
 from services.weather.hourly_weather_service_sync import HourlyWeatherService
 
-# 配置日志
-logging.basicConfig(level=logging.INFO)
+# 导入分层日志系统
+try:
+    from services.logging.hierarchical_logger import HierarchicalLogger, hierarchical_log_function
+    from services.logging.hierarchical_logger_config import LogMode, default_hierarchical_config
+except ImportError:
+    # 如果分层日志系统不可用，使用基础日志
+    HierarchicalLogger = None
+    hierarchical_log_function = None
+    LogMode = None
+    default_hierarchical_config = None
+
+# 基础日志配置
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -29,22 +43,67 @@ class ToolResult:
     error: Optional[str] = None
 
 class WeatherTool:
-    """天气工具类 - 同步版本"""
+    """天气工具类 - 同步版本（分层日志）"""
 
     def __init__(self, name: str = "weather_tool"):
         """初始化天气工具"""
         self.name = name
-        self._logger = logging.getLogger(f"{__name__}.{name}")
+        self._log_layer = "tool"
+
+        # 初始化分层日志系统
+        if HierarchicalLogger:
+            self._logger = HierarchicalLogger(f"weather.{name}", self._log_layer)
+            self._hierarchical_config = self._logger.get_config()
+        else:
+            # 回退到基础日志
+            self._logger = logging.getLogger(f"{__name__}.{name}")
+            self._hierarchical_config = None
+
+        # 记录初始化开始
+        init_start = time.time()
+        self._logger.info(f"🔧 开始初始化 WeatherTool (同步版本): {name}")
 
         # 初始化服务
+        self._logger.debug("🔧 开始初始化服务...")
         self.enhanced_service = EnhancedCaiyunWeatherService()
         self.datetime_service = DateTimeWeatherService()
         self.hourly_service = HourlyWeatherService()
+        self._logger.info("✅ 所有服务初始化完成")
 
-        self._logger.info(f"初始化工具: {name}")
+        # 缓存统计
+        self._cache_stats = {
+            'hits': 0,
+            'misses': 0,
+            'total_requests': 0
+        }
+
+        init_time = time.time() - init_start
+        self._logger.info(f"✅ WeatherTool (同步版本) 初始化完成 ({init_time:.3f}s)")
+
+    def _apply_hierarchical_decorator(self, func):
+        """应用分层日志装饰器"""
+        if hierarchical_log_function and self._hierarchical_config:
+            return hierarchical_log_function(func)
+        else:
+            # 回退到基础装饰器
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                start_time = time.time()
+                self._logger.info(f"🚀 开始执行 {func.__name__}")
+                try:
+                    result = func(self, *args, **kwargs)
+                    execution_time = time.time() - start_time
+                    self._logger.info(f"✅ {func.__name__} 执行成功 ({execution_time:.3f}s)")
+                    return result
+                except Exception as e:
+                    self._logger.error(f"❌ {func.__name__} 执行失败: {str(e)}")
+                    raise
+            return wrapper
 
     def execute(self, operation: str, **kwargs) -> ToolResult:
-        """执行天气操作 - 同步版本"""
+        """执行天气操作 - 同步版本（分层日志）"""
+        # 记录操作开始
+        self._logger.info(f"🎯 开始执行操作: {operation}")
 
         try:
             if operation == "current_weather":
@@ -71,30 +130,80 @@ class WeatherTool:
             )
 
     def _current_weather(self, location: str, **kwargs) -> ToolResult:
-        """获取当前天气"""
+        """获取当前天气（分层日志版本）"""
+        # 更新统计
+        self._cache_stats['total_requests'] += 1
+
+        # 根据日志模式决定输出详细程度
+        if self._hierarchical_config and self._hierarchical_config.should_show_details('tool', 'tool_details'):
+            self._logger.info(f"🌤️ 开始获取 {location} 的当前天气 (同步版本)")
+        else:
+            # Normal模式下只显示简洁信息
+            self._logger.info(f"查询 {location} 天气")
+
         try:
             # 使用增强版天气服务
+            if self._hierarchical_config and self._hierarchical_config.mode == LogMode.DEBUG:
+                self._logger.debug(f"🔧 调用增强版天气服务: {location}")
+
+            service_start_time = time.time()
             weather_data, source = self.enhanced_service.get_weather(location)
+            service_time = time.time() - service_start_time
+
+            # 根据模式记录不同详细程度的信息
+            if self._hierarchical_config and self._hierarchical_config.mode == LogMode.DEBUG:
+                self._logger.info(f"✅ 增强版天气服务完成: {location} ({service_time:.3f}s)")
+                self._logger.debug(f"📋 服务响应: {weather_data.condition}, {weather_data.temperature}°C")
+
+                # 记录性能指标
+                if self._hierarchical_config.should_show_details('tool', 'performance_metrics'):
+                    self._logger.log_performance_metrics(
+                        f"weather_query_{location}",
+                        {
+                            "service_time": service_time,
+                            "temperature": weather_data.temperature,
+                            "api_calls": 1
+                        }
+                    )
+
+                # 记录缓存信息
+                if hasattr(self.enhanced_service, 'get_cache_info'):
+                    cache_info = self.enhanced_service.get_cache_info()
+                    hit_rate = cache_info.get('hit_rate', 0)
+                    self._logger.log_cache_info(f"weather_query_{location}", False, hit_rate)
+            else:
+                # Normal模式只显示简洁结果
+                self._logger.info(f"✅ {location}: {weather_data.condition}, {weather_data.temperature}°C")
 
             # 转换为统一的返回格式
+            result_data = {
+                'temperature': weather_data.temperature,
+                'apparent_temperature': weather_data.apparent_temperature,
+                'humidity': weather_data.humidity,
+                'pressure': weather_data.pressure,
+                'wind_speed': weather_data.wind_speed,
+                'wind_direction': weather_data.wind_direction,
+                'condition': weather_data.condition,
+                'description': weather_data.description,
+                'source': source,
+                'location': location
+            }
+
+            # 构建元数据
+            metadata = {
+                "operation": "current_weather",
+                "source": source,
+                "service_time_ms": service_time * 1000
+            }
+
+            if hasattr(self.enhanced_service, 'get_cache_info'):
+                cache_info = self.enhanced_service.get_cache_info()
+                metadata['cache_hit_rate'] = cache_info.get('hit_rate', 0)
+
             return ToolResult(
                 success=True,
-                data={
-                    'temperature': weather_data.temperature,
-                    'apparent_temperature': weather_data.apparent_temperature,
-                    'humidity': weather_data.humidity,
-                    'pressure': weather_data.pressure,
-                    'wind_speed': weather_data.wind_speed,
-                    'wind_direction': weather_data.wind_direction,
-                    'condition': weather_data.condition,
-                    'description': weather_data.description,
-                    'source': source,
-                    'location': location
-                },
-                metadata={
-                    "operation": "current_weather",
-                    "source": source
-                }
+                data=result_data,
+                metadata=metadata
             )
 
         except Exception as e:
